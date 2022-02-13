@@ -1,0 +1,11 @@
+[flake8]
+
+# flake8 limit numbers of characters in line up to 79 chars (Recommended by Python guidelines).
+# Django project allow numbers of characters in line up to 100 chars.
+
+# Below we can exclude some of project files from numbers of characters in line limit.
+exclude=
+  migrations ,
+  __pycache__ ,
+  manage.py ,
+  settings.py

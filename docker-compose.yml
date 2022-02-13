@@ -1,0 +1,54 @@
+---
+
+# Specify the configuration for your application docker compose.
+
+# Define the version of docker compose.
+version: "3.9"
+
+# Define the services that make up the project application.
+services:
+
+  # Name of the service (container).
+  app:
+
+    # Building configuration of this service.
+    build:
+
+      # Define the context scope for this service. by default will pick up Dockerfile.
+      context: .
+
+    # Map the TCP port from Host to Container.
+    ports:
+      - '8000:8000'
+
+    # Connect the directory of the project on the local machine with specific directory on container.
+    volumes:
+      - ./app:/app
+
+    # Execute a specific commands.
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_PORT=5432
+    depends_on:
+      - db
+
+  db:
+    # Specify image for this container to install.
+    image: ${DB_IMAGE}
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+

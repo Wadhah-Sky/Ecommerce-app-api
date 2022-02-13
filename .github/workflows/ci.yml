@@ -1,0 +1,88 @@
+---
+
+# Caller workflow
+
+# Define name of workflow.
+name: Ecommerce CI
+
+# Specify events.
+on:
+  push:
+    branches: [main, staging, production]
+  pull_request:
+
+
+# Define workflow actions.
+jobs:
+
+  test:
+    name: Run Tests
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          cat << EOF > .env
+          SECRET_KEY=${{secrets.SECRET_KEY}}
+          DEBUG=${{secrets.DEBUG}}
+          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+          DB_IMAGE=${{secrets.DB_IMAGE}}
+          DB_HOST=${{secrets.DB_HOST}}
+          DB_NAME=${{secrets.DB_NAME}}
+          DB_USER=${{secrets.DB_USER}}
+          DB_PASS=${{secrets.DB_PASS}}
+          EOF
+      - run: docker-compose build
+      - run: docker-compose run --rm app sh -c "python manage.py wait_for_db && python manage.py test"
+
+  lint:
+    name: Lint
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          cat << EOF > .env
+          SECRET_KEY=${{secrets.SECRET_KEY}}
+          DEBUG=${{secrets.DEBUG}}
+          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+          DB_IMAGE=${{secrets.DB_IMAGE}}
+          DB_HOST=${{secrets.DB_HOST}}
+          DB_NAME=${{secrets.DB_NAME}}
+          DB_USER=${{secrets.DB_USER}}
+          DB_PASS=${{secrets.DB_PASS}}
+          EOF
+      - run: docker-compose build
+      - run: docker-compose run --rm app sh -c "flake8"
+
+  deploy_staging:
+    name: Deploy to Staging
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+    needs: [test, lint]
+    if: github.ref == 'refs/heads/staging'
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "Deploy to STAGING code here"
+
+  deploy_production:
+    name: Deploy to Production
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+    needs: [test, lint]
+    if: github.ref == 'refs/heads/production'
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "Deploy to PRODUCTION code here"
