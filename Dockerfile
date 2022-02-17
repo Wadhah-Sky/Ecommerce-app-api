@@ -24,17 +24,20 @@ COPY ./app /app
 # Specify the default directory to run apps.
 WORKDIR /app
 
-# Install 'PostgreSQL' client dependency.
+# Install last version of 'PostgreSQL' client dependency that will be use by django through the driver 'psycopg2'
+# to connect to Postgres server.
 RUN apk add --update --no-cache postgresql-client
 
-# Install linux temporary dependencies those required while installing the requirements dependencies.
+# Install image temporary dependencies those required while installing the requirements dependencies.
 RUN apk add --update --no-cache --virtual .tmp-build-deps \
-        gcc libc-dev linux-headers postgresql-dev
+        build-base postgresql-dev musl-dev
 
 # install python virtual environemnt module 'venv', update pip and install the required dependences.
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
-    /py/bin/pip install -r /requirements.txt
+    /py/bin/pip install -r /requirements.txt && \
+    mkdir -p /vol/web/static && \
+    mkdir -p /vol/web/media
 
 # Create path for python virtual environemnt on docker image system path.
 ENV PATH="/py/bin:$PATH"
@@ -42,19 +45,16 @@ ENV PATH="/py/bin:$PATH"
 # Delete the temporary dependencies file.
 RUN apk del .tmp-build-deps
 
-# Create subfolders to hold the images, CSS and JavaScript stactics files.
-RUN mkdir -p /vol/web/{media,static}
-
 # Create a new user account on docker image without home directory to use and run the application process only.
 RUN adduser -D user
 
-# Change ownership of '/vol/' directory and it's subfolders from 'root' user to
-# 'user'.
-RUN chown -R user:user /vol/
+# Change ownership of '/vol' directory and it's subfolders using -R flag from 'root' user to
+# 'user' in 'user' group.
+RUN chown -R user:user /vol
 
 # Change permission to allow everyone to read and execute the static files,
 # the owner is allowed to write to the files as well.
-RUN chmod -R 755 /vol/web
+RUN chmod -R 755 /vol
 
 # Switch docker container account from 'root' to the new account.
 USER user

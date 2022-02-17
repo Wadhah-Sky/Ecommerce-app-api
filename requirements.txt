@@ -6,8 +6,10 @@ Django>=4.0.2,<4.1.0
 # Install the latest version of Django REST framework 3.13 but less than 3.14 version.
 djangorestframework>=3.13.0,<3.14.0
 
-# Install python package 'psycopg2' that used by Django to communicate with Postgres.
-# Note: this package need temporary dependencies 'gcc, libc-dev, linux-headers and postgresql-dev' while installing.
+# Install python package 'psycopg2' that used by Django as database driver to communicate with Postgres
+# server installed on Docker by using another dependency 'postgresql-client' for the Docker image.
+# Note: going to have some dependencies 'build-base postgresql-dev musl-dev' to be installed by 'Dockerfile'
+#       when building the image in order to install the 'postgresql-client'.
 psycopg2>=2.9.3,<2.10.0
 
 # Install python linting tool 'flake8'.

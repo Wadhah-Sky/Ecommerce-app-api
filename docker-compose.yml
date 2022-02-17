@@ -14,16 +14,17 @@ services:
     # Building configuration of this service.
     build:
 
-      # Define the context scope for this service. by default will pick up Dockerfile.
+      # Define the context scope for this service to pick up Dockerfile.
       context: .
 
     # Map the TCP port from Host to Container.
     ports:
       - '8000:8000'
 
-    # Connect the directory of the project on the local machine with specific directory on container.
+    # Map a specific directory on container with a directory in the project directory on the local machine.
     volumes:
       - ./app:/app
+      - ./app/data:/vol/web
 
     # Execute a specific commands.
     command: >
