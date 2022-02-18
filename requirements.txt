@@ -12,5 +12,8 @@ djangorestframework>=3.13.0,<3.14.0
 #       when building the image in order to install the 'postgresql-client'.
 psycopg2>=2.9.3,<2.10.0
 
+# Install Python Imaging Library that adds image create and processing capabilities to your Python interpreter.
+Pillow>=9.0.1,<9.1.0
+
 # Install python linting tool 'flake8'.
 flake8>=4.0.1,<4.1.0

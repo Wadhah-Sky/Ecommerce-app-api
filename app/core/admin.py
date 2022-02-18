@@ -1,3 +1,7 @@
-# from django.contrib import admin
+"""Customize and manage your project django admin web page"""
 
-# Register your models here.
+from django.contrib import admin
+from core import models
+
+
+admin.site.register(models.Category)

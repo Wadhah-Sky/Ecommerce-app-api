@@ -26,11 +26,11 @@ WORKDIR /app
 
 # Install last version of 'PostgreSQL' client dependency that will be use by django through the driver 'psycopg2'
 # to connect to Postgres server.
-RUN apk add --update --no-cache postgresql-client
+RUN apk add --update --no-cache postgresql-client jpeg-dev
 
 # Install image temporary dependencies those required while installing the requirements dependencies.
 RUN apk add --update --no-cache --virtual .tmp-build-deps \
-        build-base postgresql-dev musl-dev
+        build-base postgresql-dev musl-dev zlib zlib-dev
 
 # install python virtual environemnt module 'venv', update pip and install the required dependences.
 RUN python -m venv /py && \
