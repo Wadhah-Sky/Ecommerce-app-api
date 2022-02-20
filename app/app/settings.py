@@ -48,8 +48,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'phonenumber_field',
+    'django_phonenumbers',
     'core',
     'website',
+    'user',
 ]
 
 MIDDLEWARE = [
@@ -151,3 +154,14 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Specify user model of your app.
+AUTH_USER_MODEL = 'core.User'
+
+# Specify store phone numbers strings in database.
+# Choices: "E164", "INTERNATIONAL", "NATIONAL", "RFC3966".
+PHONENUMBER_DB_FORMAT = "E164"
+
+# Specify string formatting of phone numbers.
+# Choices: "E164", "INTERNATIONAL", "NATIONAL", "RFC3966".
+PHONENUMBER_DEFAULT_FORMAT = "E164"

@@ -15,5 +15,14 @@ psycopg2>=2.9.3,<2.10.0
 # Install Python Imaging Library that adds image create and processing capabilities to your Python interpreter.
 Pillow>=9.0.1,<9.1.0
 
+# Install python package contains a collection of tools for internationalizing Python applications, that required for
+# 'PhoneNumberField' widgets.
+Babel>=2.9.1,<2.10.0
+
+# Install Django library which interfaces with 'python-phonenumbers' module to validate, pretty print and convert phone
+# numbers.
+django-phonenumber-field>=6.1.0,<6.2.0
+django-phonenumbers>=1.0.1,<1.1.0
+
 # Install python linting tool 'flake8'.
 flake8>=4.0.1,<4.1.0
