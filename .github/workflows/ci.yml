@@ -22,6 +22,7 @@ jobs:
       matrix:
         os: [ ubuntu-20.04 ]
     environment: .env
+    url: https://github.com/Wadhah-Sky/Ecommerce-app-api/settings/environments/932083322/
     steps:
       - uses: actions/checkout@v2
       - run: docker-compose build
@@ -34,6 +35,7 @@ jobs:
       matrix:
         os: [ ubuntu-20.04 ]
     environment: .env
+    url: https://github.com/Wadhah-Sky/Ecommerce-app-api/settings/environments/932083322/
     steps:
       - uses: actions/checkout@v2
       - run: docker-compose build
