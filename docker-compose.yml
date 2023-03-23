@@ -2,6 +2,11 @@
 
 # Specify the configuration for your application docker compose.
 
+# Note: if you specify only the image variable for the service, then make sure it's the source for the image.
+#       And if you set both of image and build variables, so it's mean the image variable will represent the
+#       name for image that will be build in the registry.
+#       Important: it's very crucial to set both of variables if working with Docker swarm environment if using Dockerfile.
+
 # Define the version of docker compose.
 version: "3.9"
 
@@ -9,47 +14,306 @@ version: "3.9"
 services:
 
   # Name of the service (container).
-  app:
+  cache:
+    # Specify image for this container to install.
+    image: redis:7-alpine
 
-    # Building configuration of this service.
-    build:
+    # cpus and memory constraints: use with version 2.0 of Docker compose.
+    # mem_limit: 300m
+    # mem_reservation: 100m
 
-      # Define the context scope for this service to pick up Dockerfile.
-      context: .
+    # Version 3.0 to configure resource constraints, will work within Docker swarm environment if available.
+    deploy:
+      # Specify the number of replicas of this service to be created in the swarm.
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 50M
+        reservations:
+          cpus: '0.5'
+          memory: 20M
+
+    # Specify restart flag to unless-stopped, so when the container is stopped (manually or otherwise),
+    # it is not restarted even after Docker daemon restarts.
+    # Note: the default value is 'no', Do not automatically restart the container.
+    # IMPORTANT: this variable will be ignored if push the service into Docker swarm which have 'restart_policy'
+    #            in 'deploy' variable.
+    #restart: unless-stopped
 
     # Map the TCP port from Host to Container.
     ports:
-      - '8000:8000'
+      - '6379:6379'
 
-    # Map a specific directory on container with a directory in the project directory on the local machine.
-    volumes:
-      - ./app:/app
-      - ./app/data:/vol/web
+    # If you're using an orchestration tool other than Docker Swarm -- i.e.,
+    # Kubernetes or AWS ECS -- it's highly likely that the tool has its own
+    # internal system for handling health checks.
+    healthcheck:
+      # For 'redis' service we use 'redis-cli' tool with 'ping' command to check the output is 'PONG'
+      # which mean redis is live, otherwise exit.
+      # 'grep' tool stands for global search for regular expression and print out, The grep filter searches
+      # a file for a particular pattern of characters.
+      # We pass the output of 'redis-cli ping' by using pip operator to the 'grep' tool.
+      # OR (||) operator will see if left side is fail then execute the right command which will exit.
+      test: ["CMD-SHELL", "redis-cli ping | grep 'PONG' || exit 1"]
 
-    # Execute a specific commands.
-    command: >
-      sh -c "python manage.py wait_for_db &&
-             python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
+      # specify the time between the health check for the application container. it waits for the
+      # specified time from one check to another.
+      interval: 10s
 
-    environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG}
-      - DB_HOST=${DB_HOST}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASS=${DB_PASS}
-      - DB_PORT=5432
-    depends_on:
-      - db
+      # If a single health check takes longer than the time defined in the 'timeout' that run will be considered a failure.
+      timeout: 10s
+
+      # specify the number of seconds the container needs to start; health check will wait for that time to start.
+      start_period: 20s
+
+      # specify the number of consecutive health check failures required to declare the container status as unhealthy.
+      retries: 3
+
+    networks:
+      - webnet
 
   db:
-    # Specify image for this container to install.
-    image: ${DB_IMAGE}
+    # In Docker swarm environment, it's very important to name image that build using dockerfile as:
+    # registry_URL:target_port/name_for_image
+    image: 127.0.0.1:5000/postgres
+    # Building configuration of this service.
+    # ampersand mark means this service build config will be used by other services to build.
+    build:
+      # Specify the context scope for this service to pick up related Dockerfile, could be a 'URL'.
+      context: .
+      # Specify Dockerfile.
+      dockerfile: compose/local/postgres/Dockerfile
+      # Specify the stage of Dockerfile that 'docker-compose build' will stop at.
+      target: dev
     ports:
       - '5432:5432'
+    healthcheck:
+      # By using 'pg_isready' tool we can check if a specific database for specific user is exists and running.
+      # --quite: is option tell this tool, don't print out the response script.
+      # the $${env_var_name} means use env variables from the container env system, if you run same command from
+      # inside the container then only use ${env_var_name}.
+      # Note: if you don't set the --username value then the 'pg_ready' will use by default the current user of
+      # container( default is 'root' unless if you change it ) which will print:
+      #
+      # Fatal Error: <user_name> is not exist.
+      #
+      test: ["CMD-SHELL", "pg_isready --quiet --dbname=$${POSTGRES_DB} --username=$${POSTGRES_USER} || exit 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    # Map a specific directory on container with a directory in the project directory on the local machine.
+    #
+    # Note: the postgres 'initdb' command that will create the databases cluster in the container need to do
+    # some 'chmod' commands for the directory that hold cluster, and this can make an error:
+    #
+    # The files belonging to this database system will be owned by user "user". This user must also own the server process.
+    # initdb: error: could not access directory "/var/lib/postgresql/data": Permission denied
+    #
+    # You will face this error if trying to mount a volume from host machine with the 'data' directory in the container
+    # where 'initdb' command will/created the databases cluster, because this directory has limited permissions, due
+    # the user of the container is not the same of the one who in PostgresSQL database and this the reason for the error.
+    volumes:
+     - postgres-db:/var/lib/postgresql/data
+    # Set environment variables to be use inside container, if there are already such variables in the image that will
+    # use to create the container, then these variables will overwrite the ones of the image.
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${SQL_NAME}
+      - POSTGRES_USER=${SQL_USER}
+      - POSTGRES_PASSWORD=${SQL_PASS}
+    # Set the network that this container will be in it.
+    networks:
+      - webnet
 
+  app:
+    image: 127.0.0.1:5000/django
+    # Building configuration of this service.
+    # ampersand mark means this service build config will be used by other services to build.
+    build: &app_build
+      # Specify the context scope for this service to pick up related Dockerfile, could be a 'URL'.
+      context: .
+      # Specify Dockerfile.
+      dockerfile: compose/local/django/Dockerfile
+      # Specify the stage of Dockerfile that 'docker-compose build' will stop at.
+      target: dev
+    ports:
+      - '8000:8000'
+    healthcheck:
+      # by using 'curl' network command tool, check if specific url is live(landing page will response) or not.
+      # --fail: make sure (HTTP) Fail silently (no output at all).
+      # --silent: make sure to not print the output of HTTP response.
+      # --output: is used to specify where to hold the response HTTP document, you can find the response in
+      #           '--show-error' text file in your container WORKDIR.
+      test: ["CMD-SHELL", "curl --fail --silent --output /dev/null http://localhost:8000/ping || exit 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - ./backend/django_rest:/usr/src/backend/django_rest
+      - ./backend/django_rest/data:/usr/src/vol/web
+    # Execute a specific commands or script file (.sh)
+    # 'start-django.sh' is the shell script file used to run the service.
+    # Always run your commands using sh/bash shell.
+    command: bash -c "/usr/src/compose/start-django.sh"
+    # Specify the environment variables file (.env) to copy into the container.
+    # Note: don't use this way, better to set env variables manually due security reasons.
+    #env_file:
+    #  - .env
+    # Note: integers environment variables, set them directly, since on test server could face an issue
+    # when trying to retrieve them from the cloud storage because they will be stored as string.
+    environment: &app_env
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - CELERY_BROKER=${CELERY_BROKER}
+      - CELERY_BACKEND=${CELERY_BACKEND}
+      - SQL_ENGINE=${SQL_ENGINE}
+      - SQL_HOST=${SQL_HOST}
+      - SQL_NAME=${SQL_NAME}
+      - SQL_USER=${SQL_USER}
+      - SQL_PASS=${SQL_PASS}
+      - SQL_PORT=5432
+    depends_on:
+      - db
+      - cache
+    networks:
+      - webnet
+
+  ui:
+    image: 127.0.0.1:5000/vue_ui
+    build:
+      context: .
+      dockerfile: compose/local/vue/Dockerfile
+      target: dev
+    ports:
+      - "8080:8080"
+    healthcheck:
+      # Since this service using linux Alpine image, then its has 'wget' network command tool.
+      # we just need to check if server is up or not.
+      # -q: is like quite which means don't print the output.
+      # --spider <url>: to check if the specified url is exists or not, if exist then return 0 if not return 1.
+      # Note: maybe you noticed we don't use http://localhost:8080/ping like what we do with django service,
+      # because this is frontend and don't have /ping route or path, so will return 404 and exit.
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 80s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+    # Map the Vue project files between local machine and container to be updated whenever
+    # a change done on one side, while only mount 'node_modules' folder as anonymous volume
+    # to prevent overwritten by local machine directory at runtime, But this will cause an error
+    # when trying to use dependencies like 'bootstrap-vue-3' or 'vuex' with Webpack server and will
+    # show:
+    #
+    # Module not found: Error: Can't resolve 'vuex' in ....
+    #
+    # even if you are already install 'vuex', and this happens when using 'npm install' command on local machine
+    # or using 'vue add' command to install plugins on container in order to update your project and then re-build
+    # it and happen to be the plugins not installed correctly and this could lead to vue/cli not configured
+    # correctly, so, to solve this issue mount your entire project with node_modules even if it will take more time
+    # for building when create new container.
+    volumes:
+      - ./frontend/vue_spa:/usr/src/frontend/vue_spa
+      - /usr/src/frontend/vue_spa/node_modules
+    command: sh -c "npm run serve"
+    environment:
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+    depends_on:
+      - app
+    networks:
+      - webnet
+
+  worker:
+    image: 127.0.0.1:5000/celery_worker
+    # asterisk mark refer to another service same variable configs to be use in this service.
+    build: *app_build
+    healthcheck:
+      # By using 'celery' command tool we check if there is response(live) from celery MainProcess, it sends a "ping" task
+      # on the broker, workers respond and celery fetches the responses. which will return 'Pong' with details about how many
+      # nodes (workers) are running.
+      test: [ "CMD-SHELL", "celery inspect ping || exit 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 100s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    volumes: &worker_vol
+      - ./backend/django_rest:/usr/src/backend/django_rest
+    command: bash -c "/usr/src/compose/start-celeryworker.sh"
+    environment: *app_env
+    depends_on:
+      - app
+    networks:
+      - webnet
+
+  beat:
+    image: 127.0.0.1:5000/celery_beat
+    build: *app_build
+    healthcheck:
+      test: ["CMD-SHELL", "celery inspect ping || exit 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    volumes: *worker_vol
+    command: bash -c "/usr/src/compose/start-celerybeat.sh"
+    environment: *app_env
+    depends_on:
+      - worker
+    networks:
+      - webnet
+
+  flower:
+    image: 127.0.0.1:5000/celery_flower
+    build: *app_build
+    ports:
+      - "5557:5555"
+    healthcheck:
+      test: [ "CMD-SHELL", "celery inspect ping || exit 1"]
+      interval: 10s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    volumes: *worker_vol
+    command: bash -c "/usr/src/compose/start-celeryflower.sh"
+    environment: *app_env
+    depends_on:
+      - worker
+    networks:
+      - webnet
+
+# Set network that all services will be in it.
+networks:
+  webnet:
+
+volumes:
+  postgres-db:
+    driver: local

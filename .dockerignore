@@ -1,4 +1,6 @@
 # Specify all files of your project to be exclude by docker build process.
+# that  will speed up the Docker build process as our local dependencies
+# and git repo will not be sent to the Docker daemon.
 
 # Git
 .git
@@ -18,3 +20,6 @@ venv/
 
 # Local PostgreSQL data
 data/
+
+# Vue
+node_modules

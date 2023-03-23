@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.9.10 Docker Compose (app at [D:\Developing_Projects\ecommerce-app-api\docker-compose.yml])" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Remote Python 3.11.0b3 Docker Compose (app at [D:\Developing_Projects\ecommerce-app-api\docker-compose.yml])" project-jdk-type="Python SDK" />
+  <component name="WebPackConfiguration">
+    <option name="mode" value="AUTO" />
+    <option name="path" value="$PROJECT_DIR$/frontend/vue_spa/node_modules/@vue/cli-service/webpack.config.js" />
+  </component>
 </project>

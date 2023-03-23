@@ -1,0 +1,79 @@
+# Define your dependencies here
+
+# Install the latest version of Django framework 4.0.2 but less than 4.1.0 version.
+Django>=4.0.2,<4.1.0
+
+# Install the latest version of Django REST framework 3.13 but less than 3.14 version.
+djangorestframework>=3.13.0,<3.14.0
+
+# Install package that is a reusable Django application for allowing users to filter queryset dynamically.
+django-filter>=22.1,<22.2
+
+# Install package to support multiple model/queryset view (and mixin) for Django Rest Framework.
+django-rest-multiple-models>=2.1.3,<2.2.0
+
+# Install python package 'psycopg2' that used by Django as database driver to communicate with Postgres
+# server installed on Docker by using another dependency 'postgresql-client' for the Docker image.
+# Note: going to have some dependencies 'build-base postgresql-dev musl-dev' to be installed by 'Dockerfile'
+#       when building the image in order to install the 'postgresql-client'.
+psycopg2>=2.9.3,<2.10.0
+
+# Install Python client for Redis database and key-value store.
+# Note: this package is required by 'django-redis'.
+redis>=4.3.1,<4.4.0
+
+# Install full-featured redis cache and session backend for Django.
+django-redis>=5.2.0,<5.3.0
+
+# Install asynchronous task queue.
+celery>=5.2.6,<5.3.0
+
+# Install a web based tool for monitoring and administrating Celery clusters (queues),
+# by processing messages on the 'Messages Broker'.
+flower>=1.0.0,<1.1.0
+
+# Install Python Imaging Library that adds image create and processing capabilities to your Python interpreter.
+Pillow>=9.0.1,<9.1.0
+
+# Install python package contains a collection of tools for internationalizing Python applications, that required for
+# 'PhoneNumberField' widgets.
+Babel>=2.9.1,<2.10.0
+
+# Install Django library which interfaces with 'python-phonenumbers' module to validate, pretty print and convert phone
+# numbers.
+django-phonenumber-field>=6.1.0,<6.2.0
+django-phonenumbers>=1.0.1,<1.1.0
+
+# Install django module to adds support for using money and currency fields in django models
+# and forms.
+django-money>=2.1.1,<2.2.0
+
+# Install Django library for processing images.
+django-imagekit>=4.1.0,<4.2.0
+
+# Install django application to handle chained model fields.
+# Note: after install is done, add 'dal' and 'dal_select2' at top of INSTALLED_APPS in 'settings.py' file,
+#       this will make sure to override the 'jquery.init.js' script provided by the admin, which sets up
+#       jQuery with 'noConflict', making jQuery available in django.jQuery only and not $ (global).
+django-autocomplete-light>=3.9.4,<3.10.0
+
+# Install django-Hacker: customize default django forms directly from anywhere in the api.
+djhacker>=0.1.2,<0.2.0
+
+# Install simple color field for your models with a nice color-picker in the admin-interface.
+# Note: After add this package to 'settings.py', you need to run 'python manage.py collectstatic'
+django-colorfield>=0.7.0,<1.0.0
+
+# Install package contains Django admin classes that allow for nested inlines.
+# Note: After add 'nested_admin' to 'settings.py', you need to run 'python manage.py collectstatic'
+django-nested-admin>=3.4.0,<3.5.0
+
+# Install Modified Preorder Tree Traversal for Django Models.
+django-mptt>=0.14.0,<0.15.0
+
+# Install Django Duration field widget to handle duration field in the form.
+# Note: Make sure to set 'APP_DIRS' to 'True' in 'settings.py'.
+django-durationwidget2>=1.0.6,<1.1.0
+
+# Install python linting tool 'flake8'.
+flake8>=4.0.1,<4.1.0

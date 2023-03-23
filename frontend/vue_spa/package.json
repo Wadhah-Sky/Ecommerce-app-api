@@ -1,0 +1,47 @@
+{
+  "name": "vue_spa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "test:unit": "vue-cli-service test:unit",
+    "test:e2e": "vue-cli-service test:e2e",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.2.1",
+    "@fortawesome/free-solid-svg-icons": "^6.2.1",
+    "@fortawesome/vue-fontawesome": "^3.0.3",
+    "@popperjs/core": "^2.11.6",
+    "axios": "^1.3.2",
+    "bootstrap": "^5.2.3",
+    "lodash": "^4.17.21",
+    "pinia": "^2.0.30",
+    "register-service-worker": "^1.7.2",
+    "swiper": "^9.0.2",
+    "vue": "^3.2.47",
+    "vue-agile": "^2.0.0",
+    "vue-multiselect": "^3.0.0-beta.1",
+    "vue-router": "^4.1.6",
+    "vue-sidebar-menu": "^5.2.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.12",
+    "@babel/eslint-parser": "^7.19.1",
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-e2e-cypress": "~5.0.8",
+    "@vue/cli-plugin-eslint": "^5.0.8",
+    "@vue/cli-plugin-pwa": "~5.0.8",
+    "@vue/cli-plugin-router": "~5.0.8",
+    "@vue/cli-service": "^5.0.8",
+    "@vue/test-utils": "^2.2.10",
+    "cypress": "^12.5.1",
+    "eslint": "8.33.0",
+    "eslint-plugin-vue": "^9.9.0",
+    "sass": "^1.58.0",
+    "sass-loader": "^13.2.0",
+    "vue-cli-plugin-lodash": "~0.1.4",
+    "vue-cli-plugin-pinia": "~0.2.3"
+  }
+}
