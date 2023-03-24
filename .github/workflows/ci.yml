@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: ubuntu-latest
+        os: [ Ubuntu 22.04 ]
     environment: development
     steps:
       - uses: actions/checkout@v2
@@ -50,7 +50,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ Ubuntu 22.04 ]
     environment: development
     steps:
       - uses: actions/checkout@v2
