@@ -211,9 +211,9 @@ class ProductListAPIView(generics.ListAPIView):
         ).distinct().order_by('-created_at')
 
     @property
-    def get_attributes(self):
-        """Return list of attribute instance depending on 'attr' query string
-        that passed within url"""
+    def get_attribute_leaf_nodes(self):
+        """Return list of attribute leaf node instances depending on 'attr'
+        query string that passed within url"""
 
         # Important: since Product model implement 'Mptt' class, means the
         #            return list of instance is 'TreeQuerySet'.
@@ -232,20 +232,43 @@ class ProductListAPIView(generics.ListAPIView):
 
             # Get all attribute instances that its title equivalent to
             # 'titles_set'.
-            attributes = Attribute.objects.filter(title__in=titles_set).only(
-                'tree_id',
-                'pk',
-                'title'
+            attributes = Attribute.objects.filter(
+                title__in=titles_set,
             )
 
-            return attributes
+            # Initialize list to hold attribute leaf nodes 'pk'.
+            leaf_nodes = []
+
+            # Loop over 'TreeQuerySet' of attributes.
+            for item in attributes:
+                # Note: get_leafnodes() method returns list of attributes
+                #       as Attribute instance not 'TreeQuerySet'.
+                leaf_nodes += item.get_leafnodes(include_self=True).values(
+                    'pk'
+                )
+
+            # Convert leaf_nodes (list of dict for 'pk') into set value
+            # depending on 'pk' value.
+            pk_set = set([leaf['pk'] for leaf in leaf_nodes])
+
+            # Info: Maybe you will ask why we not return the leaf_nodes as it,
+            #       this because leaf_nodes is list Attribute instances and in
+            #       our api filtering and serializer we use lookup like 'in'
+            #       with 'pk' field in filter() method, also we are return
+            #       instances using Mptt class methods, and this won't work if
+            #       the provided list is not 'TreeQuerySet' and you have to
+            #       create list by loop over that list and provide the 'pk'.
+
+            return Attribute.objects.filter(pk__in=pk_set).only(
+                'pk', 'tree_id', 'title'
+            )
 
     @property
     def get_attribute_titles_lists(self):
         """Return list of lists for attribute titles that passed in 'attr'
         query string where same attributes family fit in one list"""
 
-        attributes = self.get_attributes
+        attributes = self.get_attribute_leaf_nodes
 
         if attributes:
 
@@ -286,12 +309,12 @@ class ProductListAPIView(generics.ListAPIView):
         be only related to product items"""
 
         # Check if 'attr' query string is set.
-        if self.get_attributes:
+        if self.get_attribute_leaf_nodes:
 
             # From attributes those set, check if any of them have
             # 'is_common_attribute=False' (means attributes for product item
             # instances).
-            product_item_attributes = self.get_attributes.filter(
+            product_item_attributes = self.get_attribute_leaf_nodes.filter(
                 product_attributes_attribute__is_common_attribute=False
             ).distinct()
 

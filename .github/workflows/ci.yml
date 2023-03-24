@@ -21,10 +21,26 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-20.04 ]
-    environment: ${{.env}}
-    url: 'https://github.com/Wadhah-Sky/Ecommerce-app-api/settings/environments/932083322/'
+    environment: development
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          cat << EOF > .env
+          SECRET_KEY=${{secrets.SECRET_KEY}}
+          DEBUG=${{secrets.DEBUG}}
+          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+          CELERY_BROKER=${{secrets.CELERY_BROKER}}
+          CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
+          SQL_IMAGE=${{secrets.SQL_IMAGE}}
+          SQL_ENGINE=${{secrets.SQL_ENGINE}}
+          SQL_HOST=${{secrets.SQL_HOST}}
+          SQL_NAME=${{secrets.SQL_NAME}}
+          SQL_USER=${{secrets.SQL_USER}}
+          SQL_PASS=${{secrets.SQL_PASS}}
+          SQL_PORT=${{secrets.SQL_PORT}}
+          CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
+          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+          EOF
       - run: docker-compose build
       - run: docker-compose run --rm backend sh -c "python manage.py wait_for_db && python manage.py test"
 
@@ -34,10 +50,26 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-20.04 ]
-    environment: ${{.env}}
-    url: 'https://github.com/Wadhah-Sky/Ecommerce-app-api/settings/environments/932083322/'
+    environment: development
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          cat << EOF > .env
+          SECRET_KEY=${{secrets.SECRET_KEY}}
+          DEBUG=${{secrets.DEBUG}}
+          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+          CELERY_BROKER=${{secrets.CELERY_BROKER}}
+          CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
+          SQL_IMAGE=${{secrets.SQL_IMAGE}}
+          SQL_ENGINE=${{secrets.SQL_ENGINE}}
+          SQL_HOST=${{secrets.SQL_HOST}}
+          SQL_NAME=${{secrets.SQL_NAME}}
+          SQL_USER=${{secrets.SQL_USER}}
+          SQL_PASS=${{secrets.SQL_PASS}}
+          SQL_PORT=${{secrets.SQL_PORT}}
+          CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
+          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+          EOF
       - run: docker-compose build
       - run: docker-compose run --rm backend sh -c "flake8"
 

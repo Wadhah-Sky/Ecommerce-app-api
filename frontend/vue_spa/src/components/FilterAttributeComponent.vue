@@ -15,21 +15,21 @@
             <div class="row row-cols-auto mt-1 pe-0" style="margin-left: 0">
 
               <div v-for="( option ) in attribute.options"
-                   :key="whiteSpacesReplace(option.child_title, '-')"
+                   :key="whiteSpacesReplace(option, '-')"
                    class="col ps-0 pe-1"
               >
 
-                <label :for="whiteSpacesReplace(option.child_title, '-')"
+                <label :for="whiteSpacesReplace(option, '-')"
                        class="option-btn-check-label">
                   <input type="checkbox"
                          class="check-input"
                          v-model="checkInputs"
-                         :id="whiteSpacesReplace(option.child_title, '-')"
-                         :name="whiteSpacesReplace(option.child_title, '-')"
-                         :value="option.child_title"
+                         :id="whiteSpacesReplace(option, '-')"
+                         :name="whiteSpacesReplace(option, '-')"
+                         :value="option"
                   />
 
-                  <span class="btn option-btn">{{ option.child_title }}</span>
+                  <span class="btn option-btn">{{ option }}</span>
                 </label>
 
               </div>
@@ -45,32 +45,28 @@
           <div class="row-cols-auto mt-1">
 
             <label v-for="( option ) in attribute.options"
-                   :key="whiteSpacesReplace(option.child_title, '-')"
-                   :for="whiteSpacesReplace(option.child_title, '-')"
+                   :key="whiteSpacesReplace(option, '-')"
+                   :for="whiteSpacesReplace(option, '-')"
                    v-tooltip
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
-                   :title="availableColors.includes(lowerCase(option.parent_title)) ? option.parent_title : option.child_title"
+                   :title="option"
                    class="option-color-check-label"
             >
               <input type="checkbox"
                      v-model="checkInputs"
-                     :id="whiteSpacesReplace(option.child_title, '-')"
-                     :name="whiteSpacesReplace(option.child_title, '-')"
-                     :value="option.child_title"
+                     :id="whiteSpacesReplace(option, '-')"
+                     :name="whiteSpacesReplace(option, '-')"
+                     :value="option"
               />
               <span
                   :class="[
                       'option-color',
                       'col',
-                      availableColors.includes(lowerCase(option.parent_title)) ? lowerCase(option.parent_title) : ''
-                  ]"
-                  :style="[
-                      availableColors.includes(lowerCase(option.parent_title)) ? '' :
-                      setColorStyle(lowerCase(`#${option.parent_title}`))
+                      whiteSpacesReplace(lowerCase(option), '-')
                   ]"
               ><font-awesome-icon
-                  v-if="!availableColors.includes(lowerCase(option.parent_title))"
+                  v-if="!availableColors.includes(whiteSpacesReplace(lowerCase(option)))"
                   icon="fa-solid fa-circle-check"/>
         </span>
 
@@ -86,21 +82,21 @@
           <div class="row-cols-auto mt-1">
 
             <label v-for="( option ) in attribute.options"
-                   :key="whiteSpacesReplace(option.child_title, '-')"
-                   :for="whiteSpacesReplace(option.child_title, '-')"
+                   :key="whiteSpacesReplace(option, '-')"
+                   :for="whiteSpacesReplace(option, '-')"
                    v-tooltip
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
-                   :title="option.parent_title"
+                   :title="option"
                    class="option-rise-picker-check-label"
             >
               <input type="checkbox"
                      v-model="checkInputs"
-                     :id="whiteSpacesReplace(option.child_title, '-')"
-                     :name="whiteSpacesReplace(option.child_title, '-')"
-                     :value="option.child_title"
+                     :id="whiteSpacesReplace(option, '-')"
+                     :name="whiteSpacesReplace(option, '-')"
+                     :value="option"
               />
-              <span :class="['option-rise-picker col', lowerCase(option.child_title)]"></span>
+              <span :class="['option-rise-picker col', lowerCase(option)]"></span>
 
             </label>
 
@@ -113,20 +109,20 @@
           <div class="row mt-1">
 
             <div v-for="( option ) in attribute.options"
-                 :key="whiteSpacesReplace(option.child_title, '-')"
+                 :key="whiteSpacesReplace(option, '-')"
                  class="col-md-12 pt-1"
             >
 
-              <label :for="whiteSpacesReplace(option.child_title, '-')"
+              <label :for="whiteSpacesReplace(option, '-')"
                      class="form-check-label">
                 <input type="checkbox"
                        class="form-check-input"
                        v-model="checkInputs"
-                       :id="whiteSpacesReplace(option.child_title, '-')"
-                       :name="whiteSpacesReplace(option.child_title, '-')"
-                       :value="option.child_title"
+                       :id="whiteSpacesReplace(option, '-')"
+                       :name="whiteSpacesReplace(option, '-')"
+                       :value="option"
                 />
-                <span>{{ option.child_title }}</span>
+                <span>{{ option }}</span>
               </label>
 
             </div>
@@ -186,15 +182,15 @@ const lowerCase = (value) => {
   // Note: you need to check if value is not none, otherwise will raise an exception undefined value.
   return value?.toLowerCase();
 };
-const setColorStyle = (title) => {
-  /**
-   * Method to return CSS string for <spain> of option-color class input.
-   */
-  return `background-color: ${title};` +
-      'margin: 0 10px 5px 0.1px!important;' +
-      'width: 26px!important;' +
-      'height: 26px!important;'
-};
+// const setColorStyle = (title) => {
+//   /**
+//    * Method to return CSS string for <spain> of option-color class input.
+//    */
+//   return `background-color: ${title};` +
+//       'margin: 0 10px 5px 0.1px!important;' +
+//       'width: 26px!important;' +
+//       'height: 26px!important;'
+// };
 const whiteSpacesReplace = (str, use='') => {
   /**
    * Replace all whitespace in the string you need by use global mode (search
@@ -531,6 +527,27 @@ div.scrollmenu{
 .clear {
   background-image: $option-colors-background-img;
   background-position: -1600px 0px;
+}
+//////////////////////////////////////////////////////////////
+
+// customized colors
+
+.light-wash, .medium-wash, .dark-wash{
+  margin: 0 10px 5px 0.1px!important;
+  width: 26px!important;
+  height: 26px!important;
+}
+
+.light-wash{
+  background: #CBDAE9;
+}
+
+.medium-wash{
+  background: #7C95B3;
+}
+
+.dark-wash{
+  background: #3E5A7A;
 }
 
 ///////////////////////////////////////////////////////////////

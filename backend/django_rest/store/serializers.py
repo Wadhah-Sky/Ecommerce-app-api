@@ -195,7 +195,7 @@ class AttributeSerializer(serializers.ModelSerializer):
         attributes = instance.get_descendants().filter(
             category_attributes_attribute__category__in=category_ancestors,
             product_attributes_attribute__product__isnull=False
-        ).distinct().order_by('title')
+        ).distinct()
 
         # initialize an empty list.
         options = []
@@ -205,20 +205,32 @@ class AttributeSerializer(serializers.ModelSerializer):
             # Add the title of instance to the list as parent and child
             # title, in case its parent is a root node, otherwise use the
             # parent title.
-            if attribute.parent.is_root_node():
-                options.append(
-                    {
-                        'parent_title': attribute.title,
-                        'child_title': attribute.title
-                     }
-                )
-            else:
-                options.append(
-                    {
-                        'parent_title': attribute.parent.title,
-                        'child_title': attribute.title
-                    }
-                )
+            # if attribute.parent.is_root_node():
+            #     options.append(
+            #         {
+            #             'child_title': attribute.title
+            #         }
+            #     )
+            # elif attribute.parent.parent.is_root_node():
+            #     options.append(
+            #         {
+            #             'child_title': attribute.parent.title,
+            #             'grandchild_title': attribute.title
+            #         }
+            #     )
+            # else:
+            #     options.append(
+            #         {
+            #             'child_title': attribute.parent.parent.title,
+            #             'grandchild_title': attribute.parent.title
+            #         }
+            #     )
 
-        # Return the list.
-        return options
+            # Add the (level=1) in tree family instances for current attribute
+            # ancestor.
+            options += [
+                item.title for item in attribute.get_family().filter(level=1)
+            ]
+
+        # Return the sorted list of non-duplicated options.
+        return sorted(set(options))
