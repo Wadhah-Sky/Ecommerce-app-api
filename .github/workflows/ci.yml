@@ -43,8 +43,7 @@ jobs:
           EOF
       - run: docker-compose build
       - run: docker-compose up db
-      - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh"
-      - run: docker-compose run --rm app bash -c "python manage.py test"
+      - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh && python manage.py test"
 
   lint:
     name: Lint

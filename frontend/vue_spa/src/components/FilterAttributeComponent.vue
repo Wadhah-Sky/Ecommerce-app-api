@@ -15,17 +15,17 @@
             <div class="row row-cols-auto mt-1 pe-0" style="margin-left: 0">
 
               <div v-for="( option ) in attribute.options"
-                   :key="whiteSpacesReplace(option, '-')"
+                   :key="whiteSpacesReplace(lowerCase(option), '-')"
                    class="col ps-0 pe-1"
               >
 
-                <label :for="whiteSpacesReplace(option, '-')"
+                <label :for="whiteSpacesReplace(lowerCase(option), '-')"
                        class="option-btn-check-label">
                   <input type="checkbox"
                          class="check-input"
                          v-model="checkInputs"
-                         :id="whiteSpacesReplace(option, '-')"
-                         :name="whiteSpacesReplace(option, '-')"
+                         :id="whiteSpacesReplace(lowerCase(option), '-')"
+                         :name="whiteSpacesReplace(lowerCase(option), '-')"
                          :value="option"
                   />
 
@@ -45,8 +45,8 @@
           <div class="row-cols-auto mt-1">
 
             <label v-for="( option ) in attribute.options"
-                   :key="whiteSpacesReplace(option, '-')"
-                   :for="whiteSpacesReplace(option, '-')"
+                   :key="whiteSpacesReplace(lowerCase(option), '-')"
+                   :for="whiteSpacesReplace(lowerCase(option), '-')"
                    v-tooltip
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
@@ -55,8 +55,8 @@
             >
               <input type="checkbox"
                      v-model="checkInputs"
-                     :id="whiteSpacesReplace(option, '-')"
-                     :name="whiteSpacesReplace(option, '-')"
+                     :id="whiteSpacesReplace(lowerCase(option), '-')"
+                     :name="whiteSpacesReplace(lowerCase(option), '-')"
                      :value="option"
               />
               <span
@@ -82,8 +82,8 @@
           <div class="row-cols-auto mt-1">
 
             <label v-for="( option ) in attribute.options"
-                   :key="whiteSpacesReplace(option, '-')"
-                   :for="whiteSpacesReplace(option, '-')"
+                   :key="whiteSpacesReplace(lowerCase(option), '-')"
+                   :for="whiteSpacesReplace(lowerCase(option), '-')"
                    v-tooltip
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
@@ -92,11 +92,11 @@
             >
               <input type="checkbox"
                      v-model="checkInputs"
-                     :id="whiteSpacesReplace(option, '-')"
-                     :name="whiteSpacesReplace(option, '-')"
+                     :id="whiteSpacesReplace(lowerCase(option), '-')"
+                     :name="whiteSpacesReplace(lowerCase(option), '-')"
                      :value="option"
               />
-              <span :class="['option-rise-picker col', lowerCase(option)]"></span>
+              <span :class="['option-rise-picker col', whiteSpacesReplace(lowerCase(option), '-')]"></span>
 
             </label>
 
@@ -109,17 +109,17 @@
           <div class="row mt-1">
 
             <div v-for="( option ) in attribute.options"
-                 :key="whiteSpacesReplace(option, '-')"
+                 :key="whiteSpacesReplace(lowerCase(option), '-')"
                  class="col-md-12 pt-1"
             >
 
-              <label :for="whiteSpacesReplace(option, '-')"
+              <label :for="whiteSpacesReplace(lowerCase(option), '-')"
                      class="form-check-label">
                 <input type="checkbox"
                        class="form-check-input"
                        v-model="checkInputs"
-                       :id="whiteSpacesReplace(option, '-')"
-                       :name="whiteSpacesReplace(option, '-')"
+                       :id="whiteSpacesReplace(lowerCase(option), '-')"
+                       :name="whiteSpacesReplace(lowerCase(option), '-')"
                        :value="option"
                 />
                 <span>{{ option }}</span>

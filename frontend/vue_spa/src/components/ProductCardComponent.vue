@@ -2,7 +2,7 @@
 
   <figure class="card card-product-grid">
 
-    <router-link :to="{name: 'home' }" class="img-wrap">
+    <router-link :to="{name: 'product' }" class="img-wrap">
       <img :src="props.thumbnail" :alt="props.productTitle">
     </router-link>
 
@@ -55,7 +55,7 @@
           <span class="badge bg-white promotion-summary">{{ props.promotionSummary }}</span>
         </div>
 
-        <router-link :to="{name: 'home' }" class="title">
+        <router-link :to="{name: 'product' }" class="title">
           <span v-tooltip
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"

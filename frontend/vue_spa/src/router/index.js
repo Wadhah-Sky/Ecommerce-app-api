@@ -352,7 +352,7 @@ const routes = [
               this generates a separate chunk (about.[hash].js) for this route
               which is lazy-loaded when the route is visited.
             */
-            component: () => import(/* webpackChunkName: "store" */ '../views/StoreView.vue'),
+            component: () => import(/* webpackChunkName: "categoryStore" */ '../views/StoreView.vue'),
             /*
                Set the parameters to be passed to component props.
             */
@@ -366,6 +366,17 @@ const routes = [
             }),
           }
     ]
+  },
+  {
+    name: 'product',
+    path: '/product',
+    component: () => import(/* webpackChunkName: "product" */ '../views/ProductView.vue'),
+    beforeEnter: [removeHash],
+    /*
+      Set if this component accepts props.
+      When props is set to true, the route.params will be set as the component props.
+    */
+    // props: true
   },
   {
     /* Regex to catch all paths are not define previously, this root very important:
