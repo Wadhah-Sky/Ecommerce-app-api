@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: ubuntu-latest
     environment: development
     steps:
       - uses: actions/checkout@v2
@@ -42,7 +42,8 @@ jobs:
           CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
           EOF
       - run: docker-compose build
-      - run: docker-compose run --rm app sh -c "python manage.py test"
+      - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh"
+      - run: docker-compose run --rm app bash -c "python manage.py test"
 
   lint:
     name: Lint
@@ -71,7 +72,7 @@ jobs:
           CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
           EOF
       - run: docker-compose build
-      - run: docker-compose run --rm app sh -c "flake8"
+      - run: docker-compose run --rm app bash -c "flake8"
 
   deploy_staging:
     name: Deploy to Staging
