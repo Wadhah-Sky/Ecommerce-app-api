@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [ Ubuntu 22.04 ]
+        os: [ Ubuntu 20.04 ]
     environment: development
     steps:
       - uses: actions/checkout@v2
@@ -42,6 +42,7 @@ jobs:
           CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
           EOF
       - run: docker-compose build
+      - run: docker-compose up db
       - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh"
       - run: docker-compose run --rm app bash -c "python manage.py test"
 
@@ -50,7 +51,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [ Ubuntu 22.04 ]
+        os: [ Ubuntu 20.04 ]
     environment: development
     steps:
       - uses: actions/checkout@v2
