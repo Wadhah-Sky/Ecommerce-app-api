@@ -42,7 +42,7 @@ jobs:
           CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
           EOF
       - run: docker-compose build
-      - run: docker-compose run --rm app sh -c "/usr/src/compose/start-django.sh && python manage.py test"
+      - run: docker-compose run --rm app sh -c "python manage.py wait_for_db && python manage.py test"
 
   lint:
     name: Lint
@@ -71,7 +71,7 @@ jobs:
           CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
           EOF
       - run: docker-compose build
-      - run: docker-compose run --rm app sh -c "/usr/src/compose/start-django.sh && flake8"
+      - run: docker-compose run --rm app sh -c "flake8"
 
   deploy_staging:
     name: Deploy to Staging
