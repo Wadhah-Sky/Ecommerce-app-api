@@ -17,6 +17,7 @@ export const useEndpointStore = defineStore('Endpoint',{
         storeCategoriesEndpoint: '/api/v1/store/categories/',
         storeProductsEndpoint: '/api/v1/store/products/category/',
         storeAttributesEndpoint: '/api/v1/store/attributes/category/',
+        storeProductDetailsEndpoint: '/api/v1/product/details/',
     }),
 
 });

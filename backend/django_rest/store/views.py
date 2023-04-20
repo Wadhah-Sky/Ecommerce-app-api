@@ -78,7 +78,7 @@ class CategoryRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = serializers.CategoryDetailsSerializer
     # The default lookup_field is 'pk' and should be pass as argument in URL.
     lookup_field = 'slug'
-    queryset = Category.objects.filter(is_active=True)
+    queryset = Category.objects.filter(is_active=True).distinct()
 
     # def get_queryset(self):
     #     """Return a specific category instance"""

@@ -1,6 +1,6 @@
 <template>
   <!-- ========================= BANNER SECTION ========================= -->
-  <section class="section-intro padding-y-sm">
+  <section class="section-intro padding-y-sm bg-white">
     <div class="container">
 
       <div class="intro-banner-wrap">
@@ -9,7 +9,7 @@
           <div v-for="( banner, index ) in storeHome.dataResult.Banner" :key="index" class="slide">
 
             <router-link v-if="banner.frontend_path" :to="{ path: banner.frontend_path }" class="img-wrap">
-              <img :src="banner.thumbnail" :alt="banner.title" >
+              <img v-lazy="banner.thumbnail" :alt="banner.title" >
             </router-link>
           </div>
 
@@ -56,6 +56,7 @@
               :mousewheel="true"
               :keyboard="true"
               :freeMode="true"
+              :lazy="true"
           >
 
             <swiper-slide v-for="( slide, index ) in slider.products" :key="index">
@@ -63,6 +64,7 @@
               <product-card-component :product-title="slide.title"
                                       :product-slug="slide.slug"
                                       :product-item-slug="slide.product_item.slug"
+                                      :product-item-attr="slide.product_item.attributes.join()"
                                       :thumbnail="slide.product_item.thumbnail"
                                       :price-currency-symbol="slide.product_item.price_currency_symbol"
                                       :list-price-amount="slide.product_item.list_price_amount"
@@ -110,7 +112,7 @@
             <router-link
                 :to="{ name: 'categoryStore', params:{ slug: card.category_slug }, query: {page: 1} }"
             >
-              <img class="card-img-top img-wrap" :src="card.thumbnail" :alt="card.title">
+              <img v-lazy="card.thumbnail" :alt="card.title" class="card-img-top img-wrap" >
             </router-link>
 
             <div class="card-body">
@@ -204,7 +206,7 @@ const checkDataResultAvailability = async () => {
    * replace the current component with page-not-found component.
    */
 
- if (!storeHome.dataResult.Banner && !storeHome.dataResult.Section){
+ if (storeHome.dataResult.Banner.length === 0 && storeHome.dataResult.Section.length === 0){
     /*
       In case the storeHome.getDataResult() returned a response with status code 404 or 200 (with empty result),
       we need to make sure to replace the current component before its rendered (while in setup life cycle)

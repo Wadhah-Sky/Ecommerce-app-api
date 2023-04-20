@@ -38,7 +38,7 @@
 import {onMounted, ref} from "vue";
 
 export default {
-  name: "RatingStarsComponent"
+  name: "FilterRatingStarsComponent"
 }
 </script>
 

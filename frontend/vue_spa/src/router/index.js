@@ -150,7 +150,7 @@ const setAttributeInQuery = (to) => {
                Delete line in else{} block, will take the effect.
    */
 
-  if(to.query.attr && typeof to.query.attr === 'string'){
+  if(! [null, undefined].includes(to.query.attr) ){
 
     // Convert attr string into array of attributes split by (,)
     const attributes = to.query.attr.split(',');
@@ -167,11 +167,11 @@ const setAttributeInQuery = (to) => {
           attrArray.push(val);
       }
     }
-    // console.log("Attributes:", attrArray)
     // Now set 'attr' value for route query to be string of attributes seperated by comma (,).
     to.query.attr = attrArray.join();
   }
   else {
+    // in case 'attr' is null or undefined.
     // Delete the 'attr' from route query if exists.
     delete to.query?.attr
   }
@@ -229,12 +229,24 @@ const setSelectByInQuery = (to) => {
   // Available values
   const values = ['deals', 'price-low-to-high', 'price-high-to-low'];
 
-  // Check if 'selectBy' is provided, string and include within available list of values, otherwise delete it.
-  if(to.query.selectBy && (typeof to.query.selectBy !== 'string' || !values.includes(to.query.selectBy)) ) {
+  // Check if 'selectBy' is provided and include within available list of values, otherwise delete it.
+  if(to.query.selectBy && (!values.includes(to.query.selectBy)) ) {
     delete to.query.selectBy
     return { path: to.path, query: to.query, hash: to.hash }
   }
 };
+const setProductQuery = (to) => {
+  /**
+   * Check before entering the component that if both of (to.query.attr) and (to.query.itemS) is set,
+   * remove (to.query.itemS)
+   */
+
+  if( to.query.itemS && to.query.attr ) {
+    delete to.query.itemS
+    return { path: to.path, query: to.query, hash: to.hash }
+  }
+};
+
 const removeQueryParams = (to) => {
   /**
    * Remove params from url query.
@@ -369,14 +381,17 @@ const routes = [
   },
   {
     name: 'product',
-    path: '/product',
+    path: '/product/:productSlug/:itemS?/:attr?',
     component: () => import(/* webpackChunkName: "product" */ '../views/ProductView.vue'),
-    beforeEnter: [removeHash],
+    beforeEnter: [removeHash, setProductQuery, setAttributeInQuery],
     /*
-      Set if this component accepts props.
-      When props is set to true, the route.params will be set as the component props.
+     Set the parameters to be passed to component props.
     */
-    // props: true
+    props: route => ({
+      productSlug: route.params.productSlug,
+      productItemSlug: route.query.itemS,
+      productItemAttr: route.query.attr
+    }),
   },
   {
     /* Regex to catch all paths are not define previously, this root very important:

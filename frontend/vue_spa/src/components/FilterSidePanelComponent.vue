@@ -45,7 +45,7 @@
 
         <div class="row">
 
-          <multi-select-component :store-filter="storeFilter" />
+          <filter-multi-select-component :store-filter="storeFilter" />
 
         </div>
 
@@ -53,7 +53,7 @@
 
           <span class="attribute">Avg. Customer Review</span>
 
-          <rating-stars-component/>
+          <filter-rating-stars-component/>
 
         </div>
 
@@ -61,7 +61,7 @@
 
           <span class="attribute">Price</span>
 
-          <price-range-component :store-filter="props.storeFilter"/>
+          <filter-price-range-component :store-filter="props.storeFilter"/>
 
         </div>
 
@@ -88,9 +88,9 @@
 */
 import ContentLoaderComponent from "@/components/ContentLoaderComponent";
 import FilterAttributeComponent from "@/components/FilterAttributeComponent";
-import MultiSelectComponent from "@/components/MultiSelectComponent";
-import RatingStarsComponent from "@/components/RatingStarsComponent";
-import PriceRangeComponent from "@/components/PriceRangeComponent";
+import FilterMultiSelectComponent from "@/components/FilterMultiSelectComponent";
+import FilterRatingStarsComponent from "@/components/FilterRatingStarsComponent";
+import FilterPriceRangeComponent from "@/components/FilterPriceRangeComponent";
 import {useRoute, useRouter} from "vue-router";
 import {ref, toRef, onMounted, defineExpose, defineProps} from "vue";
 
@@ -99,9 +99,9 @@ export default {
   components: {
     ContentLoaderComponent,
     FilterAttributeComponent,
-    MultiSelectComponent,
-    RatingStarsComponent,
-    PriceRangeComponent
+    FilterMultiSelectComponent,
+    FilterRatingStarsComponent,
+    FilterPriceRangeComponent
   }
 }
 

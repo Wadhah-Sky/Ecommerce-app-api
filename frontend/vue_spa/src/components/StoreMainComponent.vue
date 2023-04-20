@@ -7,25 +7,21 @@
         <header class="border-bottom mb-3 ms-0 pb-2">
           <div class="row row-cols-auto">
 
-              <div class="col" style="padding-right: 0">
+              <div class="col data-count" >
                 <span>
                   {{ storePagination.dataCount }} {{ storePagination.dataCount > 1 ? 'items' : 'item' }} found
                 </span>
 
               </div>
 
-              <span>
-                |
-              </span>
-
-              <div class="col" style="padding-left: 0">
+              <div class="col ps-0">
 
                 <span style="margin-right: 5px">
                   <font-awesome-icon :icon="['fa-solid', 'fa-sliders']" />
                   Filters
                 </span>
 
-                <div class="button r" id="button-filter" @click="emits('toggleFilterSidePanel')">
+                <div class="button r" id="button-filter" @click="emits('toggle-filter-side-panel')">
                   <input type="checkbox" class="checkbox" :checked="storeFilter.collapsed"/>
                   <div class="knobs"></div>
                   <div class="layer"></div>
@@ -55,6 +51,7 @@
                                     :rating="product.rating"
                                     :product-slug="product.slug"
                                     :product-item-slug="product.product_item.slug"
+                                    :product-item-attr="product.product_item.attributes.join()"
                                     :thumbnail="product.product_item.thumbnail"
                                     :price-currency-symbol="product.product_item.price_currency_symbol"
                                     :list-price-amount="product.product_item.list_price_amount"
@@ -128,7 +125,7 @@ const props = defineProps({
 });
 const storeFilter = toRef(props, 'storeFilter');
 // Define the list of events that you want to emit.
-const emits = defineEmits(['toggleFilterSidePanel']);
+const emits = defineEmits(['toggle-filter-side-panel']);
 
 /*
   Define functions
@@ -153,6 +150,11 @@ const emits = defineEmits(['toggleFilterSidePanel']);
 </script>
 
 <style scoped>
+
+.data-count:after{
+  content: "|";
+  padding-left: 6px;
+}
 
 .knobs,
 .layer {

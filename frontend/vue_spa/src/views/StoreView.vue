@@ -1,6 +1,6 @@
 <template>
 
-  <section class="section-content ">
+  <section class="section-content bg-white">
     <bread-crumbs-component
         v-if="categoryChildrenArray.ancestor_nodes"
         :data="categoryChildrenArray.ancestor_nodes"
@@ -72,7 +72,7 @@ export default {
     BreadCrumbsComponent,
     ContentLoaderComponent
   }
-}
+};
 
 </script>
 
@@ -87,19 +87,19 @@ const props = defineProps({
     required: true
   },
   attr: {
-    type: String,
+    type: [String, undefined],
     required: false
   },
   minPrice: {
-    type: String,
+    type: [String, undefined],
     required: false
   },
   maxPrice: {
-    type: String,
+    type: [String, undefined],
     required: false
   },
   selectBy: {
-    type: String,
+    type: [String, undefined],
     required: false
   },
   page: {
@@ -117,12 +117,6 @@ const router = useRouter();
 const categoryChildrenArray = ref([]);
 const updateData = ref(false);
 // const routeQuery = ref(route.query);
-
-// Set the value of 'route.query.attr' to 'checkedOptions' after checking is string and not null.
-if (route.query.attr && typeof route.query.attr === 'string') {
-  // Covert string value to array.
-  storeFilter.checkedOptions = (route.query.attr).split(',');
-}
 
 /*
   Define functions
@@ -239,11 +233,12 @@ const triggerGetProductsDataResult = async (slug, attr, minPrice, maxPrice, sele
           }
       ]
   );
+
   // Get the data from backend.
   await storePagination.getDataResult(endpoint);
 
 };
-const cleanUrl = (registeredArray=Object.keys(props), queryObj=route.query) =>{
+const cleanUrl = (registeredArray, queryObj) =>{
   /**
    * Method to clean view url.
    */
@@ -265,12 +260,12 @@ const cleanUrl = (registeredArray=Object.keys(props), queryObj=route.query) =>{
 */
 // Set page title.
 setPageTitle(`Jamie & Cassie | Store`);
-// Clear URL query.
-cleanUrl();
+cleanUrl(['attr', 'minPrice', 'maxPrice', 'selectBy', 'page'], route.query);
 
 /*
   call functions with top-level await, to trigger <suspense> in parent component.
 */
+// Clear URL query.
 await getCategoryChildren(props.slug);
 await triggerGetProductsDataResult(
     props.slug,

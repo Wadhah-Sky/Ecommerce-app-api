@@ -1,11 +1,13 @@
 from django import forms
 
+from django_admin_hstore_widget.forms import HStoreFormField
 # from durationwidget.widgets import TimeDurationWidget
 
 from dal import autocomplete
 from dal import forward
 
-from core.models import ProductItemAttribute, ProductAttribute
+from core.models import (ProductItemAttribute, ProductAttribute, Product,
+                         ProductItem)
 
 
 class ProductItemAttributeInlineForm(forms.ModelForm):
@@ -104,31 +106,35 @@ class ProductAttributeInlineForm(forms.ModelForm):
         }
 
 
-# class ProductAdminForm(forms.ModelForm):
-#     """Form class for admin add/change page of ProductOption model"""
-#
-#     class Meta:
-#         model = Product
-#         exclude = ['id']
-#         # fields = '__all__'
-#
-#         # Set your fields widget.
-#         widgets = {
-#             'brand_category': autocomplete.ModelSelect2(
-#                 # Set your django api url:
-#                 # '<api name>:<name of the registered view path>'
-#                 #
-#                 # Note: make sure you registered the api routes in your main
-#                 # project 'urls.py' file.
-#                 url='core:brand-category-autocomplete',
-#                 # Set the related model field value to pass it to the view.
-#                 # Note: if you forward relational model field, the value that
-#                 #       will pass is actual obj of that field.
-#                 forward={'category': Product.category},
-#                 # You can set some options for this Select2 field.
-#                 attrs={
-#                     # Set placeholder
-#                     'data-placeholder': 'category related brands'
-#                 },
-#             ),
-#         }
+class ProductAdminForm(forms.ModelForm):
+    """Form class for admin add/change page of Product model"""
+
+    class Meta:
+        model = Product
+        exclude = ['id']
+        # fields = '__all__'
+
+        # Set your fields widget.
+        # widgets = {
+        #     'details': HStoreFormField()
+        # }
+
+    # Define fields
+    details = HStoreFormField()
+
+
+class ProductItemAdminForm(forms.ModelForm):
+    """Form class for admin add/change page of ProductItem model"""
+
+    class Meta:
+        model = ProductItem
+        exclude = ['id']
+        # fields = '__all__'
+
+        # Set your fields widget.
+        # widgets = {
+        #     'details': HStoreFormField()
+        # }
+
+    # Define fields
+    details = HStoreFormField()

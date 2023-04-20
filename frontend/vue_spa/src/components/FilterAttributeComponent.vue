@@ -68,14 +68,13 @@
               ><font-awesome-icon
                   v-if="!availableColors.includes(whiteSpacesReplace(lowerCase(option)))"
                   icon="fa-solid fa-circle-check"/>
-        </span>
+              </span>
 
             </label>
 
           </div>
 
         </template>
-
 
         <template v-else-if="lowerCase(attribute.input_class) === 'option-rise-picker'">
 
@@ -182,11 +181,11 @@ const lowerCase = (value) => {
   // Note: you need to check if value is not none, otherwise will raise an exception undefined value.
   return value?.toLowerCase();
 };
-// const setColorStyle = (title) => {
+// const setColorStyle = (colorHex) => {
 //   /**
 //    * Method to return CSS string for <spain> of option-color class input.
 //    */
-//   return `background-color: ${title};` +
+//   return `background-color: #${colorHex};` +
 //       'margin: 0 10px 5px 0.1px!important;' +
 //       'width: 26px!important;' +
 //       'height: 26px!important;'

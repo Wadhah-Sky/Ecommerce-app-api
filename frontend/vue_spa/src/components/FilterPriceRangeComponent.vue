@@ -97,7 +97,7 @@ import { MutationType } from 'pinia';
 import {ref, toRef, defineProps} from 'vue';
 
 export default {
-  name: "PriceRangeComponent"
+  name: "FilterPriceRangeComponent"
 }
 </script>
 

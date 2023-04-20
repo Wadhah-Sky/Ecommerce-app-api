@@ -217,33 +217,48 @@
   How to use v-model with child component?
   1- in child component inputs add:
 
-     directly emit signal ('update:modelValue') which is related to v-model attribute that will be
+     A- directly emit signal ('update:modelValue') which is related to v-model attribute that will be
      received in parent component:
 
-     @input="$emit('update:modelValue', $event.target.value)"
+     @input="$emit('update:model-value', $event.target.value)"
 
-     or through using a defined emits array:
+     B- or through using a defined emits array:
 
-     @input="emits('update:modelValue', $event.target.value)"
+     @input="emits('update:model-value', $event.target.value)"
 
      with define of emits in <script setup>:
 
-     const emits = defineEmits(['update:modelValue']);
+     const emits = defineEmits(['update:model-value']);
 
-     2- in parent component, define a ref value and using with v-model on child component:
+  2- in parent component, define a ref value and using with v-model on child component:
 
      <parent-component>
        <child v-model="<name-of-ref-const>" />
      </parent>
+
+  Note: the two steps above will update the data from child component to parent component only, in case
+        you want two ways updating, then:
+
+        1- add prop variable in the child component and name it like the emit name with camelCase style.
+
+           const props = defineProps({modelValue: {type: Object, required: true},});
+
+        2- Now you can process the prop 'modelValue' to be reactive:
+
+           const modelValue = ref(props.modelValue);
  */
 
 /*
    Note:
-   1- Don't use same ref const as v-model const with multiple component fragments, this will cause
-      to have multiple v-model that work separately from other fragments, this happened when using
+   1- Don't use same ref const (const el =ref(null)) as v-model const with multiple component fragments, this
+      will cause to have multiple v-model that work separately from other fragments, this happened when using
       v-for in parent component to send data for child component those have v-model with their inputs,
-      so, you will have multiple child component as fragments, to solve it move v-for into child component,
-      in this case will have one child component.
+      so, you will have multiple child component as fragments, to solve it:
+
+      A- move v-for into child component, in this case will have one child component.
+      B- use unique index for that ref variable with each fragment like using:
+         <child v-model=el[index] />
+
    2- if you face such error:
 
       Extraneous non-props attributes (<name-of-emit>) were passed to component but could not be automatically
@@ -251,6 +266,27 @@
 
       this means you passing out value from multiple child component to parent component, so you need to set root
       to these components by wrap them with <div>.
+ */
+
+/*
+  what deference between ref and :ref ?
+
+  ref : is static reference that can be used to hold ref of single/multiple elements and
+        can be use with v-for, and remember to define its const as ref:
+
+       <input v-for="el in elements" ref="inputs" />
+
+  :ref : this the dynamic reference that can be used to hold ref of single/multiple elements and
+         can be use with v-for, and remember to define its const as ref:
+
+         <input v-for="el in elements" :ref="inputs" />
+
+         * The big deference that :ref is dynamic and can be change when component is updating,
+           so be careful if you use as array:
+
+           <input v-for="el in elements" :ref="el => inputs.push(el)" />
+
+           This will cause to keep updating the inputs with new duplicated references.
  */
 
 /*
@@ -315,6 +351,12 @@
 
   const clone = structuredClone(object);
 
+ */
+
+/*
+  How to check that of current variable is an object created by => new Object() or notations {<key>: <value>}?
+
+  Object.getPrototypeOf(<variable>) === Object.prototype
  */
 
 /*

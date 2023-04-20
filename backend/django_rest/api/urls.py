@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/v1/', include('core.urls')),
     path('api/v1/', include('home.urls')),
     path('api/v1/', include('store.urls')),
+    path('api/v1/', include('product.urls')),
 ]
 
 # in case running on development server, can access media files urls.

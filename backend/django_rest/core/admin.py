@@ -16,7 +16,7 @@ from phonenumber_field.widgets import PhoneNumberPrefixWidget
 
 from imagekit.admin import AdminThumbnail
 from imagekit import ImageSpec
-from imagekit.processors import ResizeToFill
+from imagekit.processors import ResizeToFit
 from imagekit.cachefiles import ImageCacheFile
 from mptt.admin import MPTTModelAdmin
 
@@ -87,7 +87,7 @@ class AdminThumbnailSpec(ImageSpec):
     height = 100
 
     # Define a list of  Pillow package image processors.
-    processors = [ResizeToFill(width, height)]
+    processors = [ResizeToFit(width, height)]
 
     # Set format of image with optional options.
     format = 'JPEG'
@@ -770,6 +770,7 @@ class ProductItemAdmin(nested_admin.NestedModelAdmin):
     """Customize variables of your django admin web page for ProductItem
      model"""
 
+    form = forms.ProductItemAdminForm
     inlines = [
         PromotionItemInline,
         ProductItemAttributeInline,
@@ -804,12 +805,14 @@ class ProductAttributeInline(nested_admin.NestedTabularInline):
     extra = 0
     # Require that at least one value should set.
     min_num = 0
-    readonly_fields = ['slug']
+    # readonly_fields = ['slug']
     autocomplete_fields = ['attribute']
 
 
 class ProductAdmin(nested_admin.NestedModelAdmin):
     """Customize variables of your django admin web page for Product model"""
+
+    form = forms.ProductAdminForm
 
     admin_thumbnail = AdminThumbnail(image_field=cached_admin_thumb)
     admin_thumbnail.short_description = 'Thumbnail'

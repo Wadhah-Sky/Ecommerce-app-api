@@ -59,9 +59,12 @@ RUN apt-get update && \
 
 # Note: adduser/addgroup command tool in slim-bullseye image has different options from alpine image.
 # Install python virtual environemnt module 'venv', in Python based on linux Debian image hold the venv in '/opt/venv' file.
+# To update pip:
+# 1-  /opt/venv/bin/pip install --upgrade pip
+# 2-  /opt/venv/bin/python3 -m pip install --upgrade pip
 RUN python3 -m venv /opt/venv && \
     # update pip.
-    /opt/venv/bin/pip install --upgrade pip && \
+    /opt/venv/bin/python3 -m pip install --upgrade pip && \
     # create a user group 'usergroup' with group id. \
     # --system option, make addgroup tool add a system group.
     addgroup --gid 1001 --system usergroup && \

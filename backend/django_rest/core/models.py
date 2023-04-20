@@ -88,6 +88,12 @@
 #
 #       (required_percentage)/100 * Number = X
 
+# append() vs += with list in Python?
+#
+# In general case append will add one item to the list, while += will copy all
+# elements of right-hand-side list into the left-hand-side list. so if the
+# right-hand-side is a string, then += will add each character of the string
+# separately to left-hand-side.
 
 from django import forms
 from django.db import models
@@ -110,7 +116,7 @@ from djmoney.models.fields import MoneyField
 from djmoney.money import Money
 from djmoney.models.validators import MaxMoneyValidator, MinMoneyValidator
 
-from imagekit.processors import ResizeToFill
+from imagekit.processors import ResizeToFit, Resize
 from imagekit.models import ProcessedImageField
 
 from django.contrib.postgres import fields as pg_fields
@@ -129,8 +135,10 @@ import os
 
 
 # Note Postgres has multiple specific fields, like:
-# 1- ArrayField, field will accept array of value.
-# 2- HStoreField, will accept value of {key:value}, keys should be string.
+# 1- ArrayField: field will accept array of value.
+# 2- HStoreField: will accept value of {key:value}, keys should be string, in
+#                 database stored like this in the cell:
+#                 Fitted => Relaxing,Manufacture => China
 # 3- JSONField: two type(regular and binary).
 # 4- CI/Text/Char, means the value will be stored as lowercase, the Text type
 #    is unlimited length while the char type is limited with specific size and
@@ -161,6 +169,17 @@ import os
 #    On PostgreSQL 12+, it’s preferable to use non-deterministic collations
 #    instead of the 'citext' extension. You can create them using the
 #    CreateCollation migration operation.
+
+
+# How to use Postgres specific fields like (HStoreField, ArrayField)?
+# 1- create the extension,
+#    A- in django migration file or
+#    B- directly into your database using script file to be run whenever your
+#       database is starting.
+# 2- Add 'django.contrib.postgres' in your INSTALLED_APPS.
+#
+# You’ll see an error like (can't adapt type 'dict') if you skip the first
+# step, or (type "hstore" does not exist) if you skip the second.
 
 
 # JSONField VS HStore?
@@ -844,9 +863,7 @@ class Category(mptt_models.MPTTModel, TimeStampedModel):
     thumbnail = ProcessedImageField(
         blank=True,
         upload_to=create_image_file_path,
-        processors=[
-            ResizeToFill(70, 70),
-        ],
+        processors=[ResizeToFit(70, 70)],
         format='JPEG',
         options={'quality': 100}
     )
@@ -1078,7 +1095,7 @@ class Banner(TimeStampedModel):
         upload_to=create_image_file_path,
         format='JPEG',
         options={'quality': 100},
-        processors=[ResizeToFill(1118, 280)]
+        processors=[Resize(1118, 280)]
     )
     title = models.CharField(max_length=40, unique=True)
     frontend_path = models.CharField(max_length=200, blank=True)
@@ -1198,11 +1215,12 @@ class Card(TimeStampedModel):
     #     editable=False
     # )
     slug = models.SlugField(max_length=100)
-    # processors=[ResizeToFill(220, 221)]
+    # processors=[ResizeToFit(220, 221)]
     thumbnail = ProcessedImageField(
         upload_to=create_image_file_path,
         format='JPEG',
-        options={'quality': 100}
+        options={'quality': 100},
+        processors=[ResizeToFit(220, 221)]
     )
     title = models.CharField(max_length=40)
     summary = models.TextField(max_length=150)
@@ -1504,6 +1522,14 @@ class ProductGroup(TimeStampedModel):
 class Product(TimeStampedModel):
     """Model class to create product instances"""
 
+    class Meta:
+        """Set metadata for your Model class"""
+
+        # You can set uniqueness on field index rather than set (unique=True)
+        # on the field.
+        # indexes field accept list of values.
+        # indexes = [CaseInsensitiveUniqueIndex(fields=['title'])]
+
     # Define model fields.
     slug = models.SlugField(max_length=100)
     thumbnail = ProcessedImageField(
@@ -1514,6 +1540,8 @@ class Product(TimeStampedModel):
     # For frontend store, we set max length be 87 characters.
     title = models.TextField(max_length=100, unique=True)
     summary = models.TextField(max_length=400)
+    # You can't set unique constraint on HstoreField since it's {key: value}.
+    details = pg_fields.HStoreField(null=True, blank=True)
     category = models.ForeignKey(
         'Category',
         on_delete=models.PROTECT,
@@ -1528,6 +1556,8 @@ class Product(TimeStampedModel):
         blank=True,
         related_name='products_product_group'
     )
+    use_item_attribute_img = models.BooleanField(default=False)
+    use_item_attribute_color_shape = models.BooleanField(default=False)
     is_available = models.BooleanField(default=False)
 
     def item_instance(self, item=None):
@@ -1645,7 +1675,8 @@ class ProductItem(TimeStampedModel):
         default_currency=settings.MONEY_DEFAULT_CURRENCY,
         validators=MONEY_VALIDATOR
     )
-    content = models.JSONField(null=True, blank=True)
+    # You can't set unique constraint on HstoreField since it's {key: value}.
+    details = pg_fields.HStoreField(null=True, blank=True)
     product = models.ForeignKey(
         'Product',
         on_delete=models.CASCADE,
@@ -1715,16 +1746,46 @@ class ProductItem(TimeStampedModel):
 
         # Check if the return object is not None.
         if instance:
+
+            ########################################################
+            # This block to return deal price while counting the decimal value
+            # of list price.
+            ########################################################
+
             # Calculate the required percentage for list_price.
-            required_percentage = round(
-                100 - Decimal(instance.promotion.discount_percentage)
-            )
+            # required_percentage = round(
+            #     100 - Decimal(instance.promotion.discount_percentage)
+            # )
+            #
+            # Return the deal_price as Money value.
+            # return round_money(
+            #     (Decimal(
+            #         required_percentage / 100
+            #     ) * self.list_price.amount),
+            #     self.list_price.currency
+            # )
+            #######################################################
+
+            #######################################################
+            # This block of code to return deal price while keeping the
+            # decimal value of list price.
+            #######################################################
+
+            # Get the list price amount.
+            amount = self.list_price.amount
+
+            # Get the discount percentage of promotion.
+            discount_percentage = instance.promotion.discount_percentage
+
+            # Calculate the rounded discount value of list price amount.
+            discount = round((amount * Decimal(discount_percentage))/100)
+
+            # Calculate the deal price amount.
+            deal_price = amount - discount
 
             # Return the deal_price as Money value.
-            return round_money(
-                (Decimal(required_percentage / 100) * self.list_price.amount),
-                self.list_price.currency
-            )
+            return round_money(deal_price, self.list_price.currency)
+            ########################################################
 
     @property
     def price_currency_symbol(self):
@@ -1756,6 +1817,13 @@ class ProductItem(TimeStampedModel):
             product_attributes_attribute__in=product_attributes
         )
         return attributes
+
+    @property
+    def images(self):
+        """Return the ProductItemImage instances that this product item
+        related with"""
+
+        return self.product_item_images_product_item.all()
 
     def clean(self):
         """Restrict the add/change to model fields"""
@@ -1809,7 +1877,7 @@ class ProductItemImage(TimeStampedModel):
 
     # Define model fields.
     slug = models.SlugField(max_length=100)
-    thumbnail = ProcessedImageField(
+    image = ProcessedImageField(
         upload_to=create_image_file_path,
         format='JPEG',
         options={'quality': 100}
@@ -1892,7 +1960,8 @@ class Attribute(mptt_models.MPTTModel, TimeStampedModel):
         blank=True,
         upload_to=create_image_file_path,
         format='JPEG',
-        options={'quality': 100}
+        options={'quality': 100},
+        processors=[ResizeToFit(90, 90)]
     )
     # Note: implement hierarchy of categories using self joining concept.
     # Info: 'TreeOneToOneField', is just a regular 'OneToOneField' that renders
@@ -2006,6 +2075,15 @@ class CategoryAttribute(models.Model):
 class ProductAttribute(models.Model):
     """Model class to set product attributes"""
 
+    # Specify input class field choices, those can be use on frontend to
+    # specify value for class attribute.
+    # INPUT_CLASS_CHOICES = (
+    #     ("option-select", "option-select"),
+    #     ("option-btn", "option-btn"),
+    #     ("option-color", "option-color"),
+    #     ("option-img", "option-img")
+    # )
+
     class Meta:
         """Set metadata for your Model class"""
 
@@ -2019,13 +2097,13 @@ class ProductAttribute(models.Model):
         ]
 
     # Define model fields.
-    slug = models.SlugField(max_length=100)
-    thumbnail = ProcessedImageField(
-        blank=True,
-        upload_to=create_image_file_path,
-        format='JPEG',
-        options={'quality': 100}
-    )
+    # slug = models.SlugField(max_length=100)
+    # thumbnail = ProcessedImageField(
+    #     blank=True,
+    #     upload_to=create_image_file_path,
+    #     format='JPEG',
+    #     options={'quality': 100}
+    # )
     product = models.ForeignKey(
         'Product',
         on_delete=models.CASCADE,
@@ -2036,6 +2114,11 @@ class ProductAttribute(models.Model):
         on_delete=models.CASCADE,
         related_name='product_attributes_attribute'
     )
+    # input_class = models.CharField(
+    #     max_length=20,
+    #     choices=INPUT_CLASS_CHOICES,
+    #     default='option-select'
+    # )
     is_common_attribute = models.BooleanField(
         default=True,
         help_text="By selecting this option as True, means this attribute "
@@ -2069,7 +2152,8 @@ class ProductItemAttribute(models.Model):
         blank=True,
         upload_to=create_image_file_path,
         format='JPEG',
-        options={'quality': 100}
+        options={'quality': 100},
+        processors=[ResizeToFit(70, 70)],
     )
     product_item = models.ForeignKey(
         'ProductItem',

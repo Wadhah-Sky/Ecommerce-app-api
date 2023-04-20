@@ -19,10 +19,8 @@ const cleanUrlQuery = (registeredArray, queryObj) => {
     }
     // In case registeredObj including the current key, check if current key's value is empty or undefined,
     // if that true, delete the current key from clonedObj.
-    else {
-      if ( ['', undefined, null].includes(clonedObj[key]) ){
-        delete clonedObj[key]
-      }
+    else if ( ['', undefined, null].includes(clonedObj[key]) ) {
+        delete clonedObj[key];
     }
   }
   // Return the cleaned clonedObj.

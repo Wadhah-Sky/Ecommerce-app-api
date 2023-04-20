@@ -111,12 +111,14 @@ class ProductItemSerializer(serializers.ModelSerializer):
             'price_currency_symbol',
             'list_price_amount',
             'deal_price_amount',
+            'attributes'
         ]
 
     # Define related/reverse model fields.
     thumbnail = serializers.SerializerMethodField()
     list_price_amount = serializers.SerializerMethodField()
     deal_price_amount = serializers.SerializerMethodField()
+    attributes = serializers.SerializerMethodField()
 
     def get_thumbnail(self, instance):
         """Return the thumbnail of instance if it's not exists return the
@@ -152,6 +154,13 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
         if instance.deal_price:
             return instance.deal_price.amount
+
+    def get_attributes(self, instance):
+        """Return current instance attributes title"""
+
+        attributes = instance.attributes
+
+        return [item.title for item in attributes]
 
     def to_representation(self, instance):
         """Custom representation field to add to each returned instance"""

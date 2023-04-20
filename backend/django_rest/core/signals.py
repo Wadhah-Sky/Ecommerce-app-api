@@ -12,8 +12,7 @@ from django.utils.text import slugify
 
 from core.models import (User, Category, Attribute, PromotionCategory, Banner,
                          Card, PurchaseOrder, Product, ProductItem,
-                         ProductAttribute, ProductItemAttribute,
-                         ProductItemImage)
+                         ProductItemAttribute, ProductItemImage)
 from core.tasks import (set_product_item_promotion)
 
 import string
@@ -154,8 +153,11 @@ def set_slug_to_card(sender, instance, *args, **kwargs):
 def set_slug_to_product(sender, instance, *args, **kwargs):
     """Create a slug for product instance when pre_save signal is emit"""
 
-    if instance:
-        instance.slug = create_slug(instance.title)
+    if instance and (not instance.slug):
+        # Get the first 8 characters of product.title (without spaces)
+        product_title = instance.title.replace(" ", "")[:8]
+
+        instance.slug = create_slug(product_title)
 
 
 @receiver(pre_save, sender=ProductItem)
@@ -163,7 +165,7 @@ def set_sku_to_product_item(sender, instance, *args, **kwargs):
     """Create (Stock Keeping Unit) value for product item instance when
     pre_save signal is emit"""
 
-    if instance and not instance.sku:
+    if instance and (not instance.sku):
 
         # Our formula for sku (Stock Keeping Unit) field:
         # sku (12) = category_title(3)-product_title(4)-random(3)
@@ -203,7 +205,7 @@ def set_slug_to_product_item(sender, instance, *args, **kwargs):
     """Create a slug for product's item instance when pre_save signal is
     emit"""
 
-    if instance:
+    if instance and (not instance.slug):
         instance.slug = create_slug(instance.sku)
 
 
@@ -212,17 +214,8 @@ def set_slug_to_product_item_image(sender, instance, *args, **kwargs):
     """Create a slug for product item image instance when pre_save signal is
     emit"""
 
-    if instance and not instance.slug:
+    if instance and (not instance.slug):
         instance.slug = create_slug(instance.product_item.sku)
-
-
-@receiver(pre_save, sender=ProductAttribute)
-def set_slug_to_product_attribute(sender, instance, *args, **kwargs):
-    """Create slug for product attribute instance when pre_save signal is
-    emit"""
-
-    if instance:
-        instance.slug = create_slug(instance.attribute.title)
 
 
 @receiver(pre_save, sender=ProductItemAttribute)
@@ -302,84 +295,3 @@ def set_po_code_to_po(sender, instance, *args, **kwargs):
 #     <Your code>
 #
 #
-# @receiver(pre_save, sender=ColorGroup)
-# def add_slug_to_color_group(sender, instance, *args, **kwargs):
-#     """Create a slug for ColorGroup object when pre_save signal is emit"""
-#
-#     if instance:
-#         instance.slug = create_slug(instance.color_group_name)
-#
-#
-# @receiver(pre_save, sender=Color)
-# def add_slug_to_color(sender, instance, *args, **kwargs):
-#     """Create a slug for Color object when pre_save signal is emit"""
-#
-#     if instance:
-#         instance.slug = create_slug(instance.color_name)
-#
-#
-# @receiver(pre_save, sender=ProductStyleVariation)
-# def add_slug_to_product_style_variation(sender, instance, *args, **kwargs):
-#     """Create a slug for ProductStyleVariation object when pre_save signal is
-#      emit"""
-#
-#     if instance:
-#         instance.slug = create_slug(instance.style.style_name)
-#
-#
-# @receiver(pre_save, sender=ProductStyleVariation)
-# def add_headline_to_product_style_variation(sender, instance, *args, **kwargs):
-#     """Create or update headline of ProductStyleVariation"""
-#
-#     if instance:
-#         if instance.product_details.brand:
-#             instance.product_headline = \
-#                 f'{str(instance.product_details.brand)}, ' \
-#                 f'{instance.product_details.product_name}, {str(instance)}'
-#         else:
-#             instance.product_headline = \
-#                 f'{instance.product_details.product_name}, {str(instance)}'
-#
-#
-# @receiver(pre_save, sender=Product)
-# def add_slug_to_product(sender, instance, *args, **kwargs):
-#     """Create a slug for Product object when pre_save signal is emit"""
-#
-#     if instance:
-#         instance.slug = create_slug(str(instance))
-#
-#
-# @receiver(pre_save, sender=Product)
-# def add_deal_price_to_product(sender, instance, *args, **kwargs):
-#     """Create or update deal_price of product"""
-#
-#     if instance:
-#         if instance.offer:
-#             # Set 'discount' variable to round to closet integer without
-#             # decimal value using round()
-#             discount = round(
-#                 (instance.list_price * instance.offer.offer_discount)/100
-#             )
-#             # Set 'deal_price' after subtracting 'discount' from 'list_price'.
-#             instance.deal_price = instance.list_price - discount
-#         else:
-#             instance.deal_price = None
-#
-#
-# @receiver(post_save, sender=Offer)
-# def update_offer_products(sender, instance, created, **kwargs):
-#     """Update related all offer's products when the offer is updated using
-#     celery task"""
-#
-#     # We need the celery task to execute only when update an existing offer.
-#     if not created:
-#         # Add task to job queue.
-#         update_products_deal_price.delay(instance.id)
-#
-#
-# @receiver(pre_save, sender=ProductImage)
-# def add_slug_to_product_image(sender, instance, *args, **kwargs):
-#     """Create a slug for ProductImage object when pre_save signal is emit"""
-#
-#     if instance:
-#         instance.slug = create_slug(str(instance))

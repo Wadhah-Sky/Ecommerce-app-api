@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
@@ -59,11 +60,13 @@ INSTALLED_APPS = [
     'colorfield',
     'nested_admin',
     'durationwidget',
+    'django_admin_hstore_widget',
     'mptt',
     'core',
     'home',
     'store',
     'user',
+    'product'
 ]
 
 MIDDLEWARE = [

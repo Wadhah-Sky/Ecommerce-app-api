@@ -20,7 +20,7 @@ from core.models import (Category, Attribute)
 
 
 class CategoryChildSerializer(serializers.ModelSerializer):
-    """Serialize class of Category model used as depth 1 of the tree"""
+    """Serialize class of Product model"""
 
     class Meta:
         """Serialize specific model fields"""

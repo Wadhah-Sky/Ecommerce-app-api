@@ -2,14 +2,14 @@
 
   <div class="mt-2">
     <multi-select v-model="selectedOption"
-                 :options="availableSelectByOptions"
-                 track-by="value"
-                 label="option"
-                 :searchable="false"
-                 :close-on-select="false"
-                 :show-labels="false"
-                 :max-height="150"
-                 placeholder="Select by"
+                  :options="availableSelectByOptions"
+                  track-by="value"
+                  label="option"
+                  :searchable="false"
+                  :close-on-select="false"
+                  :show-labels="false"
+                  :max-height="150"
+                  placeholder="Select by"
     />
   </div>
 
@@ -24,7 +24,7 @@ import {useRouter, useRoute} from "vue-router";
 import {ref, toRef, defineProps, watch} from 'vue';
 
 export default {
-  name: "MultiSelectComponent"
+  name: "FilterMultiSelectComponent"
 }
 </script>
 
@@ -94,6 +94,8 @@ watch(() => selectedOption.value, (currentValue, oldValue) =>{
 
 <style >
 
+/* multi select style will not work if it set inside <style scoped>  */
+
 .multiselect{
   cursor: default;
   width: 160px;
@@ -114,10 +116,23 @@ watch(() => selectedOption.value, (currentValue, oldValue) =>{
   transition: color 200ms ease-in-out;
 }
 
+.multiselect__tag,
+.multiselect__tag-icon::after,
+.multiselect__option--selected,
 .multiselect__option--selected.multiselect__option--highlight{
   background: #0F1111;
   color: #fff;
   transition: color 200ms ease-in-out;
+}
+
+.multiselect__option--selected,
+.multiselect__option--selected.multiselect__option--highlight{
+  border: 1px solid #e9ecef;
+}
+
+.multiselect__tag-icon:hover{
+  transition: 0.3s;
+  transform: scale(110%);
 }
 
 </style>

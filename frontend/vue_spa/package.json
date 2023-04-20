@@ -19,9 +19,10 @@
     "lodash": "^4.17.21",
     "pinia": "^2.0.30",
     "register-service-worker": "^1.7.2",
-    "swiper": "^9.0.2",
+    "swiper": "^9.1.0",
     "vue": "^3.2.47",
     "vue-agile": "^2.0.0",
+    "vue-lazyload": "^3.0.0-rc.2",
     "vue-multiselect": "^3.0.0-beta.1",
     "vue-router": "^4.1.6",
     "vue-sidebar-menu": "^5.2.5"

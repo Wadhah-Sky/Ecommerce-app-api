@@ -2,8 +2,15 @@
 
   <figure class="card card-product-grid">
 
-    <router-link :to="{name: 'product' }" class="img-wrap">
-      <img :src="props.thumbnail" :alt="props.productTitle">
+    <router-link
+        :to="{
+          name: 'product',
+          params: { productSlug: props.productSlug },
+          query: { itemS: props.productItemSlug, attr: props.productItemAttr }
+        }"
+        class="img-wrap"
+    >
+      <img v-lazy="props.thumbnail" :alt="props.productTitle">
     </router-link>
 
     <figcaption class="card-body info-wrap">
@@ -25,7 +32,7 @@
                     v-tooltip
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    title="Multi variations of product items"
+                    title="Multi variations of the product"
               >Multi variations
               </span>
 
@@ -50,12 +57,19 @@
       </div>
 
       <div class="fix-height">
-        <div class="content">
-          <span class="badge bg-danger promotion-title">{{ props.promotionTitle }}</span>
-          <span class="badge bg-white promotion-summary">{{ props.promotionSummary }}</span>
+        <div v-if="props.promotionTitle || props.promotionSummary" class="content">
+          <span v-if="props.promotionTitle" class="badge bg-danger promotion-title">{{ props.promotionTitle }}</span>
+          <span v-if="props.promotionSummary" class="badge bg-white promotion-summary">{{ props.promotionSummary }}</span>
         </div>
 
-        <router-link :to="{name: 'product' }" class="title">
+        <router-link
+            :to="{
+              name: 'product',
+              params: {productSlug: props.productSlug},
+              query: {itemS: props.productItemSlug, attr: props.productItemAttr}
+            }"
+            class="title"
+        >
           <span v-tooltip
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
@@ -105,6 +119,10 @@ const props = defineProps({
     type: String,
     required: true
   },
+  productItemAttr: {
+    type: String,
+    required: true
+  },
   thumbnail: {
     type: String,
     required: true
@@ -121,16 +139,16 @@ const props = defineProps({
     type: [String, Number],
     required: true
   },
+  dealPriceAmount: {
+    type: [String, Number, undefined],
+    required: false
+  },
   promotionTitle: {
     type: [String, undefined],
     required: false
   },
   promotionSummary: {
     type: [String, undefined],
-    required: false
-  },
-  dealPriceAmount: {
-    type: [String, Number, undefined],
     required: false
   },
   productItemsCount: {
@@ -147,6 +165,10 @@ const props = defineProps({
 </script>
 
 <style scoped>
+
+.badge{
+  border-radius: 0!important;
+}
 
 .promotion-title{
   text-overflow:ellipsis;

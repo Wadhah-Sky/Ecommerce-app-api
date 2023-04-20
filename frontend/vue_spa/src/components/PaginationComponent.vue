@@ -3,7 +3,8 @@
   <nav class="mt-4" aria-label="Page navigation sample">
     <ul class="pagination justify-content-center">
       <li :class="['page-item', isDisabledPrev(1) ]"
-          :tabindex="isDisabledPrev(1) === 'disabled' ? -1 : 0">
+          :tabindex="isDisabledPrev(1) === 'disabled' ? -1 : 0"
+      >
         <router-link
             :to="{ path: route.path, query: { ...route.query, page: pageNumber - 1 } }"
             class="page-link"

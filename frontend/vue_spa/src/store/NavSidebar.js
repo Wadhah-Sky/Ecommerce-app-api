@@ -115,7 +115,7 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
                 }
             }
         },
-        setMenu(){
+        async setMenu(){
             /**
              * Function to set 'menu' array of objects for 'sidebar-menu' component.
              */
@@ -185,16 +185,16 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
             this.addSeperator();
             this.addHeaderNavigation('Asking for help?');
             this.addNavigation([
-                {
-                    href: '/contact-us/talk-to-agent',
-                    title: 'Talk to agent',
-                    icon: {
-                        element: 'font-awesome-icon',
-                        attributes: {
-                            icon: 'fa-solid fa-headset',
-                        },
-                    },
-                },
+                // {
+                //     href: '/contact-us/talk-to-agent',
+                //     title: 'Talk to agent',
+                //     icon: {
+                //         element: 'font-awesome-icon',
+                //         attributes: {
+                //             icon: 'fa-solid fa-headset',
+                //         },
+                //     },
+                // },
                 {
                     href: '/contact-us/email',
                     title: 'Email us',
@@ -212,23 +212,28 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
              * Function to get data from backend server in order to set value of 'dynamicNavArray'.
              */
 
-            /*
-             Note: if one store uses another store, you can directly import and call the useStore()
-                   function within actions and getters. Then you can interact with the store just like
-                   you would from within a Vue component.
-            */
-            const storeContentLoading = useContentLoadingStore();
             try {
                 this.response = await axios.get(endpoint);
                 this.dynamicNavArray = this.response.data;
-                this.setMenu();
-                // Set state of homeViewDataLoading to be false so the user can view the content of home page.
-                // Note: We need to delay this step so that the 'LogoLoadingComponent' still active for longer time.
-                setTimeout(() => {storeContentLoading.$patch({navSidebarDataLoading: false})},3000);
+
+                if (this.dynamicNavArray.length > 0){
+                    await this.setMenu();
+                }
             }
             catch (error) {
                 console.log("Error while trying to retrieve the requested data from backend server!");
                 // console.log(error.response.statusText);
+            }
+            finally {
+                /*
+                   Note: if one store uses another store, you can directly import and call the useStore()
+                   function within actions and getters. Then you can interact with the store just like
+                   you would from within a Vue component.
+                */
+                const storeContentLoading = useContentLoadingStore();
+                // Set state of homeViewDataLoading to be false so the user can view the content of home page.
+                // Note: We need to delay this step so that the 'LogoLoadingComponent' still active for longer time.
+                setTimeout(() => {storeContentLoading.$patch({navSidebarDataLoading: false})},3000);
             }
         },
     }

@@ -44,6 +44,7 @@ jobs:
       - run: docker-compose build
       - run: docker-compose up db
       - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh && python manage.py test"
+      - run: docker-compose down
 
   lint:
     name: Lint

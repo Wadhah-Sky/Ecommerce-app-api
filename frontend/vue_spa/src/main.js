@@ -17,14 +17,14 @@
 // import "bootstrap/dist/css/bootstrap.min.css";
 // import "bootstrap";
 
-// Register Font Awesome library and svg icons.
+// Register Font Awesome library and svg-gif-png icons.
 import { library } from '@fortawesome/fontawesome-svg-core';
 // 'faS' class means 'fa-solid'.
 import {
     faS,
     faSliders, faUser, faHouse, faStore, faHeadset, faEnvelope, faChevronRight,
-    faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck,
-    faCircleExclamation, faStar
+    faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck, faXmark,
+    faCircleExclamation, faStar, faCartShopping, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 
 // Register CSS/scss/sass and other files of your project as global.
@@ -33,8 +33,10 @@ import {
    <style> or <style lang=sass> specifically if you want to override sass
    variables value.
 */
+// import 'swiper/swiper-bundle.css';
 import 'swiper/css';
 import 'swiper/css/navigation';
+
 // import 'vue-sidebar-menu/dist/vue-sidebar-menu.css';
 import './assets/css/ui.css';
 import 'vue-multiselect/dist/vue3-multiselect.css';
@@ -50,19 +52,24 @@ import VueAgile from 'vue-agile';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {Multiselect} from 'vue-multiselect';
 import {tooltip} from "@/common/tooltip";
+import VueLazyload from 'vue-lazyload';
 // import './plugins/bootstrap-vue';
 
 /*
-    Add the svg icons those want to use with your Font Awesome library (utility
-    class), so you don't to import all icons svg files and minimize the space
+    Add the svg-gif-png icons those want to use with your Font Awesome library (utility
+    class), so you don't to import all icons svg-gif-png files and minimize the space
     of use.
 */
 library.add(
     faS,
     faSliders, faUser, faHouse, faStore, faHeadset, faEnvelope, faChevronRight,
-    faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck,
-    faCircleExclamation, faStar
+    faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck, faXmark,
+    faCircleExclamation, faStar, faCartShopping, faSpinner
 );
+
+// Vue lazy loader options.
+const loadImage = require('./assets/images/svg-gif-png/loading.gif');
+const errorImage = require('./assets/images/svg-gif-png/Image_not_available.png');
 
 // Create vue App.
 const app = createApp(App);
@@ -72,6 +79,13 @@ app.use(createPinia());
 app.use(router);
 app.use(VueSidebarMenu);
 app.use(VueAgile);
+// 'preLoad' option is proportion of pre-loading height, default (1.3).
+app.use(VueLazyload, {
+  preLoad: 1.3,
+  loading: loadImage,
+  error: errorImage,
+  attempt: 3
+});
 app.component('font-awesome-icon', FontAwesomeIcon);
 app.component('multi-select', Multiselect);
 app.directive('tooltip', tooltip);
