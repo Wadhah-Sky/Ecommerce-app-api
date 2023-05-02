@@ -516,7 +516,6 @@ p:last-child {
   background-color: rgba(0, 0, 0, 0.3);
   position: absolute;
   z-index: 9;
-  position: absolute;
 }
 .slider-banner-owl .owl-nav .owl-prev {
   left: 0;
@@ -537,7 +536,6 @@ p:last-child {
   background-color: rgba(0, 0, 0, 0.3);
   position: absolute;
   z-index: 9;
-  position: absolute;
 }
 .slider-banner-slick .slick-prev:before, .slider-banner-slick .slick-next:before {
   display: none;
@@ -950,11 +948,11 @@ a[class*=card]:hover .title {
 }
 
 .card-sm .img-wrap {
-  height: 160px;
+  max-height: 160px;
 }
 
 .card-lg .img-wrap {
-  height: 280px;
+  max-height: 280px;
 }
 
 .card-banner {
@@ -999,21 +997,23 @@ a[class*=card]:hover .title {
   position: absolute;
   left: 0;
   bottom: 0;
-  left: 0;
   z-index: 10;
   width: 100%;
-  padding: 7px 20px;
-  padding-top: 30px;
+  padding: 30px 20px 7px 20px;
   border-radius: 0 0 0.37rem 0.37rem;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%);
   color: #fff;
 }
 .card-banner .img-bg {
+  vertical-align: top;
+  overflow-clip-margin: inherit;
+  overflow: clip;
   position: absolute;
   right: 0;
   bottom: 0;
   mix-blend-mode: multiply;
   max-width: 100%;
+  max-height: 100%;
 }
 
 .card .img-wrap {

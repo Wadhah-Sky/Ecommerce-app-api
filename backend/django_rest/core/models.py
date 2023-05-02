@@ -116,7 +116,7 @@ from djmoney.models.fields import MoneyField
 from djmoney.money import Money
 from djmoney.models.validators import MaxMoneyValidator, MinMoneyValidator
 
-from imagekit.processors import ResizeToFit, Resize
+from imagekit.processors import ResizeToFit, Resize, Thumbnail
 from imagekit.models import ProcessedImageField
 
 from django.contrib.postgres import fields as pg_fields
@@ -441,12 +441,24 @@ def round_money(amount, currency=settings.MONEY_DEFAULT_CURRENCY,
 
 
 def create_image_file_path(instance, filename):
-    """Generate file path for a new category image"""
+    """Generate file path for a new image"""
 
+    # Info: 'filename' is the name of uploaded image by user.
+
+    # Get the extension from the filename.
     extension = filename.split('.')[-1]
+
+    # Create a new filename to store in the database.
     filename = f'{instance.slug}/{uuid.uuid4()}.{extension}'
-    class_name = instance.__class__.__name__.lower()
-    return os.path.join(f'uploads/{class_name}', filename)
+
+    # Get the class name of the given instance.
+    # class_name = instance.__class__.__name__.lower()
+
+    # An important SEO (Google search) step that your website brand its
+    # uploaded images.
+    website_brand_name = 'Jamie-&-Cassie'
+
+    return os.path.join(f'uploads/{website_brand_name}', filename)
 
 
 def instance_time_stamp(instance):
@@ -1630,6 +1642,20 @@ class Product(TimeStampedModel):
         if instance:
             return instance.price_currency_symbol
 
+    @property
+    def attributes(self):
+        """Return related attribute instances that this product connect with"""
+
+        # Get the related product attribute instances.
+        product_attributes = self.product_attributes_product.distinct()
+
+        # Get the attribute instances that related to specific product
+        # attribute instances.
+        attributes = Attribute.objects.filter(
+            product_attributes_attribute__in=product_attributes
+        )
+        return attributes
+
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
 
@@ -1675,6 +1701,7 @@ class ProductItem(TimeStampedModel):
         default_currency=settings.MONEY_DEFAULT_CURRENCY,
         validators=MONEY_VALIDATOR
     )
+    stock = models.PositiveSmallIntegerField(default=10)
     # You can't set unique constraint on HstoreField since it's {key: value}.
     details = pg_fields.HStoreField(null=True, blank=True)
     product = models.ForeignKey(
@@ -2152,8 +2179,8 @@ class ProductItemAttribute(models.Model):
         blank=True,
         upload_to=create_image_file_path,
         format='JPEG',
-        options={'quality': 100},
-        processors=[ResizeToFit(70, 70)],
+        options={'quality': 70},
+        processors=[Thumbnail(64, 64)],
     )
     product_item = models.ForeignKey(
         'ProductItem',

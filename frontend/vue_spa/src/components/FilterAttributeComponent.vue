@@ -140,8 +140,8 @@
 /*
   Libraries, methods, variables and components imports
 */
-import {whiteSpacesReplacer} from "@/common/whiteSpacesReplacer";
 import { MutationType } from 'pinia';
+import {whiteSpacesReplacer} from "@/common/whiteSpacesReplacer";
 import {useRoute, useRouter} from "vue-router";
 import {watch, ref, toRef} from 'vue';
 

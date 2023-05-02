@@ -34,7 +34,7 @@
 
           <div id="nav">
 
-              <navbar-component/>
+              <navbar-component />
 
           </div>
 
@@ -360,19 +360,64 @@
  */
 
 /*
+  If you ever come through below errors/warns:
+
+  1- [vue warn]: inject() can only be used inside setup() or functional components.
+
+     This happens due below block code in core code:
+
+     else if ((process.env.NODE_ENV !== 'production')) {
+        warn(`inject() can only be used inside setup() or functional components.`);
+     }
+
+  2- wthAsyncContext called without active current instance. This is likely a bug.
+
+     This happens due there is promise that not caught by 'wait', probably due an error raise
+     while processing the async method.
+
+  3- caught (in promise) TypeError: Cannot read properties of null (reading 'scope')
+
+     This error is the main reason for the 1 & 2 error if come together, and it happened when using
+     vue-router with store management like 'Pinia', so far there is no clear answer for the cause of
+     this issue, but you can minimize it by:
+
+     1- make sure you probably defined the 'pinia' in 'main.js' file.
+     2- import the stores of 'Pinia' as first in the related component and use the store only inside
+        setup() stage of the component OR register it as global property for registered 'app'.
+     3- make sure the local & network is available.
+     4- restart the vue-cli by re-run the command: npm run serve
+ */
+
+/*
+  How to update the child component that relate on store management state without need to
+  watch the state inside that component?
+
+  You have to pass the data as attribute/prop for the child component and since the 'props' are reactive
+  by default so any change in the state from parent component will reflect on child component.
+  Don't pass the store and then use toRef() method to make it reactive inside child component because this
+  will not work and will not watch the mutation of the state for that store.
+  But be careful if using <store>.$reset() inside parent component before leaving the route because this
+  will raise an error in child component because it not dis-mount at that moment, so to solve this issue
+  wrap the child component inside parent component with v-if for the related data, which means if this data
+  not exist remove the component.
+
+ */
+
+/*
   Libraries, methods, variables and components imports
 */
 // @ is an alias to /src
-import {ref, onErrorCaptured} from 'vue';
+import {useEndpointStore} from "@/store/StaticEndpoint";
+import {useCartStore} from "@/store/Cart";
 import {useContentLoadingStore} from "@/store/ContentLoading";
 import {useHomeStore} from "@/store/Home";
 import {useNavSidebarStore} from "@/store/NavSidebar";
-import {useEndpointStore} from "@/store/StaticEndpoint";
 import LogoLoadingView from "@/views/LogoLoadingView";
 import ContentLoaderComponent from "@/components/ContentLoaderComponent";
 import NavSidebarComponent from "@/components/NavSidebarComponent";
 import NavbarComponent from "@/components/NavbarComponent";
 import FooterComponent from "@/components/FooterComponent";
+import {ref, onErrorCaptured} from 'vue';
 
 export default {
   name: "App",
@@ -398,16 +443,30 @@ Set the value for 'timeout' prop of <suspense>, to override behavior of display
 the previous #default content while waiting for the new content and its async
 dependencies to be resolved.
 */
+const storeEndpoint = useEndpointStore();
+const storeCart = useCartStore();
 const storeContentLoading = useContentLoadingStore();
 const storeHome = useHomeStore();
 const storeNavSidebar = useNavSidebarStore();
-const storeEndpoint = useEndpointStore();
 const timeOut = 0;
 const errMsg = ref(null);
 
 /*
   Define functions
 */
+const loadCartInfo = () => {
+  /**
+   * Load info from local storage into 'cart' store state.
+   */
+
+  // Get the 'products' json string from local storage api.
+  // Note: local storage only work with strings, so we have to parse the json string into equivalent data type.
+
+  // Mutate with $patch function.
+  storeCart.$patch((state) => {
+    state.products = JSON.parse(window.localStorage.getItem("jamie&CassieCart"));
+  });
+};
 const triggerGetDataResult = async () => {
   /**
    * Get all data list from backend server for the frontend landing homepage.
@@ -428,6 +487,7 @@ onErrorCaptured(() => {
   call functions
 */
 triggerGetDataResult();
+loadCartInfo();
 
 </script>
 

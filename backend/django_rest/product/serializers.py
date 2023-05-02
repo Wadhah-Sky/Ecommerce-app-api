@@ -3,6 +3,12 @@
 from rest_framework import serializers
 # from rest_framework.response import Response
 
+from django.db.models import Subquery
+
+from itertools import chain
+# from operator import attrgetter
+
+from home.serializers import ProductSerializer
 from core.models import (Product, ProductItem, ProductAttribute,
                          ProductItemAttribute)
 
@@ -22,6 +28,8 @@ class ProductItemSerializer(serializers.ModelSerializer):
             'deal_price_amount',
             'details',
             'attributes',
+            'low_stock',
+            'temporarily_not_available',
             'images'
         ]
 
@@ -30,6 +38,8 @@ class ProductItemSerializer(serializers.ModelSerializer):
     list_price_amount = serializers.SerializerMethodField()
     deal_price_amount = serializers.SerializerMethodField()
     attributes = serializers.SerializerMethodField()
+    low_stock = serializers.SerializerMethodField()
+    temporarily_not_available = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
 
     def get_thumbnail(self, instance):
@@ -117,6 +127,24 @@ class ProductItemSerializer(serializers.ModelSerializer):
                     returned_obj[root_title].append(attr.title)
 
             return returned_obj
+
+    def get_low_stock(self, instance):
+        """Return true if current product item stock is below 10"""
+
+        if instance.stock <= 0:
+            return None
+        elif instance.stock < 10:
+            return True
+        else:
+            return False
+
+    def get_temporarily_not_available(self, instance):
+        """Return true if current product item stock zero or less"""
+
+        if instance.stock <= 0:
+            return True
+        else:
+            return False
 
     def get_images(self, instance):
         """Return all related images for current instance"""
@@ -260,7 +288,8 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             'available_attributes_combination',
             'use_item_attribute_img',
             'use_item_attribute_color_shape',
-            'selected_product_item'
+            'selected_product_item',
+            'related_products'
         ]
 
     # Define related/reverse model fields.
@@ -268,6 +297,7 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
     related_product_items = serializers.SerializerMethodField()
     available_attributes_combination = serializers.SerializerMethodField()
     selected_product_item = serializers.SerializerMethodField()
+    related_products = serializers.SerializerMethodField()
 
     def get_common_attributes(self, instance):
         """Return the common attributes of current instance"""
@@ -391,6 +421,78 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
             instance=product_item,
             read_only=True,
             many=False,
+            context=self.context
+        ).data
+
+    def get_related_products(self, instance):
+        """Method to return 12 of related products for current product"""
+
+        # Get related attribute instances.
+        attributes = instance.attributes
+
+        # Initialize an empty list.
+        result = []
+
+        # Get list of 12 (max) of the newest related products for current
+        # instance with condition of same category and at least one of related
+        # attributes.
+        queryset = Product.objects.filter(
+            category=instance.category,
+            is_available=True,
+            product_attributes_product__attribute__in=attributes,
+            product_items_product__isnull=False
+        ).exclude(pk=instance.pk).distinct().order_by('-created_at')[:12]
+
+        # Get queryset length.
+        query_length = len(queryset)
+
+        # Check if length of queryset is less than 12.
+        if query_length < 12:
+
+            # Get the category root node for current product instance.
+            root_node = instance.category.get_root()
+
+            # Set list of pk from queryset product instances.
+            pk_list = [item.pk for item in queryset]
+
+            # add current product instance pk.
+            pk_list.append(instance.pk)
+
+            # Get extra queryset product instances in size of
+            # (12 - queryset length)
+            # where category is list of current product's root category family
+            # and exclude the product instances these listed in 'pk_list'.
+            extra_queryset = Product.objects.filter(
+                category__in=Subquery(root_node.get_family().values('pk')),
+                is_available=True,
+                product_items_product__isnull=False
+            ).exclude(pk__in=pk_list).distinct().order_by(
+                '-created_at'
+            )[:12-query_length]
+
+            # Combine the two queryset.
+            result = chain(queryset, extra_queryset)
+
+            # In case wanted to sort the combined two queryset.
+            # Note: no major deference between 'operator.attrgetter' and
+            #      'getattr'
+            # result = sorted(
+            #     set(chain(queryset, extra_queryset)),
+            #     key=attrgetter('created_at'),
+            #     reverse=True
+            # )
+
+        # If result is empty, means the main queryset contains 12 of product
+        # instances.
+        if not result:
+            # So set the main queryset value to 'result'.
+            result = queryset
+
+        # Serialize the instances of 'result'.
+        return ProductSerializer(
+            instance=result,
+            read_only=True,
+            many=True,
             context=self.context
         ).data
 

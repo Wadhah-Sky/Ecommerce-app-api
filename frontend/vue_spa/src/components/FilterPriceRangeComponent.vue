@@ -91,9 +91,9 @@
 /*
   Libraries, methods, variables and components imports
 */
+import { MutationType } from 'pinia';
 import {querySerializer} from "@/common/querySerializer";
 import {useRoute, useRouter} from "vue-router";
-import { MutationType } from 'pinia';
 import {ref, toRef, defineProps} from 'vue';
 
 export default {

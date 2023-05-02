@@ -55,17 +55,17 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
     @property
     def get_product_item(self):
         """Return the related product item depending on one of the following:
-            1- attr query string.
-            2- item_s query string.
+            1- item_s query string.
+            2- attr query string.
             3- default product item for current queryset.
         """
+
+        # Get product item slug from 'item_s' url query parameter.
+        item_slug = self.request.query_params.get('item_s', None)
 
         # Remember: attr query is a string seperated by comma(,) for multiple
         #           values
         attr = self.request.query_params.get('attr', None)
-
-        # Get product item slug from 'item_s' url query parameter.
-        item_slug = self.request.query_params.get('item_s', None)
 
         # Get the product instance of this retrieve view.
         # Note: we use first() method to change queryset list that will contain
@@ -75,7 +75,11 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
         # Initialize a none object.
         instance = None
 
-        if attr:
+        if item_slug:
+            instance = get_object_or_404(ProductItem, slug=item_slug)
+
+        # In case no item slug has provided.
+        elif attr:
             attr_set = set(item.strip() for item in attr.split(','))
 
             attributes = Attribute.objects.filter(title__in=attr_set)
@@ -95,11 +99,7 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
                         instance = item
                         break
 
-        # In case no 'attr' has provided.
-        elif item_slug:
-            instance = get_object_or_404(ProductItem, slug=item_slug)
-
-        # In case neither of 'attr' or 'item_slug' has provided/
+        # In case neither of 'attr' or 'item_slug' has provided
         else:
             instance = product.item_instance()
 

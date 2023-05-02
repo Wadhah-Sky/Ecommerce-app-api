@@ -30,9 +30,9 @@
 
           </template>
 
-          <template v-else>
+          <template v-else-if="props.useImg">
 
-            <span class="option-img col">
+            <span class="option-img col" style="width: 72px!important; height: 72px!important;">
               <img v-lazy="option.thumbnail" :alt="option[`${trackBy}`]" >
             </span>
 
@@ -281,10 +281,18 @@ $option-rise-pickers-background-img: url("../assets/images/swatches/rise-pickers
   display: inline-block;
   cursor: pointer;
 }
+
+// if you dont use 'max' with height and width, the image will show as resized (fill).
+// use transform 'scale' to show image in good shape.
 .option-img img{
-  padding-top: 2px;
-  height: 45.5px;
-  width: 42.5px;
+  vertical-align: top;
+  overflow-clip-margin: inherit;
+  overflow: clip;
+  //transform: scale(0.8);
+  margin: 2px;
+  padding: 0;
+  max-height: 100%;
+  max-width: 100%;
 }
 .option-img:hover{
   box-shadow: 0 2px 0 0 rgb(204, 12, 57 / 50 ) inset;

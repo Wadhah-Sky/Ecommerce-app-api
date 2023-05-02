@@ -5,8 +5,8 @@
     <router-link
         :to="{
           name: 'product',
-          params: { productSlug: props.productSlug },
-          query: { itemS: props.productItemSlug, attr: props.productItemAttr }
+          params: { slug: props.slug },
+          query: { itemS: props.itemS }
         }"
         class="img-wrap"
     >
@@ -65,8 +65,8 @@
         <router-link
             :to="{
               name: 'product',
-              params: {productSlug: props.productSlug},
-              query: {itemS: props.productItemSlug, attr: props.productItemAttr}
+              params: { slug: props.slug },
+              query: { itemS: props.itemS }
             }"
             class="title"
         >
@@ -101,6 +101,10 @@
 </template>
 
 <script>
+/*
+  Libraries, methods, variables and components imports
+*/
+// import {useRouter} from "vue-router";
 import {defineProps} from "vue";
 
 export default {
@@ -110,16 +114,19 @@ export default {
 
 <script setup>
 
+/*
+  Define handlers (properties, props and computed)
+*/
 const props = defineProps({
-  productSlug: {
+  slug: {
     type: String,
     required: true
   },
-  productItemSlug: {
+  itemS: {
     type: String,
     required: true
   },
-  productItemAttr: {
+  attr: {
     type: String,
     required: true
   },
@@ -161,7 +168,29 @@ const props = defineProps({
   },
 
 });
+// const router = useRouter();
 
+/*
+  Define functions
+*/
+// const showProductView = async (slug, itemS) => {
+//   /**
+//    * Method to push new router state and show new component while recerve the
+//    * current state and component, for full example visit:
+//    *
+//    * https://github.com/vuejs/router/blob/main/packages/router/e2e/modal/index
+//    */
+//
+//   // add backgroundView state to the location, so we can render a different view from this one
+//   const backgroundView = router.currentRoute.value.fullPath
+//
+//   await router.push({
+//     name: 'product',
+//     params: {slug: slug},
+//     query: {itemS: itemS},
+//     state: {backgroundView}
+//   })
+// };
 </script>
 
 <style scoped>

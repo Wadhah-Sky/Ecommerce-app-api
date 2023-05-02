@@ -235,17 +235,17 @@ const setSelectByInQuery = (to) => {
     return { path: to.path, query: to.query, hash: to.hash }
   }
 };
-const setProductQuery = (to) => {
-  /**
-   * Check before entering the component that if both of (to.query.attr) and (to.query.itemS) is set,
-   * remove (to.query.itemS)
-   */
-
-  if( to.query.itemS && to.query.attr ) {
-    delete to.query.itemS
-    return { path: to.path, query: to.query, hash: to.hash }
-  }
-};
+// const setProductQuery = (to) => {
+//   /**
+//    * Check before entering the component that if both of (to.query.attr) and (to.query.itemS) is set,
+//    * remove (to.query.itemS)
+//    */
+//
+//   if( to.query.itemS && to.query.attr ) {
+//     delete to.query.itemS
+//     return { path: to.path, query: to.query, hash: to.hash }
+//   }
+// };
 
 const removeQueryParams = (to) => {
   /**
@@ -381,16 +381,18 @@ const routes = [
   },
   {
     name: 'product',
-    path: '/product/:productSlug/:itemS?/:attr?',
+    path: '/product/:slug/:itemS?',
     component: () => import(/* webpackChunkName: "product" */ '../views/ProductView.vue'),
-    beforeEnter: [removeHash, setProductQuery, setAttributeInQuery],
+    beforeEnter: [removeHash],
     /*
      Set the parameters to be passed to component props.
     */
+    // Note: if you want to use 'attr':
+    // 1- add method 'setProductQuery' to beforeEnter router guard.
+    // 2- add 'attr' the path query parameters and set it value to related prop.
     props: route => ({
-      productSlug: route.params.productSlug,
-      productItemSlug: route.query.itemS,
-      productItemAttr: route.query.attr
+      slug: route.params.slug,
+      itemS: route.query.itemS
     }),
   },
   {

@@ -1,42 +1,16 @@
 <template>
 
   <header class="section-header">
-<!--    <nav class="navbar p-md-0 navbar-expand-sm navbar-light border-bottom">-->
-<!--      <div class="container">-->
-<!--        <button class="navbar-toggler" type="button" data-toggle="collapse"-->
-<!--                data-target="#navbarTop4" aria-controls="navbarNav"-->
-<!--                aria-expanded="false" aria-label="Toggle navigation">-->
-<!--          <span class="navbar-toggler-icon"></span>-->
-<!--        </button>-->
-<!--        <div class="collapse navbar-collapse" id="navbarTop4">-->
-<!--          <ul class="navbar-nav mr-auto">-->
-<!--            <li class="nav-item dropdown">-->
-
-<!--              <a href="#" class="nav-link"> English </a>-->
-
-<!--            </li>-->
-<!--            <li class="nav-item dropdown">-->
-
-<!--              <a href="#" class="nav-link"> USD </a>-->
-
-<!--            </li>-->
-<!--          </ul>-->
-<!--          <ul class="navbar-nav">-->
-<!--            <li><a href="#" class="nav-link"> <i class="fa fa-envelope"></i>-->
-<!--              Email </a></li>-->
-<!--            <li><a href="#" class="nav-link"> <i class="fa fa-phone"></i> Call-->
-<!--              us </a></li>-->
-<!--          </ul> &lt;!&ndash; list-inline //  &ndash;&gt;-->
-<!--        </div> &lt;!&ndash; navbar-collapse .// &ndash;&gt;-->
-<!--      </div> &lt;!&ndash; container //  &ndash;&gt;-->
-<!--    </nav>-->
 
     <section class="header-main border-bottom">
       <div class="container">
+
         <div class="row">
+
+          <!--Logo-->
           <div class="col-3">
             <router-link :to="{name: 'home'}" class="brand-wrap">
-              <img class="logo" src="../assets/images/logo/logo.png">
+              <img class="logo" src="../assets/images/logo/logo.png" alt="Jamie & Cassie">
             </router-link> <!-- brand-wrap.// -->
           </div>
 <!--          <div class="col-2">-->
@@ -66,6 +40,7 @@
 <!--            <a href="/store" class="btn btn-outline-primary">Store</a>-->
 <!--          </div>-->
 
+          <!--Search-->
           <div class="col-6">
             <form action="#" class="search">
               <div class="input-group w-10">
@@ -80,25 +55,38 @@
               </div>
             </form> <!-- search-wrap .end// -->
           </div> <!-- col.// -->
+
+          <!--Cart-->
           <div class="col-3">
             <div class="d-flex justify-content-end mb-3 mb-lg-0">
-<!--              <div class="widget-header">-->
-<!--                <small class="title text-muted">Welcome guest!</small>-->
-<!--                <div>-->
-<!--                  <a href="./signin.html">Sign in</a> <span-->
-<!--                    class="dark-transp"> | </span>-->
-<!--                  <a href="./register.html"> Register</a>-->
-<!--                </div>-->
-<!--              </div>-->
-              <a href="./cart.html" class="widget-header pl-3 ml-3">
+
+              <a href="#"
+                 @click.capture.prevent="cartToggle"
+                 class="widget-header pl-3 ml-3"
+                 :style="[cartDropdown ? {color: '#ABB0BE'} : {color: '#0F1111'}]"
+              >
                 <div class="icon icon-sm rounded-circle border">
-                  <font-awesome-icon icon="fa-solid fa-shopping-cart" />
+                  <font-awesome-icon icon="fa-solid fa-shopping-cart"/>
                 </div>
-                <span class="badge badge-pill badge-danger notify">0</span>
+                <span class="badge badge-pill notify" style="background-color: rgb(204, 12, 57);">
+                  {{storeCart.itemsCount}}
+                </span>
               </a>
+
+              <template v-if="cartDropdown">
+
+                <cart-dropdown-component :products="storeCart.products"
+                                         :total-price="storeCart.totalPrice"
+                                         :remove-item="storeCart.removeItem"
+                />
+
+              </template>
+
             </div> <!-- widgets-wrap.// -->
           </div> <!-- col.// -->
+
         </div> <!-- row.// -->
+
       </div> <!-- container.// -->
     </section> <!-- header-main .// -->
 
@@ -107,17 +95,67 @@
 </template>
 
 <script>
+/*
+  Libraries, methods, variables and components imports
+*/
+import {useCartStore} from "@/store/Cart";
+import CartDropdownComponent from "@/components/CartDropdownComponent";
+import {useRoute} from "vue-router";
+import {ref, watch} from 'vue';
 
 export default {
-  name: "NavbarComponent"
+  name: "NavbarComponent",
+  components: {
+    CartDropdownComponent
+  }
 }
 
 </script>
 
 <script setup>
 
+/*
+  Define handlers (properties, props and computed)
+*/
+const storeCart = useCartStore();
+const route = useRoute();
+const cartDropdown = ref(false);
+
+/*
+  Define functions
+*/
+const cartToggle = () =>{
+  /**
+   * Toggle the cart dropdown menu
+   */
+
+  cartDropdown.value = !cartDropdown.value;
+};
+
+// Watch route
+watch(() => route, (currentValue, oldValue) =>
+    {
+      // When route is change, remove the cart dropdown component by set value of 'cartDropdown' to false.
+      cartDropdown.value = false;
+    },
+    {
+      deep: true
+    }
+);
+
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+
+$main-color: #0F1111;
+$light-text: #ABB0BE;
+
+.icon{
+  transition: color 200ms ease-in-out;
+}
+
+.icon:hover{
+  color: $light-text!important;
+}
 
 </style>

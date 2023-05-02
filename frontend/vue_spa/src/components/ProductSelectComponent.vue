@@ -12,16 +12,16 @@
       </div>
     </div>
 
-    <div v-for="(options, index) of productOptions" :key="index" class="row">
+    <div v-for="(options, index) in productOptions" :key="index" class="row">
 
       <template v-if="options.length > 1">
 
         <div class="item-option-select mt-2">
 
-          <template v-if="
-            (useColorShape && colorSyllable.includes(lowerCase(index))) ||
-            (useImg && risePickerSyllable.includes(lowerCase(index)))
-            && !selectedSameOptionStatus[index]">
+          <template v-if="(useColorShape && colorSyllable.includes(lowerCase(index))) ||
+                          (useImg && risePickerSyllable.includes(lowerCase(index))) &&
+                          !selectedSameOptionStatus[index]"
+          >
 
             <div class="row">
 
@@ -39,7 +39,7 @@
             <product-single-select-component v-model="selectedOption[index]"
                                              :group-name="index"
                                              :options="options"
-                                             :use-img="checkThumbnailsAvailability(index)"
+                                             :use-img="useImg ? checkThumbnailsAvailability(index) : false"
                                              track-by="value"
                                              parent-attr="parentAttribute"
                                              @mouseenter="setSelectLabel(index, $event.label)"
@@ -132,8 +132,8 @@
   Libraries, methods, variables and components imports
 */
 import ProductSingleSelectComponent from "@/components/ProductSingleSelectComponent";
-import{ref, toRef, defineProps, watch, onMounted} from "vue";
 import {useRouter, useRoute} from "vue-router";
+import{ref, toRef, defineProps, defineEmits, watch, onMounted} from "vue";
 
 export default {
   name: "ProductSelectComponent",
@@ -173,6 +173,8 @@ const route = useRoute();
 const selectLabel = ref({});
 const risePickerSyllable = ['rise', 'picker', 'rise style', 'rise picker', 'rise picker style'];
 const colorSyllable = ['color', 'colors', 'colour', 'colours'];
+// Define the list of events that you want to emit.
+const emits = defineEmits(['activeOption']);
 
 /*
  elements variable, is a ref to html elements.
@@ -422,6 +424,10 @@ onMounted( () => {
       }
     }
   }
+
+  // Emit a signal to parent component.
+  emits('activeOption', {status: true});
+
 });
 
 // Watch effects, access ref elements after our component is rendered.
@@ -448,9 +454,11 @@ watch(() => selectedOption.value, (currentValue, oldValue) =>
                   set in this specific case to always to pick value with no possible of unselect using
                   attribute of :allow-empty to be false).
        */
-      //console.log("trigger")
+
       // Initialize an empty array variable.
       let attributes = [];
+      // Initialize an empty variable to hole the wanted product item slug.
+      let product_item_slug = null;
       // Set boolean variable that we use if it's true will allow to make router push.
       let pushStatus = false;
 
@@ -477,12 +485,15 @@ watch(() => selectedOption.value, (currentValue, oldValue) =>
       if (attributes.length > 0) {
 
         // Loop over value (array) of 'productItemsSlugs'.
-        for (let array of Object.values(productItemsSlugs.value)) {
+        // productItemsSlugs => [{<item_slug>: [<related_attributes>]}, {<item_slug>: [<related_attributes>]}]
+        for (let [index, val] of Object.entries(productItemsSlugs.value)) {
 
           // Make sure:
-          // 1- the current array length is equal to attributes array.
+          // 1- the current val (array) length is equal to attributes array.
           // 2- and the whole array items included within array of attributes.
-          if (array.length === attributes.length && array.every(item => attributes.includes(item))) {
+          if (val.length === attributes.length && val.every(item => attributes.includes(item))) {
+            // set the value of 'product_item_slug'
+            product_item_slug = index;
             // Set push status to be true.
             pushStatus = true
             // No need to continue loop over the rest arrays.
@@ -490,32 +501,77 @@ watch(() => selectedOption.value, (currentValue, oldValue) =>
           }
         }
 
-        // In case push status is true, push new router state.
-        if (pushStatus) {
+        /////////////////////////////////////////////////////////////////
+        // In case want to use 'itemS' query parameter.
+        ////////////////////////////////////////////////////////////////
+        // In case push status is true and product item slug is not null, push new router state.
+        if (pushStatus && product_item_slug !== null) {
 
-          let currentRouteAttr = route.query.attr.trim().split(',');
-
-          if (!(currentRouteAttr.length === attributes.length && currentRouteAttr.every(item => attributes.includes(item)))) {
-
-            // Convert attributes array to string seperated by comma.
-            let attributesString = attributes.join();
+          // Check that the current route.query.itemS is not equal to selected product item slug.
+          if(route.query.itemS !== product_item_slug){
 
             // Tigger the passed function through props with required parameters, to get data from backend server.
+            // 'getProductItemDataResult' method parameters : (method, slug, itemS, attr=null, onlyItem=false)
             props.triggerGetDataResult(
                 'getProductItemDataResult',
-                route.params.productSlug,
-                route.query.itemS,
-                attributesString,
+                route.params.slug,
+                product_item_slug,
+                null,
                 true
             );
 
             // If everything went ok to restore data from backend server, push new router state.
             router.replace({
               name: route.name,
-              query: {'attr': attributesString}
+              query: {'itemS': product_item_slug}
             });
           }
+
+          // Emit a signal to parent component.
+          emits('activeOption', {status: true});
         }
+        else {
+          // Emit a signal to parent component.
+          emits('activeOption', {status: false});
+        }
+
+        /////////////////////////////////////////////////////////////////
+        // In case want to use 'attr' query parameter.
+        ////////////////////////////////////////////////////////////////
+        // In case push status is true, push new router state.
+        // if (pushStatus) {
+        //
+        //   let currentRouteAttr = route.query.attr.trim().split(',');
+        //
+        //   if (!(currentRouteAttr.length === attributes.length && currentRouteAttr.every(item => attributes.includes(item)))) {
+        //
+        //     // Convert attributes array to string seperated by comma.
+        //     let attributesString = attributes.join();
+        //
+        //     // Tigger the passed function through props with required parameters, to get data from backend server.
+        //     // 'getProductItemDataResult' method parameters : (method, slug, itemS, attr=null, onlyItem=false)
+        //     props.triggerGetDataResult(
+        //         'getProductItemDataResult',
+        //         route.params.slug,
+        //         route.query.itemS,
+        //         attributesString
+        //         true
+        //     );
+        //
+        //     // If everything went ok to restore data from backend server, push new router state.
+        //     router.replace({
+        //       name: route.name,
+        //       query: {'attr': attributesString}
+        //     });
+        //
+        //     // Emit a signal to parent component.
+        //     emits('activeOption', {status: true});
+        //   }
+        // }
+        // else{
+        //   Emit a signal to parent component.
+        //   emits('activeOption', {status: false});
+        // }
       }
     },
     {

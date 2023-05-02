@@ -22,7 +22,7 @@ Hot Reload is always enabled except following situations:
 */
 
 const { defineConfig } = require('@vue/cli-service')
-// const path = require('path');
+const path = require(`path`);
 
 module.exports = defineConfig({
   /*
@@ -66,9 +66,15 @@ module.exports = defineConfig({
 
   // Configure aliases to use by Webpack server at build time.
   configureWebpack: {
+    // resolve: {
+    //   alias: {
+    //     // '<symbol_or_dependency_name>': path.resolve(__dirname, '<path>')
+    //   }
+    // }
     resolve: {
+      symlinks: false,
       alias: {
-        // '<symbol_or_dependency_name>': path.resolve(__dirname, '<path>')
+        vue: path.resolve('./node_modules/vue')
       }
     }
   },

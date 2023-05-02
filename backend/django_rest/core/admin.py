@@ -777,7 +777,14 @@ class ProductItemAdmin(nested_admin.NestedModelAdmin):
         ProductItemImageInline
     ]
     ordering = ['created_at']
-    readonly_fields = ['deal_price', 'category', 'created_at', 'updated_at']
+    readonly_fields = [
+        'sku',
+        'slug',
+        'deal_price',
+        'category',
+        'created_at',
+        'updated_at'
+    ]
     search_fields = ['__str__']
 
 

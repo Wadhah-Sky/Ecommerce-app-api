@@ -19,6 +19,8 @@ export const useProductStore = defineStore('Product', {
     selectedProductItem: {},
     productItemsSlugs: {},
     productOptions: {},
+    productDetails: {},
+    productAdditionalDetails: {},
     productOptionsCombination: {},
     selectedProductItemOptions: {},
     selectedProductItemSameOptionsStatus: {},
@@ -47,6 +49,11 @@ export const useProductStore = defineStore('Product', {
           await this.setSelectedProductItemOptions(this.selectedProductItem['attributes']);
         }
 
+        // Call the method that set product details state.
+        await this.setProductDetails();
+        // Call the method that set product additional details state.
+        await this.setProductAdditionalDetails();
+
       }
       catch (error){
         await router.replace(
@@ -65,6 +72,8 @@ export const useProductStore = defineStore('Product', {
         this.productItem = {};
         this.productItemsSlugs = {};
         this.productOptions = [];
+        this.productDetails = {};
+        this.productAdditionalDetails = {};
         this.productOptionsCombination = {};
       }
       finally {
@@ -88,6 +97,9 @@ export const useProductStore = defineStore('Product', {
         if (this.selectedProductItem['attributes'].length > 0){
           await this.setSelectedProductItemOptions(this.selectedProductItem['attributes']);
         }
+
+        // Call the method that set product additional details state.
+        await this.setProductAdditionalDetails();
       }
       catch (error){
         await router.replace(
@@ -102,6 +114,7 @@ export const useProductStore = defineStore('Product', {
         );
         console.log("Error while trying to retrieve the requested data from backend server!");
         this.selectedProductItem = {};
+        this.productAdditionalDetails = {};
       }
       finally {
         // Whether an error occurred or not, set the state of dataLoading to be false.
@@ -224,6 +237,94 @@ export const useProductStore = defineStore('Product', {
 
       // Set value of 'selectedProductItemOptions'.
       this.selectedProductItemOptions = options;
+    },
+    async setDetails(arrOfObjs) {
+      /**
+       * Method to return details object from a given array of objects.
+       */
+
+      // Initialize an empty object.
+      let returnedObj = {};
+
+      // Check of given parameter is an array of objects that are not null or empty.
+      if (Array.isArray(arrOfObjs)) {
+
+        if (arrOfObjs.every(item => ![null, undefined, '', 'None'].includes(item) &&
+            Object.getPrototypeOf(item) === Object.prototype)
+        ) {
+
+          // Loop over array of objects.
+          for (let item of arrOfObjs) {
+
+            // Loop over array where 'index' of object is the key and its value is 'val'.
+            for (let [index, val] of Object.entries(item)) {
+
+              // Check that if index is not exists as key, set new key with its value.
+              if (!returnedObj[index]) {
+                returnedObj[index] = val;
+              }
+              else {
+                // Otherwise update current value four current index.
+                returnedObj[index] = returnedObj[index] + ', ' + val;
+              }
+            }
+          }
+        }
+      }
+
+      // Return the object value.
+      return returnedObj;
+    },
+    async setProductDetails (){
+      /**
+       * Method to set product details state.
+       */
+
+      // Ex: productOption => {color: [{}, {}], size: [{}]}
+      let productSingleOption = {};
+
+      // Loop over product options where 'index' is the key and its value (array) is the 'val'.
+      for(let [index, val] of Object.entries(this.productOptions)){
+
+        // Check that val (array) is contains only one item (obj).
+        if(val.length === 1){
+
+          // Check that if index is not exists as key, set new key with its value.
+          if(!productSingleOption[index]){
+            productSingleOption[index] = val[0]['value'];
+          }
+          else {
+            // Otherwise update current value four current index.
+            productSingleOption[index] = productSingleOption[index] + ', ' +val[0]['value'];
+          }
+        }
+      }
+
+      // Initialize an array of objects to get details from them.
+      let arr = [
+          productSingleOption,
+          this.dataResult['common_attributes'],
+          this.dataResult['details']
+      ]
+
+      // Set product details value.
+      // Note: since 'setDetails' is a async method, you should call it with await keyword otherwise will
+      //       lead to 'productDetails' be a pending object.
+      this.productDetails = await this.setDetails(arr);
+    },
+    async setProductAdditionalDetails (){
+      /**
+       * Method to set product additional details state.
+       */
+
+      // Initialize an array of objects to get details from them.
+          // Note: since 'setDetails' accept only array parameter, so we send the object as array item.
+      let arr = [this.selectedProductItem['details']];
+
+      // Set product details value.
+      // Note: since 'setDetails' is a async method, you should call it with await keyword otherwise will
+      //       lead to 'productAdditionalDetails' be a pending object.
+      this.productAdditionalDetails = await this.setDetails(arr);
     }
   }
 });

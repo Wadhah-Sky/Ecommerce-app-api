@@ -8,7 +8,11 @@
         >
           <div v-for="( banner, index ) in storeHome.dataResult.Banner" :key="index" class="slide">
 
-            <router-link v-if="banner.frontend_path" :to="{ path: banner.frontend_path }" class="img-wrap">
+            <router-link v-if="banner.frontend_path"
+                         :to="{ path: banner.frontend_path }"
+                         class="img-wrap"
+                         style="max-width: 1118px !important; max-height: 280px!important;"
+            >
               <img v-lazy="banner.thumbnail" :alt="banner.title" >
             </router-link>
           </div>
@@ -22,66 +26,19 @@
   <!-- ========================= BANNER SECTION END// ========================= -->
 
   <!-- ========================= SWIPER SECTION  ========================= -->
+
   <section v-for="( slider, index ) in storeHome.dataResult.ProductGroup" :key="index"
            class="section-name padding-y-sm"
   >
+
     <div class="container">
 
-      <header class="section-heading">
-        <h3 class="section-title">{{slider.title}}</h3>
-      </header><!-- sect-heading -->
+      <product-swiper-component :slider-title="slider.title" :products="slider.products" />
 
-      <div class="row">
-        <div class="col-md-12">
+    </div>
 
-          <swiper
-              :slides-per-view=1
-              :space-between=10
-              :breakpoints="{
-              '640': {
-                slidesPerView: 1,
-                spaceBetween: 15,
-              },
-              '768': {
-                slidesPerView: 2,
-                spaceBetween: 20,
-              },
-              '1024': {
-                slidesPerView: 4,
-                spaceBetween: 22,
-              }}"
-              :modules="modules"
-              :cssMode="true"
-              :navigation="true"
-              :mousewheel="true"
-              :keyboard="true"
-              :freeMode="true"
-              :lazy="true"
-          >
-
-            <swiper-slide v-for="( slide, index ) in slider.products" :key="index">
-
-              <product-card-component :product-title="slide.title"
-                                      :product-slug="slide.slug"
-                                      :product-item-slug="slide.product_item.slug"
-                                      :product-item-attr="slide.product_item.attributes.join()"
-                                      :thumbnail="slide.product_item.thumbnail"
-                                      :price-currency-symbol="slide.product_item.price_currency_symbol"
-                                      :list-price-amount="slide.product_item.list_price_amount"
-                                      :deal-price-amount="slide.product_item.deal_price_amount"
-                                      :promotion-title="slide.product_item.promotion_title"
-                                      :promotion-summary="slide.product_item.promotion_summary"
-              />
-
-            </swiper-slide>
-
-          </swiper>
-        </div>
-
-      </div> <!-- row.// -->
-
-    </div><!-- container // -->
   </section>
+
   <!-- ========================= SWIPER SECTION END// ========================= -->
 
   <!-- ========================= EXTRA SECTIONS  ========================= -->
@@ -157,19 +114,15 @@
 /*
   Libraries, methods, variables and components imports
 */
-import ProductCardComponent from "@/components/ProductCardComponent";
 import {useHomeStore} from "@/store/Home";
 import { useAgileSliderStore } from "@/store/AgileSlider";
-import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Navigation, Mousewheel, Keyboard, FreeMode } from "swiper";
+import ProductSwiperComponent from "@/components/ProductSwiperComponent";
 import {useRoute, useRouter} from "vue-router";
 
 export default {
   name: "HomeView",
   components: {
-    ProductCardComponent,
-    Swiper,
-    SwiperSlide
+    ProductSwiperComponent
   }
 }
 
@@ -185,11 +138,10 @@ Note: if you are going to use props inline for <agile> component, convert props 
 /*
   Define handlers (properties, props and computed)
 */
-const storeAgileSlider = useAgileSliderStore();
-const storeHome = useHomeStore();
-const modules = [Navigation, Mousewheel, Keyboard, FreeMode];
 const router = useRouter();
 const route = useRoute();
+const storeHome = useHomeStore();
+const storeAgileSlider = useAgileSliderStore();
 
 /*
   Define functions
@@ -206,27 +158,33 @@ const checkDataResultAvailability = async () => {
    * replace the current component with page-not-found component.
    */
 
- if (storeHome.dataResult.Banner.length === 0 && storeHome.dataResult.Section.length === 0){
-    /*
-      In case the storeHome.getDataResult() returned a response with status code 404 or 200 (with empty result),
-      we need to make sure to replace the current component before its rendered (while in setup life cycle)
-      with another component (like page-not-found), be careful that you should REPLACE not PUSH to the
-      'page-not-found' component because whenever you do a router.push() you add new route record into
-      routing stack and if you tried to move back by pressing on back button in the browser will move
-      you back to the component that you actually pushed from which will push you again to 'page-not-found'
-      component again and so on while router.replace() will replace the current route record with another one.
-    */
-    await router.replace(
-        {
-          name: 'page-not-found',
-          // preserve current path and remove the first char to avoid the target URL starting with `//`
-          params: { pathMatch: route.path.substring(1).split('/') },
-          // preserve existing query and hash if any
-          query: route.query,
-          hash: route.hash
-        }
-    );
+  // Check if 'Banner' and 'Section' is exists.
+  if (storeHome.dataResult.Banner && storeHome.dataResult.Section) {
+
+    if (storeHome.dataResult.Banner.length === 0 && storeHome.dataResult.Section.length === 0) {
+      /*
+        In case the storeHome.getDataResult() returned a response with status code 404 or 200 (with empty result),
+        we need to make sure to replace the current component before its rendered (while in setup life cycle)
+        with another component (like page-not-found), be careful that you should REPLACE not PUSH to the
+        'page-not-found' component because whenever you do a router.push() you add new route record into
+        routing stack and if you tried to move back by pressing on back button in the browser will move
+        you back to the component that you actually pushed from which will push you again to 'page-not-found'
+        component again and so on while router.replace() will replace the current route record with another one.
+      */
+      await router.replace(
+          {
+            name: 'page-not-found',
+            // preserve current path and remove the first char to avoid the target URL starting with `//`
+            params: {pathMatch: route.path.substring(1).split('/')},
+            // preserve existing query and hash if any
+            query: route.query,
+            hash: route.hash
+          }
+      );
+    }
+
   }
+
 
 };
 

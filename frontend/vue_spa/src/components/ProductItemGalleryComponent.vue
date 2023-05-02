@@ -30,7 +30,7 @@
         </swiper>
 
 
-        <swiper v-if="props.images.length > 1"
+        <swiper v-if="images.length > 1"
                 @swiper="setThumbsSwiper"
                 :cssMode="true"
                 :mousewheel="true"
@@ -90,8 +90,9 @@ const props = defineProps({
   images: {
     type: Array,
     required: true
-  },
+  }
 });
+// const storeProduct = toRef(props, 'storeProduct');
 const modules = [Mousewheel, Keyboard];
 const thumbsSwiper = ref(null);
 

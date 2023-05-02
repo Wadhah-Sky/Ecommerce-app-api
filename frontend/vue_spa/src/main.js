@@ -17,6 +17,22 @@
 // import "bootstrap/dist/css/bootstrap.min.css";
 // import "bootstrap";
 
+// Note: before everything else, import methods and components.
+
+// Import methods and component.
+import { createApp } from 'vue';
+import App from './App.vue';
+import { createPinia } from 'pinia';
+import './registerServiceWorker';
+import router from './router';
+import VueSidebarMenu from 'vue-sidebar-menu';
+import VueAgile from 'vue-agile';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import {Multiselect} from 'vue-multiselect';
+import {tooltip} from "@/common/tooltip";
+import VueLazyload from 'vue-lazyload';
+// import './plugins/bootstrap-vue';
+
 // Register Font Awesome library and svg-gif-png icons.
 import { library } from '@fortawesome/fontawesome-svg-core';
 // 'faS' class means 'fa-solid'.
@@ -41,20 +57,6 @@ import 'swiper/css/navigation';
 import './assets/css/ui.css';
 import 'vue-multiselect/dist/vue3-multiselect.css';
 
-// Import methods and component.
-import { createApp } from 'vue';
-import App from './App.vue';
-import './registerServiceWorker';
-import { createPinia } from 'pinia';
-import router from './router';
-import VueSidebarMenu from 'vue-sidebar-menu';
-import VueAgile from 'vue-agile';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import {Multiselect} from 'vue-multiselect';
-import {tooltip} from "@/common/tooltip";
-import VueLazyload from 'vue-lazyload';
-// import './plugins/bootstrap-vue';
-
 /*
     Add the svg-gif-png icons those want to use with your Font Awesome library (utility
     class), so you don't to import all icons svg-gif-png files and minimize the space
@@ -73,13 +75,14 @@ const errorImage = require('./assets/images/svg-gif-png/Image_not_available.png'
 
 // Create vue App.
 const app = createApp(App);
+const pinia = createPinia();
 
 // Install the required instances as a plugin, component and directive.
-app.use(createPinia());
 app.use(router);
+app.use(pinia);
 app.use(VueSidebarMenu);
 app.use(VueAgile);
-// 'preLoad' option is proportion of pre-loading height, default (1.3).
+// 'preLoad' option is proportion of a pre-loading height, default (1.3).
 app.use(VueLazyload, {
   preLoad: 1.3,
   loading: loadImage,
@@ -89,6 +92,12 @@ app.use(VueLazyload, {
 app.component('font-awesome-icon', FontAwesomeIcon);
 app.component('multi-select', Multiselect);
 app.directive('tooltip', tooltip);
+
+/*
+ You can register global property/properties to 'app' like register stores, so you
+ can use them directly in the project components.
+ */
+// app.config.globalProperties.<namedStore> = <useNamedStore()>;
 
 // Mount 'app' as root component.
 app.mount('#app');

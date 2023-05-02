@@ -339,7 +339,6 @@ defineExpose({triggerToggleSidePanel, triggerGetDataResult});
   display:none;
 }
 
-
 .scroll-menu{
   max-height: 78vh;
   overflow-y: auto;

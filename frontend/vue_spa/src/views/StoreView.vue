@@ -33,7 +33,7 @@
       </template>
 
       <template v-else>
-        <content-loader-component/>
+        <content-loader-component style="transition: all 0.3s ease-in-out"/>
       </template>
 
 
@@ -49,14 +49,14 @@
 /*
   Libraries, methods, variables and components imports
 */
+import {useEndpointStore} from "@/store/StaticEndpoint";
+import {useFilterStore} from "@/store/Filter";
+import {usePaginationStore} from "@/store/Pagination";
 import ContentLoaderComponent from "@/components/ContentLoaderComponent";
 import StoreCategoryMenuComponent from "@/components/StoreCategoryMenuComponent";
 import StoreMain from "@/components/StoreMainComponent";
 import FilterSidePanelComponent from "@/components/FilterSidePanelComponent";
 import BreadCrumbsComponent from "@/components/BreadCrumbsComponent";
-import {usePaginationStore} from "@/store/Pagination";
-import {useEndpointStore} from "@/store/StaticEndpoint";
-import {useFilterStore} from "@/store/Filter";
 import {ref, defineProps} from "vue";
 import {endpointSerializer} from "@/common/endpointSerializer";
 import {cleanUrlQuery} from "@/common/cleanURL";
@@ -86,37 +86,90 @@ const props = defineProps({
     type: String,
     required: true
   },
-  attr: {
-    type: [String, undefined],
-    required: false
-  },
-  minPrice: {
-    type: [String, undefined],
-    required: false
-  },
-  maxPrice: {
-    type: [String, undefined],
-    required: false
-  },
-  selectBy: {
-    type: [String, undefined],
-    required: false
-  },
   page: {
     type: String,
     required: true
+  },
+  attr: {
+    type: [String, undefined],
+    required: false,
+    default: ''
+  },
+  minPrice: {
+    type: [String, undefined],
+    required: false,
+    default: ''
+  },
+  maxPrice: {
+    type: [String, undefined],
+    required: false,
+    default: ''
+  },
+  selectBy: {
+    type: [String, undefined],
+    required: false,
+    default: ''
   }
 });
 // Note: inject() for examples stores can only be used inside setup() or functional components.
-const filterComponent = ref();
-const storePagination = usePaginationStore();
-const storeFilter = useFilterStore();
-const storeEndpoint = useEndpointStore();
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
+const storeEndpoint = useEndpointStore();
+const storeFilter = useFilterStore();
+const storePagination = usePaginationStore();
+const filterComponent = ref();
 const categoryChildrenArray = ref([]);
 const updateData = ref(false);
 // const routeQuery = ref(route.query);
+
+/*
+ Note: 'onBeforeRouteUpdate' guard can be use when trying to update the current route url (path), while
+       'onBeforeRouteLeave' can be use when trying to leave the current route (path) to another route (path).
+
+       Both of them should be at top of setup().
+*/
+onBeforeRouteUpdate(async (to, from, next) => {
+
+  if (from.params.slug !== to.params.slug){
+    // In case trying to view another slug in this view.
+    updateData.value = true;
+
+    // Reset the dataResult of storeFilter using patch function.
+    storeFilter.$patch((state) => {
+      state.response = {};
+    });
+
+    // Get category children.
+    await getCategoryChildren(to.params.slug);
+
+    // In case the storeFilter.collapsed is true which means filter
+    // component is opened, trigger 'triggerGetDataResult'.
+    if (storeFilter.collapsed) {
+      await filterComponent.value.triggerGetDataResult(
+          storeEndpoint.storeAttributesEndpoint + `${to.params.slug}/`
+      );
+    }
+  }
+  await triggerGetProductsDataResult(
+      to.params.slug,
+      to.query.attr,
+      to.query.minPrice,
+      to.query.maxPrice,
+      to.query.selectBy,
+      to.query.page
+  );
+  updateData.value = false;
+  next();
+});
+
+onBeforeRouteLeave(()=> {
+  // Reset store filter to default values when trying to leave the store view.
+  storeFilter.$reset();
+  storePagination.$reset();
+
+  // stop watching
+
+});
 
 /*
   Define functions
@@ -187,6 +240,7 @@ const getCategoryChildren = async (slug) => {
    */
 
   let endpoint = storeEndpoint.storeCategoryDetailsEndpoint + `${slug}/`;
+
   try {
     const response = await axios.get(endpoint);
     categoryChildrenArray.value = response.data;
@@ -249,7 +303,7 @@ const cleanUrl = (registeredArray, queryObj) =>{
     // Note: When trying to replace current router values, set 'name' value not 'path'
     //       because will not work.
     router.replace({
-      name: route.name,
+      name: route?.name,
       query: cleanedQueryObj
     });
   }
@@ -260,12 +314,22 @@ const cleanUrl = (registeredArray, queryObj) =>{
 */
 // Set page title.
 setPageTitle(`Jamie & Cassie | Store`);
-cleanUrl(['attr', 'minPrice', 'maxPrice', 'selectBy', 'page'], route.query);
+if(route){
+  /*
+   Info: Somtimes when press back button in the browser, happen to raise the below error:
+
+         typeError: Cannot read properties of undefined (reading 'query')
+
+         So we check that route has 'query' object as property before run cleanUrl method.
+   */
+  cleanUrl(['attr', 'minPrice', 'maxPrice', 'selectBy', 'page'], route.query);
+}
 
 /*
   call functions with top-level await, to trigger <suspense> in parent component.
 */
 // Clear URL query.
+
 await getCategoryChildren(props.slug);
 await triggerGetProductsDataResult(
     props.slug,
@@ -297,51 +361,6 @@ await triggerGetProductsDataResult(
 //       deep: true
 //     }
 // );
-
-/*
- Note: 'onBeforeRouteUpdate' guard can be use when trying to update the current route url (path), while
-       'onBeforeRouteLeave' can be use when trying to leave the current route (path) to another route (path).
-*/
-onBeforeRouteUpdate(async (to, from, next) => {
-
-  if (from.params.slug !== to.params.slug){
-    // In case trying to view another slug in this view.
-    updateData.value = true;
-
-    // Reset the dataResult of storeFilter using patch function.
-    storeFilter.$patch((state) => {
-      state.response = {};
-    });
-
-    // Get category children.
-    await getCategoryChildren(to.params.slug);
-
-    // In case the storeFilter.collapsed is true which means filter
-    // component is opened, trigger 'triggerGetDataResult'.
-    if (storeFilter.collapsed) {
-      await filterComponent.value.triggerGetDataResult(
-          storeEndpoint.storeAttributesEndpoint + `${to.params.slug}/`
-      );
-    }
-  }
-  await triggerGetProductsDataResult(
-      to.params.slug,
-      to.query.attr,
-      to.query.minPrice,
-      to.query.maxPrice,
-      to.query.selectBy,
-      to.query.page
-  );
-  updateData.value = false;
-  next();
-});
-
-onBeforeRouteLeave(()=> {
-  // Reset store filter to default values when trying to leave the store view.
-  storeFilter.$reset();
-  // stop watching
-
-});
 
 </script>
 
