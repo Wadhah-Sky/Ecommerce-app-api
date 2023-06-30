@@ -9,8 +9,18 @@ from itertools import chain
 # from operator import attrgetter
 
 from home.serializers import ProductSerializer
-from core.models import (Product, ProductItem, ProductAttribute,
+from core.models import (Product, ProductItem, ProductAttribute, Supplier,
                          ProductItemAttribute)
+
+
+class SupplierSerializer(serializers.ModelSerializer):
+    """Serializer class of Supplier model"""
+
+    class Meta:
+        """Serialize specific model fields"""
+
+        model = Supplier
+        fields = ['uuid', 'is_available']
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
@@ -21,19 +31,23 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
         model = ProductItem
         fields = [
+            'sku',
             'slug',
             'thumbnail',
             'price_currency_symbol',
             'list_price_amount',
             'deal_price_amount',
+            'supplier',
             'details',
             'attributes',
+            'limit_per_order',
             'low_stock',
             'temporarily_not_available',
             'images'
         ]
 
     # Define related/reverse model fields.
+    supplier = SupplierSerializer(read_only=True)
     thumbnail = serializers.SerializerMethodField()
     list_price_amount = serializers.SerializerMethodField()
     deal_price_amount = serializers.SerializerMethodField()
@@ -139,9 +153,10 @@ class ProductItemSerializer(serializers.ModelSerializer):
             return False
 
     def get_temporarily_not_available(self, instance):
-        """Return true if current product item stock zero or less"""
+        """Return true if current product item stock zero or less also in case
+        the supplier is not available"""
 
-        if instance.stock <= 0:
+        if instance.stock <= 0 or not instance.supplier.is_available:
             return True
         else:
             return False

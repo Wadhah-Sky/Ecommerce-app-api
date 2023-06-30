@@ -22,7 +22,7 @@ class InvalidMinPriceValue(APIException):
 
 class InvalidMaxPriceValue(APIException):
     status_code = 400
-    default_detail = "Max price value should be between ($1 - $5000)"
+    default_detail = "Max price value should be between ($0 - $5000)"
     default_code = "invalid_max_price"
 
 

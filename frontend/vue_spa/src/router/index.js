@@ -396,6 +396,44 @@ const routes = [
     }),
   },
   {
+    name: 'checkout',
+    path: '/checkout',
+    component: () => import(/* webpackChunkName: "checkout" */ '../views/CheckoutView.vue'),
+    meta: { transition: 'slide-left' },
+    children: [
+        {
+          name: 'cart',
+          path: 'cart',
+          /*
+            route level code-splitting
+            this generates a separate chunk (about.[hash].js) for this route
+            which is lazy-loaded when the route is visited.
+          */
+          component: () => import(/* webpackChunkName: "cart" */ '../views/CartView.vue'),
+        },
+        {
+          name: 'shippingDetails',
+          path: 'shipping-details',
+          /*
+            route level code-splitting
+            this generates a separate chunk (about.[hash].js) for this route
+            which is lazy-loaded when the route is visited.
+          */
+          component: () => import(/* webpackChunkName: "shippingDetails" */ '../views/ShippingDetailsView.vue'),
+        },
+        {
+          name: 'paymentDetails',
+          path: 'payment-details',
+          /*
+            route level code-splitting
+            this generates a separate chunk (about.[hash].js) for this route
+            which is lazy-loaded when the route is visited.
+          */
+          component: () => import(/* webpackChunkName: "paymentDetails" */ '../views/PaymentDetailsView.vue'),
+        }
+    ],
+  },
+  {
     /* Regex to catch all paths are not define previously, this root very important:
        1- read second point of different history modes below.
        2- if not set, then <router-view> will not work.

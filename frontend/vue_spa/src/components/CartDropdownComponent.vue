@@ -2,13 +2,13 @@
 
   <div class="container">
 
-    <div class="card shopping-cart">
+    <div id="shopping-cart" class="card">
 
       <div class="shopping-cart-header">
 
         <div class="shopping-cart-total">
           <span class="lighter-text me-1">Total:</span>
-          <span class="main-color-text">{{props.totalPrice}}</span>
+          <span class="main-color-text">{{props.cartPriceCurrencySymbol}}{{props.cartTotalPriceAmount}}</span>
         </div>
 
       </div> <!--end shopping-cart-header -->
@@ -26,7 +26,7 @@
 
                   <!--This to be consider the frame of image-->
                   <div class="col-3 me-1 pt-2 pb-2"
-                       style="vertical-align: middle; padding: 0; width: 55px; height: 70px;"
+                       style="vertical-align: middle; padding-left: 0; padding-right: 0; width: 55px; height: 70px;"
                   >
                     <router-link :to="{name: 'product', params: { slug: item.slug }, query: { itemS: item.itemS }}"
                                  style="text-decoration: none"
@@ -46,20 +46,20 @@
                       {{ item.title }}
                     </router-link>
 
-                    <div class="row row-cols-auto">
+                    <div class="row mt-1 row-cols-auto">
 
                       <template v-for="(val, index) in item.attributes"
                                 :key="index"
                       >
 
-                        <span class="col-4 pe-0" style="display: inherit; font-size: 12px; font-weight: 400;">{{index}}</span>
+                        <span class="col-4 pe-0 align-self-center" style="display: inherit; font-size: 12px; font-weight: 400;">{{index}}</span>
                         <span class="col-8 ps-1 pe-0 align-self-center" style="font-size: 12px;">{{ val }}</span>
 
                       </template>
 
                     </div>
 
-                    <span class="item-price">{{item.currencySymbol }}{{ item.price }}</span>
+                    <span class="item-price">{{item.currencySymbol }}{{ item.priceAmount }}</span>
                     <span class="remove-item" @click="props.removeItem(index)">Remove</span>
 
                     <!-- <span class="item-quantity">Quantity: </span>-->
@@ -81,7 +81,12 @@
 
       </div>
 
-      <a v-if="props.products.length > 0" href="#" class="button">Checkout</a>
+      <router-link v-if="props.products.length > 0"
+                   :to="{path: '/checkout/cart'}"
+                   class="button"
+      >
+        Checkout
+      </router-link>
 
     </div> <!--end shopping-cart -->
 
@@ -111,14 +116,18 @@ const props = defineProps({
     type: Array,
     required: true
   },
-  totalPrice: {
+  cartTotalPriceAmount: {
     type: [Number, String],
+    required: true
+  },
+  cartPriceCurrencySymbol: {
+    type: String,
     required: true
   },
   removeItem: {
     type: Function,
     required: true
-  }
+  },
 });
 
 /*
@@ -152,7 +161,7 @@ $light-text: #ABB0BE;
   z-index: 88!important;
 }
 
-.shopping-cart {
+#shopping-cart {
   float: right;
   background: white;
   width: 280px;
@@ -287,7 +296,7 @@ ul.scrollmenu{
   scrollbar-width: none;  /* Firefox */
 }
 
-.shopping-cart:after {
+#shopping-cart:after {
 	bottom: 100%;
 	left: 89%;
   content: " ";

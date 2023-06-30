@@ -9,7 +9,7 @@ from functools import reduce
 from operator import or_
 from itertools import product
 
-from core.models import Product
+from core.models import Product, ProductItem
 from store import exceptions
 
 
@@ -222,7 +222,7 @@ class ProductFilter(filters.FilterSet):
         #     },
         # }
 
-    def __init__(self, titles=None, product_selected_item=None, *args,
+    def __init__(self, titles=None, selected_items_dict=None, *args,
                  **kwargs):
         """Do something with the filter or with the updated/added objects in
         backend filterset_kwargs"""
@@ -236,13 +236,23 @@ class ProductFilter(filters.FilterSet):
         # argument from backend filter class.
         self.titles = titles
 
-        # Set class attribute 'product_selected_item' with customized
+        # Set class attribute 'selected_items_dict' with customized
         # dictionary variable => {'product_pk': 'item_instance'}.
-        self.product_selected_item = product_selected_item
+        self.selected_items_dict = selected_items_dict
 
         # You can validate the data arguments.
         min_price = data.get('min_price', None)
         max_price = data.get('max_price', None)
+
+        # Our price validation should be, we do the same to frontend validation
+        #
+        # Min price => 0 - 4999
+        # Max price => 0 - 5000
+
+        # Get the USD min and max prices amount from ProductItem model.
+        # Note: we do same validation on frontend.
+        usd_min_amount = ProductItem.USD_MIN_PRICE_AMOUNT
+        usd_max_amount = ProductItem.USD_MAX_PRICE_AMOUNT
 
         # Note: "-1" and "1.5" are NOT considered numeric values, because all
         #       the characters in the string must be numeric, and the - and
@@ -255,7 +265,8 @@ class ProductFilter(filters.FilterSet):
 
             # Validate the value of min_price query string, and raise an
             # api exception if it's not valid.
-            elif int(min_price) < 0 or int(min_price) > 4999:
+            elif int(min_price) < usd_min_amount or \
+                    int(min_price) >= usd_max_amount:
                 raise exceptions.InvalidMinPriceValue
 
         if max_price:
@@ -265,7 +276,8 @@ class ProductFilter(filters.FilterSet):
 
             # Validate the value of max_price query string, and raise an
             # api exception if it's not valid.
-            if int(max_price) < 1 or int(max_price) > 5000:
+            if int(max_price) < usd_min_amount or\
+                    int(max_price) > usd_max_amount:
                 raise exceptions.InvalidMaxPriceValue
 
         if min_price and max_price:
@@ -466,8 +478,8 @@ class ProductFilter(filters.FilterSet):
 
             # Return the product item instance if this product 'pk' if found in
             # the dictionary, or return None.
-            if self.product_selected_item:
-                instance_var = self.product_selected_item[prod.pk]
+            if self.selected_items_dict:
+                instance_var = self.selected_items_dict[prod.pk]
 
             # Check if current product return a item_deal_price property value.
             if prod.item_deal_price(item=instance_var):
@@ -505,8 +517,8 @@ class ProductFilter(filters.FilterSet):
 
             # Return the product item instance if this product 'pk' if found in
             # the dictionary, or return None.
-            if self.product_selected_item:
-                instance_var = self.product_selected_item[prod.pk]
+            if self.selected_items_dict:
+                instance_var = self.selected_items_dict[prod.pk]
 
             # Check if current product return a item_deal_price property value.
             if prod.item_deal_price(item=instance_var):
@@ -536,7 +548,7 @@ class ProductFilter(filters.FilterSet):
             instance if exists in dictionary"""
 
             # Initialize instance variable.
-            instance_var = self.product_selected_item[prod.pk] or None
+            instance_var = self.selected_items_dict[prod.pk] or None
 
             # Get list price as Money.
             money = prod.item_list_price(item=instance_var)
@@ -548,7 +560,7 @@ class ProductFilter(filters.FilterSet):
             And the selected product item instance has deal price"""
 
             # Initialize instance variable.
-            product_item = self.product_selected_item[prod.pk] or None
+            product_item = self.selected_items_dict[prod.pk] or None
 
             if product_item and product_item.deal_price:
                 return True
@@ -560,7 +572,7 @@ class ProductFilter(filters.FilterSet):
             instance if exists in dictionary"""
 
             # Initialize instance variable.
-            instance_var = self.product_selected_item[prod.pk] or None
+            instance_var = self.selected_items_dict[prod.pk] or None
 
             # Get deal price as Money.
             money = prod.item_deal_price(item=instance_var)
@@ -570,7 +582,7 @@ class ProductFilter(filters.FilterSet):
         # Info: sorted()/sort() methods working fine with value of Money.
 
         # if dictionary has selected item/items for current queryset products.
-        if self.product_selected_item:
+        if self.selected_items_dict:
 
             # Return a sorted list of model instances, in case they/their
             # product item have deal price or list price.
@@ -661,8 +673,8 @@ class ProductFilter(filters.FilterSet):
 
                     # Return the product item instance if this product 'pk' if
                     # found in the dictionary, or return None.
-                    if self.product_selected_item:
-                        instance_var = self.product_selected_item[prod.pk]
+                    if self.selected_items_dict:
+                        instance_var = self.selected_items_dict[prod.pk]
 
                     # Check if current item return a deal_price property value.
                     if prod.item_deal_price(instance_var):

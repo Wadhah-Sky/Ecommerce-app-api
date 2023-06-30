@@ -13,7 +13,7 @@
 /*
   Libraries, methods, variables and components imports
 */
-import {useNavSidebarStore} from "@/store/NavSidebar";
+import {defineProps, toRef} from 'vue';
 
 export default {
   name: "NavSidebarComponent"
@@ -25,7 +25,13 @@ export default {
 /*
   Define handlers (properties, props and computed)
 */
-const storeNavSidebar = useNavSidebarStore();
+const props = defineProps({
+  storeNavSidebar: {
+    type: Object,
+    required: true
+  },
+});
+const storeNavSidebar = toRef(props, 'storeNavSidebar');
 
 </script>
 

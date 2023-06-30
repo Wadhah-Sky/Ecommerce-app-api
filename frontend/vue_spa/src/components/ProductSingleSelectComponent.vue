@@ -2,7 +2,7 @@
 
   <div class="row-cols-auto mt-1">
 
-    <template v-if="risePickerSyllable.includes(lowerCase(groupName)) || props.useImg">
+    <template v-if="props.risePickerSyllable && (props.risePickerSyllable.includes(lowerCase(groupName)) || props.useImg)">
 
         <label v-for="( option ) in options"
                :key="whiteSpacesReplace(lowerCase(option[`${trackBy}`]), '-')"
@@ -24,7 +24,7 @@
                  @change="changeOption($event, option)"
           />
 
-          <template v-if="risePickerSyllable.includes(lowerCase(groupName))">
+          <template v-if="props.risePickerSyllable && props.risePickerSyllable.includes(lowerCase(groupName))">
 
             <span :class="['option-img col', whiteSpacesReplace(lowerCase(option[`${trackBy}`]), '-')]"></span>
 
@@ -122,6 +122,10 @@ const props = defineProps({
   useImg: {
     type: Boolean,
     default: false
+  },
+  risePickerSyllable: {
+    type: Array,
+    required: false
   }
 });
 const modelValue = ref(props.modelValue);
@@ -130,7 +134,6 @@ const options = ref(props.options);
 const trackBy = ref(props.trackBy);
 const parentAttr = ref(props.parentAttr);
 const checkedValues = ref([]);
-const risePickerSyllable = ['rise', 'picker', 'rise style', 'rise picker', 'rise picker style'];
 // static reference to hold single/multiple reference of elements.
 const inputs = ref(null);
 // Define the list of events that you want to emit.

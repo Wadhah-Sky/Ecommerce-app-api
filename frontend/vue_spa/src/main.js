@@ -17,22 +17,6 @@
 // import "bootstrap/dist/css/bootstrap.min.css";
 // import "bootstrap";
 
-// Note: before everything else, import methods and components.
-
-// Import methods and component.
-import { createApp } from 'vue';
-import App from './App.vue';
-import { createPinia } from 'pinia';
-import './registerServiceWorker';
-import router from './router';
-import VueSidebarMenu from 'vue-sidebar-menu';
-import VueAgile from 'vue-agile';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import {Multiselect} from 'vue-multiselect';
-import {tooltip} from "@/common/tooltip";
-import VueLazyload from 'vue-lazyload';
-// import './plugins/bootstrap-vue';
-
 // Register Font Awesome library and svg-gif-png icons.
 import { library } from '@fortawesome/fontawesome-svg-core';
 // 'faS' class means 'fa-solid'.
@@ -40,8 +24,13 @@ import {
     faS,
     faSliders, faUser, faHouse, faStore, faHeadset, faEnvelope, faChevronRight,
     faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck, faXmark,
-    faCircleExclamation, faStar, faCartShopping, faSpinner
+    faCircleExclamation, faStar, faCartShopping, faSpinner, faArrowRight,
+    faHandHoldingDollar, faCreditCard, faEye, faEyeSlash
 } from '@fortawesome/free-solid-svg-icons';
+import {
+    faAmazonPay, faCcAmazonPay, faCcMastercard, faCcVisa, faAlipay, faApplePay,
+    faCcApplePay, faPaypal, faCcPaypal, faGooglePay, faStripe, faCcStripe
+} from '@fortawesome/free-brands-svg-icons';
 
 // Register CSS/scss/sass and other files of your project as global.
 /*
@@ -57,6 +46,29 @@ import 'swiper/css/navigation';
 import './assets/css/ui.css';
 import 'vue-multiselect/dist/vue3-multiselect.css';
 
+// Import Maz-ui css files
+import 'maz-ui/css/main.css';
+
+// Note: before everything else except the style files, import methods and components.
+
+// Import methods and component.
+import { createApp} from 'vue';
+import App from './App.vue';
+import { createPinia } from 'pinia';
+import './registerServiceWorker';
+import router from './router';
+import VueSidebarMenu from 'vue-sidebar-menu';
+import VueAgile from 'vue-agile';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import {Multiselect} from 'vue-multiselect';
+import {tooltip} from "@/common/tooltip";
+import VueLazyload from 'vue-lazyload';
+import MazPhoneNumberInput from 'maz-ui/components/MazPhoneNumberInput';
+import MazInput from 'maz-ui/components/MazInput';
+import MazSelect from 'maz-ui/components/MazSelect';
+import { IMaskDirective } from 'vue-imask';
+// import './plugins/bootstrap-vue';
+
 /*
     Add the svg-gif-png icons those want to use with your Font Awesome library (utility
     class), so you don't to import all icons svg-gif-png files and minimize the space
@@ -66,40 +78,74 @@ library.add(
     faS,
     faSliders, faUser, faHouse, faStore, faHeadset, faEnvelope, faChevronRight,
     faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck, faXmark,
-    faCircleExclamation, faStar, faCartShopping, faSpinner
+    faCircleExclamation, faStar, faCartShopping, faSpinner, faArrowRight,
+    faHandHoldingDollar, faCreditCard, faEye, faEyeSlash,
+    faAmazonPay, faCcAmazonPay, faCcMastercard, faCcVisa, faAlipay, faApplePay,
+    faCcApplePay, faPaypal, faCcPaypal, faGooglePay, faStripe, faCcStripe
 );
 
 // Vue lazy loader options.
 const loadImage = require('./assets/images/svg-gif-png/loading.gif');
 const errorImage = require('./assets/images/svg-gif-png/Image_not_available.png');
 
-// Create vue App.
-const app = createApp(App);
-const pinia = createPinia();
-
-// Install the required instances as a plugin, component and directive.
-app.use(router);
-app.use(pinia);
-app.use(VueSidebarMenu);
-app.use(VueAgile);
-// 'preLoad' option is proportion of a pre-loading height, default (1.3).
-app.use(VueLazyload, {
-  preLoad: 1.3,
-  loading: loadImage,
-  error: errorImage,
-  attempt: 3
-});
-app.component('font-awesome-icon', FontAwesomeIcon);
-app.component('multi-select', Multiselect);
-app.directive('tooltip', tooltip);
+// Initialize the variable that will be reference to new creating or existing 'App.vue' component.
+let app = '';
+// Set the name of HTML element id.
+const containerSelector = "#app";
 
 /*
- You can register global property/properties to 'app' like register stores, so you
- can use them directly in the project components.
+  Note: If you don't want to use the existing 'app' instance, you can change the code
+        by use 'app.unmount()' inside if{} block and remove else{} block, then outside
+        the condition block plug in your components, stores..etc to the new created app
+        instance and use 'app.mount(containerSelector)' at the end.
  */
-// app.config.globalProperties.<namedStore> = <useNamedStore()>;
+// Get the #app element from DOM using querySelector() method.
+const mountPoint = document.querySelector(containerSelector);
 
-// Mount 'app' as root component.
-app.mount('#app');
+// check if app has been mounted already.
+if (mountPoint && mountPoint.__vue_app__ !== undefined) {
 
+    // Set the existing mount point to 'app'.
+    app = mountPoint.__vue_app__._instance.proxy;
+}
+else {
 
+    // create a new app instance
+    app = createApp(App);
+
+    // Create 'Pinia' instance.
+    const pinia = createPinia();
+
+    /*
+       Info: You can register global property/properties to 'app' like register stores, so you
+             can use them directly in the project components.
+     */
+    // app.config.globalProperties.<namedStore> = <useNamedStore()>;
+
+    // Install the required instances like plugin, component and directive.
+    app.use(router);
+    app.use(pinia);
+    app.use(VueSidebarMenu);
+    app.use(VueAgile);
+    // 'preLoad' option is proportion of a pre-loading height, default (1.3).
+    app.use(VueLazyload, {
+        preLoad: 1.3,
+        loading: loadImage,
+        error: errorImage,
+        attempt: 3
+    });
+    app.component('font-awesome-icon', FontAwesomeIcon);
+    app.component('multi-select', Multiselect);
+    app.component('maz-input', MazInput);
+    app.component('maz-select', MazSelect);
+    app.component('maz-phone-number-input', MazPhoneNumberInput);
+    app.directive('tooltip', tooltip);
+    app.directive('imask', IMaskDirective);
+
+    // Mount 'app' const (App.vue) as root component.
+    /* Note: mount() function returns void and not the Vue app instance. You must separately
+             call the app.mount() method when creating a Vue app in a fluent method call
+             chain to keep reference to the Vue app instance.
+     */
+    app.mount(containerSelector);
+}

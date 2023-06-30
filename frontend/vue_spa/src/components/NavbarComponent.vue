@@ -61,23 +61,25 @@
             <div class="d-flex justify-content-end mb-3 mb-lg-0">
 
               <a href="#"
-                 @click.capture.prevent="cartToggle"
+                 @click.capture.prevent="toggleCartMenu"
+                 id="shopping-cart-dropdown-link"
                  class="widget-header pl-3 ml-3"
-                 :style="[cartDropdown ? {color: '#ABB0BE'} : {color: '#0F1111'}]"
+                 :style="[showCartDropDownMenu ? {color: '#ABB0BE'} : {color: '#0F1111'}]"
               >
                 <div class="icon icon-sm rounded-circle border">
                   <font-awesome-icon icon="fa-solid fa-shopping-cart"/>
                 </div>
                 <span class="badge badge-pill notify" style="background-color: rgb(204, 12, 57);">
-                  {{storeCart.itemsCount}}
+                  {{storeCheckout.itemsCount}}
                 </span>
               </a>
 
-              <template v-if="cartDropdown">
+              <template v-if="showCartDropDownMenu">
 
-                <cart-dropdown-component :products="storeCart.products"
-                                         :total-price="storeCart.totalPrice"
-                                         :remove-item="storeCart.removeItem"
+                <cart-dropdown-component :products="storeCheckout.cartProducts"
+                                         :cart-total-price-amount="storeCheckout.cartTotalPriceAmount"
+                                         :cart-price-currency-symbol="storeCheckout.cartApiPriceCurrencySymbol"
+                                         :remove-item="storeCheckout.removeItem"
                 />
 
               </template>
@@ -98,10 +100,9 @@
 /*
   Libraries, methods, variables and components imports
 */
-import {useCartStore} from "@/store/Cart";
 import CartDropdownComponent from "@/components/CartDropdownComponent";
 import {useRoute} from "vue-router";
-import {ref, watch} from 'vue';
+import {defineProps, ref, toRef, watch, onMounted} from 'vue';
 
 export default {
   name: "NavbarComponent",
@@ -117,26 +118,68 @@ export default {
 /*
   Define handlers (properties, props and computed)
 */
-const storeCart = useCartStore();
+const props = defineProps({
+  storeCheckout: {
+    type: Object,
+    required: true
+  },
+  showCartDropDownMenu: {
+    type: Boolean,
+    default: false
+  }
+});
+const storeCheckout = toRef(props, 'storeCheckout');
 const route = useRoute();
-const cartDropdown = ref(false);
+const showCartDropDownMenu = ref(props.showCartDropDownMenu);
 
 /*
   Define functions
 */
-const cartToggle = () =>{
+const toggleCartMenu = () =>{
   /**
    * Toggle the cart dropdown menu
    */
 
-  cartDropdown.value = !cartDropdown.value;
+  showCartDropDownMenu.value = !showCartDropDownMenu.value;
 };
+
+// Life-cycle
+onMounted(() => {
+
+  // We need to listen to click event whenever happens on website 'document' with exception
+  // to certain element, in order to close the cart dropdown menu component if it opens.
+
+  // So need to set a handler on 'document' that listen for event click whenever triggered.
+  document.addEventListener("click", e => {
+
+    /*
+       We use The closest() method of the Element interface traverses the element (that
+       trigger the event) and its parents (heading toward the document root) until it finds
+       a node that matches the specified CSS selector.
+     */
+
+    /*
+        Pass if clicked element:
+        1- '.cart-dropdown-menu-link'.
+        2- '.shopping-cart' (the container of cart dropdown menu)
+     */
+    if(e.target.closest("#shopping-cart-dropdown-link, #shopping-cart")){
+      return false;
+    }
+    else if (showCartDropDownMenu.value) {
+      showCartDropDownMenu.value = false;
+      //storeCheckout.value.$patch({showCartDropDownMenu: false});
+    }
+
+  });
+});
 
 // Watch route
 watch(() => route, (currentValue, oldValue) =>
     {
-      // When route is change, remove the cart dropdown component by set value of 'cartDropdown' to false.
-      cartDropdown.value = false;
+      // When route is change, remove the cart dropdown component by set value of 'showCartDropDownMenu' to false.
+      showCartDropDownMenu.value = false;
+      //storeCheckout.value.$patch({showCartDropDownMenu: false});
     },
     {
       deep: true

@@ -56,7 +56,6 @@
 
         </div>
 
-
       </div>
 
       <div class="col position-relative">
@@ -109,12 +108,20 @@ const props = defineProps({
   storeFilter: {
     type: Object,
     required: true
+  },
+  minPrice: {
+    type: [Number, String, undefined],
+    required: false
+  },
+  maxPrice: {
+    type: [Number, String, undefined],
+    required: false
   }
 });
 const storeFilter = toRef(props, 'storeFilter');
 const priceObj = ref({
-  'minPrice': storeFilter.value.price['minPrice'],
-  'maxPrice': storeFilter.value.price['maxPrice']
+  'minPrice': props.minPrice,
+  'maxPrice': props.maxPrice
 });
 const router = useRouter();
 const route = useRoute();
@@ -314,7 +321,8 @@ storeFilter.value.$subscribe((mutation, state) => {
 .list-group-item:hover{
   cursor: pointer;
   color: rgb(204, 12, 57);
-  transition: color 0.3s ease;
+  transform: translateX(3px);
+  transition: all 0.3s ease;
 }
 
 #low-price, #high-price {
@@ -397,13 +405,16 @@ input[type=number]:focus {
 
 .alert-secondary{
   opacity: 80%;
-  background-color: #e9ecef;
+  background-color: #fff;
   transition: all 0.3s ease;
 }
 
 .alert-msg{
+  display: inline-block;
+  margin: auto;
   color: rgb(204, 12, 57);
   font-size: 13px;
+  font-weight: 400;
   text-align: center;
 }
 

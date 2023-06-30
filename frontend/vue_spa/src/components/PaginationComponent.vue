@@ -13,13 +13,13 @@
         </router-link>
       </li>
 
-      <li v-show="!pageArray.includes(1)" class="page-item disabled"
+      <li v-show="!range.includes(1)" class="page-item disabled"
           :tabindex="-1">
         <span class="page-link"> ... </span>
       </li>
 
 
-      <router-link v-for="( page, index ) in pageArray" :key="index"
+      <router-link v-for="( page, index ) in range" :key="index"
                    :to="{ path: route.path, query: { ...route.query, page: page } }"
                    v-slot="{ href, navigate, isActive, isExactActive }"
                    custom
@@ -43,7 +43,7 @@
       </router-link>
 
 
-<!--      <li v-for="( page, index ) in pageArray" :key="index"-->
+<!--      <li v-for="( page, index ) in range" :key="index"-->
 <!--          class="page-item"-->
 <!--          :class="[isActive(page)]"-->
 
@@ -57,7 +57,7 @@
 <!--        </router-link>-->
 <!--      </li>-->
 
-      <li v-show="!pageArray.includes(pagesCount)"
+      <li v-show="!range.includes(pagesCount)"
           class="page-item disabled"
           :tabindex="-1">
         <span class="page-link"> ... </span>
@@ -97,7 +97,7 @@
   Libraries, methods, variables and components imports
 */
 import {useRoute} from "vue-router";
-import {defineProps, toRef} from "vue";
+import {defineProps, ref} from "vue";
 
 export default {
   name: "PaginationComponent"
@@ -111,15 +111,22 @@ export default {
   Define handlers (properties, props and computed)
 */
 const props = defineProps({
-  storePagination: {
-    type: Object,
+  range: {
+    type: Array,
+    required: true
+  },
+  pageNumber: {
+    type: [String, Number],
+    required: true
+  },
+  pagesCount: {
+    type: [Function, Number],
     required: true
   }
 });
-const storePagination = toRef(props, 'storePagination');
-const pageArray = storePagination.value.pageArray;
-const pageNumber = +storePagination.value.pageNumber;
-const pagesCount = +storePagination.value.pagesCount;
+const range = ref(props.range);
+const pageNumber = ref(+props.pageNumber);
+const pagesCount = ref(+props.pagesCount);
 // route: represent current url in the browser.
 const route = useRoute();
 
@@ -209,14 +216,14 @@ const isDisabledPrev = (page) => {
    * Function to check whether the current pageNumber in store is equal or less than sent value.
    * if so, return 'disable'.
    */
-  return +pageNumber <= +page ? 'disabled' : '' ;
+  return +pageNumber.value <= +page ? 'disabled' : '' ;
 };
 const isDisabledNext = (page) => {
   /**
    * Function to check whether the current pageNumber in store is equal or bigger than sent value.
    * if so, return 'disable'.
    */
-  return +pageNumber >= +page ? 'disabled' : '' ;
+  return +pageNumber.value >= +page ? 'disabled' : '' ;
 };
 
 /*

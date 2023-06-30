@@ -2,7 +2,7 @@
 
   <div class="mt-2">
     <multi-select v-model="selectedOption"
-                  :options="availableSelectByOptions"
+                  :options="props.availableSelectByOptions"
                   track-by="value"
                   label="option"
                   :searchable="false"
@@ -37,11 +37,19 @@ const props = defineProps({
   storeFilter: {
     type: Object,
     required: true
+  },
+  availableSelectByOptions: {
+    type: Array,
+    required: true
+  },
+  selectByOption: {
+    type: [Object, undefined],
+    required: false,
+    default: null
   }
 });
 const storeFilter = toRef(props, 'storeFilter');
-const selectedOption = ref(storeFilter.value.selectByOption);
-const availableSelectByOptions = storeFilter.value.availableSelectByOptions;
+const selectedOption = ref(props.selectByOption);
 const route = useRoute();
 const router = useRouter();
 

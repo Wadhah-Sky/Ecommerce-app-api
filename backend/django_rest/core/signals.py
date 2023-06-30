@@ -3,6 +3,12 @@
 # Important: Signals are implicit function calls which make debugging harder.
 #            If the sender and receiver of your custom signal are both within
 #            your project, you’re better off using an explicit function call.
+#            However, this behavior can be noticed if you set a print
+#            statement inside a signal method, then trigger save signal from
+#            the model instance itself, will see the statement of print on your
+#            console BUT if you trigger the signal as result of another model
+#            instance signal, will not see the statement of print e.g. when
+#            using django nested admin of models.
 
 from django.db.models.signals import pre_save, post_save, m2m_changed
 from django.dispatch import receiver
@@ -124,7 +130,7 @@ def set_promotion_to_product_item(sender, instance, created, **kwargs):
     """Set/Update PromotionItem instances those related to this instance
     Category using celery task"""
 
-    if instance:
+    if created:
 
         # Add task to job queue.
         set_product_item_promotion.delay(
@@ -209,6 +215,21 @@ def set_slug_to_product_item(sender, instance, *args, **kwargs):
         instance.slug = create_slug(instance.sku)
 
 
+@receiver(pre_save, sender=ProductItem)
+def set_limit_per_order_to_product_item(sender, instance, *args, **kwargs):
+    """Set the limit per order value for product's item instance when pre_save
+    signal is emit"""
+
+    # Check if instance is exists and not None.
+    if instance:
+        # Check if provided value for limit_per_order is None OR more than the
+        # value stock.
+        if instance.limit_per_order is None or \
+                instance.limit_per_order > instance.stock:
+            # If so, set the value of limit_per_order to be the same as stock.
+            instance.limit_per_order = instance.stock
+
+
 @receiver(pre_save, sender=ProductItemImage)
 def set_slug_to_product_item_image(sender, instance, *args, **kwargs):
     """Create a slug for product item image instance when pre_save signal is
@@ -229,63 +250,61 @@ def set_slug_to_product_item_attribute(sender, instance, *args, **kwargs):
 
 @receiver(pre_save, sender=PurchaseOrder)
 def set_po_code_to_po(sender, instance, *args, **kwargs):
-    """Generate the po_code for PO objects when pre_save signal is emit"""
+    """Generate the po_code for PO instances when pre_save signal is emit"""
 
+    # Check that if current instance is exist and not have po_code value.
     if instance and not instance.po_code:
 
-        request = get_request_obj()
+        # request = get_request_obj()
 
-        if request:
+        # if request:
+        #
+        #     # Get the info you need from current user object of current
+        #     thread.
+        #
+        #     # Get the first 4 characters of user.last_name
+        #     last_name = request.user.last_name[:4]
 
-            # the formula our system use to generate PO code:
-            # Total characters = 24 :
-            # Supplier.title(4)-User.last_name(4)-User.role(4)-
-            # User.phone_number(last 4 char)-random number(up to 24)
+        # Get the last 4 characters of supplier.uuid
+        uuid = str(instance.supplier.uuid)[-4:]
 
-            # Get the info you need from current user object of current thread.
+        # Get the first 4 characters of last name from purchase order profile
+        last_name = instance.po_profile.last_name[:4]
 
-            # Get the first 4 characters of supplier.title
-            title = instance.supplier.title[:4]
+        # Get the first 4 characters of role from purchase order profile
+        role = instance.po_profile.role[:4]
 
-            # Get the first 4 characters of user.last_name
-            last_name = request.user.last_name[:4]
+        # Get the last 4 digit of phone number from purchase order profile
+        phone_number = str(instance.po_profile.phone_number)[-4:]
 
-            # Get the first 4 characters of user.role
-            role = request.user.role[:4]
+        # the formula our system use to generate PO code of 24 characters:
+        # uuid(-4)-l_name(4)-role(4)-ph_num(-4)-random number(up to 24)
 
-            # Get the last 4 digit of user.phone_number
-            phone_number = str(request.user.phone_number)[-4:]
+        # Format the first part of formula.
+        first_part = "{}-{}-{}-{}".format(
+            uuid,
+            last_name,
+            role,
+            phone_number
+        )
 
-            # Format the first part of formula.
-            first_part = "{}-{}-{}-{}".format(
-                title,
-                last_name,
-                role,
-                phone_number
+        # Count the length of the random Characters.
+        # Note: We minus 1 as space for the dash (-) character before random
+        #       part.
+        random_char_length = (24 - len(first_part)) - 1
+
+        # Generate random string(characters and digits)
+        random_part = "".join(
+            random.choices(
+                string.ascii_letters + string.digits, k=random_char_length
             )
+        )
 
-            # Count the length of the random Characters.
-            # Note: We minus 1 as space for the (-) dash character before
-            #       random part.
-            random_char_length = (24 - len(first_part)) - 1
+        # Format first part with random part
+        char = "{}-{}".format(first_part, random_part)
 
-            # Generate random string(characters and digits)
-            random_part = "".join(
-                random.choices(
-                    string.ascii_letters + string.digits, k=random_char_length
-                )
-            )
-
-            # Format first part with random part
-            char = "{}-{}".format(first_part, random_part)
-
-            # Set the formula we made as po_code field's value as uppercase.
-            instance.po_code = char.upper()
-
-        else:
-            raise Exception(
-                "There is no request object detected in thread stack!"
-            )
+        # Set the formula we made as po_code field's value as uppercase.
+        instance.po_code = char.upper()
 
 
 # @receiver(m2m_changed, sender=models.Section.cards.through)

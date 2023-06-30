@@ -45,7 +45,10 @@
 
         <div class="row">
 
-          <filter-multi-select-component :store-filter="storeFilter" />
+          <filter-multi-select-component :store-filter="storeFilter"
+                                         :available-select-by-options="storeFilter.availableSelectByOptions"
+                                         :select-by-option="storeFilter.selectByOption"
+          />
 
         </div>
 
@@ -61,12 +64,17 @@
 
           <span class="attribute">Price</span>
 
-          <filter-price-range-component :store-filter="props.storeFilter"/>
+          <filter-price-range-component :store-filter="storeFilter"
+                                        :min-price="storeFilter.price['minPrice']"
+                                        :max-price="storeFilter.price['maxPrice']"
+          />
 
         </div>
 
-        <filter-attribute-component :data="storeFilter.dataResult"
-                                    :store-filter="props.storeFilter"
+        <filter-attribute-component :store-filter="storeFilter"
+                                    :data="storeFilter.dataResult"
+                                    :checked-options="storeFilter.checkedOptions"
+                                    :available-color-options="storeFilter.availableColorOptions"
         />
 
       </div>
@@ -390,6 +398,10 @@ defineExpose({triggerToggleSidePanel, triggerGetDataResult});
   transition: color 200ms ease-in-out;
   color: #fff;
   background-color: #0F1111;
+}
+.reset-link:active{
+  transform: translateY(3%);
+  transition: transform 0.2s ease-in-out;
 }
 
 </style>

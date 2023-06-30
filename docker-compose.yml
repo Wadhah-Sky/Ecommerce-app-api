@@ -132,6 +132,39 @@ services:
     networks:
       - webnet
 
+  pgadmin:
+    image: dpage/pgadmin4
+    healthcheck:
+      test: ["CMD", "ping localhost:80 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      # Note: in pgAdmin container, the 'start_period' variable should be at least
+      #       140s otherwise will face error of:
+      #       worker pid [<number>] has terminated due signal 9
+      start_period: 160s
+      retries: 3
+    deploy:
+      # Specify the number of replicas of this service to be created in the swarm.
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 200M
+        reservations:
+          cpus: '0.5'
+          memory: 20M
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+    depends_on:
+      - db
+    networks:
+      - webnet
+
   app:
     image: 127.0.0.1:5000/django
     # Building configuration of this service.
@@ -171,7 +204,7 @@ services:
     # Note: don't use this way, better to set env variables manually due security reasons.
     #env_file:
     #  - .env
-    # Note: integers environment variables, set them directly, since on test server could face an issue
+    # Note: integers environment variables, set them directly, since on tests server could face an issue
     # when trying to retrieve them from the cloud storage because they will be stored as string.
     environment: &app_env
       - SECRET_KEY=${SECRET_KEY}

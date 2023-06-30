@@ -24,7 +24,7 @@ from core import models
 
 # Define default user info.
 USER_PAYLOAD = {
-    'username': 'user test',
+    'username': 'user tests',
     'password': 'test12345611',
     'first_name': 'first',
     'last_name': 'last',
@@ -33,7 +33,7 @@ USER_PAYLOAD = {
 
 # Define default superuser info.
 SUPERUSER_PAYLOAD = {
-    'username': 'superuser test',
+    'username': 'superuser tests',
     'password': 'test12345611',
     'first_name': 'super',
     'last_name': 'user',
@@ -75,13 +75,13 @@ class AdminSiteTest(TestCase):
     """Tests for django admin page"""
 
     # The 'setUp' function is a TestCase function that will run before every
-    # other tests-functions in the related test class.
+    # other tests-functions in the related tests class.
 
     def setUp(self):
         """Set up a samples clients and models objects"""
 
-        user_email = 'user@test.com'
-        superuser_email = 'superuser@test.com'
+        user_email = 'user@tests.com'
+        superuser_email = 'superuser@tests.com'
 
         self.client = APIClient()
         self.user = sample_user(email=user_email)
@@ -188,7 +188,7 @@ class AdminSiteUploadFileTest(TestCase):
     def setUp(self):
         """Set up samples objects"""
 
-        superuser_email = 'superuser@test.com'
+        superuser_email = 'superuser@tests.com'
 
         self.client = APIClient()
 
@@ -198,11 +198,12 @@ class AdminSiteUploadFileTest(TestCase):
         self.client.force_login(self.superuser)
 
     # The 'tearDown' function is a TestCase function that will run after each
-    # test function of this class is done, to clean the file system and
+    # tests function of this class is done, to clean the file system and
     # restore initial state of setUp() function.
 
     def tearDown(self):
-        """Clean file system and restore initial setup state after each test"""
+        """Clean file system and restore initial setup state after each tests
+        """
 
     def test_add_category_with_image(self):
         """Test create category object with image"""

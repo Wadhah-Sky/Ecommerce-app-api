@@ -222,12 +222,16 @@ class ProductListAPIView(generics.ListAPIView):
         #           values
         attr = self.request.query_params.get('attr', None)
 
+        # Get the max_length of Attribute.title
+        title_max_length = Attribute.title.field.max_length
+
         # If attr is not None, convert its value into set value (no duplicate)
-        # and ignore any attr value that its length more than 25 characters.
+        # and ignore any attr value that its length more than
+        # 'title_max_length'.
         if attr:
             titles_set = set(
                 item.strip() for item in attr.split(',')
-                if len(item.strip()) <= 25
+                if len(item.strip()) <= title_max_length
             )
 
             # Get all attribute instances that its title equivalent to
@@ -304,7 +308,7 @@ class ProductListAPIView(generics.ListAPIView):
             return titles
 
     @property
-    def get_product_selected_item(self):
+    def get_selected_items_dict(self):
         """filter the passed attribute instances within 'attr' query string to
         be only related to product items"""
 
@@ -326,7 +330,7 @@ class ProductListAPIView(generics.ListAPIView):
                 #
                 # {'product_pk': 'item_instance'}
                 #
-                product_selected_item = {}
+                selected_items_dict = {}
 
                 # Get instances of view queryset.
                 product_instances = self.get_queryset()
@@ -362,10 +366,10 @@ class ProductListAPIView(generics.ListAPIView):
                     # Check if there is 'item' in dict_var.
                     if dict_var['item']:
                         # Set this item 'pk' to current product 'pk'.
-                        product_selected_item[product.pk] = dict_var['item']
+                        selected_items_dict[product.pk] = dict_var['item']
 
                 # Return the dictionary.
-                return product_selected_item
+                return selected_items_dict
 
     def get_serializer_context(self):
         """Override the serializer context"""
@@ -378,7 +382,7 @@ class ProductListAPIView(generics.ListAPIView):
         # Update the serializer context.
         context.update(
             {
-                'product_selected_item': self.get_product_selected_item
+                'selected_items_dict': self.get_selected_items_dict
             }
         )
 
@@ -392,5 +396,5 @@ class ProductListAPIView(generics.ListAPIView):
 
         return {
             'titles': titles,
-            'product_selected_item': self.get_product_selected_item
+            'selected_items_dict': self.get_selected_items_dict
         }

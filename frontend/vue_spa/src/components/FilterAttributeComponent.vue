@@ -66,7 +66,7 @@
                       whiteSpacesReplace(lowerCase(option), '-')
                   ]"
               ><font-awesome-icon
-                  v-if="!availableColors.includes(whiteSpacesReplace(lowerCase(option)))"
+                  v-if="!props.availableColorOptions.includes(whiteSpacesReplace(lowerCase(option)))"
                   icon="fa-solid fa-circle-check"/>
               </span>
 
@@ -156,20 +156,27 @@ export default {
   Define handlers (properties, props and computed)
 */
 const props = defineProps({
+  storeFilter: {
+    type: Object,
+    required: true
+  },
   data: {
     type: Array,
     required: true
   },
-  storeFilter: {
-    type: Object,
+  checkedOptions: {
+    type: Array,
     required: true
+  },
+  availableColorOptions: {
+    type: [Array, undefined],
+    required: false
   }
 });
 const route = useRoute();
 const router = useRouter();
 const storeFilter = toRef(props, 'storeFilter');
-const checkInputs = ref(storeFilter.value.checkedOptions);
-const availableColors = storeFilter.value.availableColorOptions;
+const checkInputs = ref(props.checkedOptions);
 
 /*
   Define functions
@@ -205,9 +212,9 @@ const whiteSpacesReplace = (str, use='') => {
 //    *
 //    */
 //
-//   let hashtagFormat = /#[a-e0-9_]{3,6}/g;
-//   let classNameFormat = /^[a-zA-Z]+[ #]/g;
-//   // hashtagFormat.test(text)
+//   let hashtagFormat = /#[a-e0-9_]{3,6}/;
+//   let classNameFormat = /^[a-zA-Z]+[ #]/;
+//   // hashtagFormat.test(value)
 //
 //   // Check if the length of returned array is contains only one item.
 //   // Info: match() method will return null if no match is found.

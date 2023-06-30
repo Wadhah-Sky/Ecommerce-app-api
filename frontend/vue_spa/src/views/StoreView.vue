@@ -120,7 +120,6 @@ const storePagination = usePaginationStore();
 const filterComponent = ref();
 const categoryChildrenArray = ref([]);
 const updateData = ref(false);
-// const routeQuery = ref(route.query);
 
 /*
  Note: 'onBeforeRouteUpdate' guard can be use when trying to update the current route url (path), while
@@ -303,7 +302,7 @@ const cleanUrl = (registeredArray, queryObj) =>{
     // Note: When trying to replace current router values, set 'name' value not 'path'
     //       because will not work.
     router.replace({
-      name: route?.name,
+      name: route.name,
       query: cleanedQueryObj
     });
   }
@@ -314,16 +313,7 @@ const cleanUrl = (registeredArray, queryObj) =>{
 */
 // Set page title.
 setPageTitle(`Jamie & Cassie | Store`);
-if(route){
-  /*
-   Info: Somtimes when press back button in the browser, happen to raise the below error:
-
-         typeError: Cannot read properties of undefined (reading 'query')
-
-         So we check that route has 'query' object as property before run cleanUrl method.
-   */
-  cleanUrl(['attr', 'minPrice', 'maxPrice', 'selectBy', 'page'], route.query);
-}
+cleanUrl(['attr', 'minPrice', 'maxPrice', 'selectBy', 'page'], route.query);
 
 /*
   call functions with top-level await, to trigger <suspense> in parent component.

@@ -83,6 +83,24 @@
 #       This mean your code trying to call the @property function as callable
 #       (using parentheses).
 
+# Info: in python 3.10 and later it's possible to do something similar to:
+#       switch... case... statement
+#
+#       by using match... case... statement:
+#
+#       match term:
+#         case pattern-1:
+#            action-1
+#         case pattern-2:
+#            action-2
+#         case pattern-3:
+#            action-3
+#         case _:
+#            action-default
+#
+#        * the _ is default case if none of before cases is true. And no need
+#          to set break keyword at each case, it's automatically done by
+#          python interpreter.
 
 # Info: To calculate the percentage of certain number:
 #
@@ -97,9 +115,8 @@
 
 from django import forms
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, \
-                                       PermissionsMixin, \
-                                       BaseUserManager
+from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
+                                        BaseUserManager)
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -134,41 +151,47 @@ import uuid
 import os
 
 
+# Info: if you want to access details of model fields details e.g. max_length,
+#       you have two ways:
+#
+#       1- <Model_class>._meta.get_field('<field_name>').max_length
+#       2- <Model_class>.<field_name>.field.max_length
+
 # Note Postgres has multiple specific fields, like:
-# 1- ArrayField: field will accept array of value.
-# 2- HStoreField: will accept value of {key:value}, keys should be string, in
-#                 database stored like this in the cell:
-#                 Fitted => Relaxing,Manufacture => China
-# 3- JSONField: two type(regular and binary).
-# 4- CI/Text/Char, means the value will be stored as lowercase, the Text type
-#    is unlimited length while the char type is limited with specific size and
-#    if you enter value less than specified size the space that left will be
-#    padded.
+#      1- ArrayField: field will accept array of value.
+#      2- HStoreField: will accept value of {key:value}, keys should be string,
+#         in database stored like this in the cell:
+#         Fitted => Relaxing,Manufacture => China
+#      3- JSONField: two type(regular and binary).
+#      4- CI/Text/Char, means the value will be stored as lowercase, the Text
+#         type is unlimited length while the char type is limited with specific
+#         size and if you enter value less than specified size the space that
+#         left will be padded.
 #
-#    There multiple options for ArrayFiled:
+#      There multiple options for ArrayFiled:
 #
-# 1- base_field for postgres ArrayField can be any standard model field
-#    except those handling relational data (ForeignKey, OneToOneField and
-#    ManyToManyField) and file fields ( FileField and ImageField).
-# 2- If you give the field a default, ensure it’s a callable such as list
-#    (for an empty default) or a callable that returns a list (such as
-#    a function). Incorrectly using default=[] creates a mutable default
-#    that is shared between all instances of ArrayField.
-# 3- It is possible to nest array fields - you can specify an instance of
-#    ArrayField as the base_field.
-# 4- size: optional argument, If passed, the array will have a maximum
-#    size as specified. This will be passed to the database, When nesting
-#    ArrayField, whether you use the size parameter or not, PostgreSQL
-#    requires that the arrays are rectangular:
+#      1- base_field for postgres ArrayField can be any standard model field
+#         except those handling relational data (ForeignKey, OneToOneField and
+#         ManyToManyField) and file fields ( FileField and ImageField).
+#      2- If you give the field a default, ensure it’s a callable such as list
+#         (for an empty default) or a callable that returns a list (such as
+#         a function). Incorrectly using default=[] creates a mutable default
+#         that is shared between all instances of ArrayField.
+#      3- It is possible to nest array fields - you can specify an instance of
+#         ArrayField as the base_field.
+#      4- size: optional argument, If passed, the array will have a maximum
+#         size as specified. This will be passed to the database, When nesting
+#         ArrayField, whether you use the size parameter or not, PostgreSQL
+#         requires that the arrays are rectangular:
 #
-#    * Not valid if you set such value:
-#    [2, 3],
-#    [2],
+#      * Not valid if you set such value:
+#        [2, 3],
+#        [2],
 #
-#    Case-insensitive collations:
-#    On PostgreSQL 12+, it’s preferable to use non-deterministic collations
-#    instead of the 'citext' extension. You can create them using the
-#    CreateCollation migration operation.
+#        Case-insensitive collations:
+#        On PostgreSQL 12+, it’s preferable to use non-deterministic collations
+#        instead of the 'citext' extension. You can create them using the
+#        CreateCollation migration operation.
 
 
 # How to use Postgres specific fields like (HStoreField, ArrayField)?
@@ -197,39 +220,39 @@ import os
 
 
 # Note: in Django ORM you have:
-# 1- aggregate(): that can be used to aggregate(group) the values of all
-#    returned records from the table.
+#       1- aggregate(): that can be used to aggregate(group) the values of all
+#          returned records from the table.
 #
-# >>POItem.objects.filter(purchase_order=po_id).aggregate(
-# >>               sum=Sum('total_amount)
-# >>)
+#       >>POItem.objects.filter(purchase_order=po_id).aggregate(
+#       >>               sum=Sum('total_amount)
+#       >>)
 #
-# This will return: {'sum': <sum(total_amount) column for all records>}
+#       This will return: {'sum': <sum(total_amount) column for all records>}
 #
-# OR:
+#       OR:
 #
-# >><model_class_name>.objects.filter(purchase_order=po_id).aggregate(
-# >>                         Sum('total_amount)
-# >>)
+#       >><model_class_name>.objects.filter(purchase_order=po_id).aggregate(
+#       >>                         Sum('total_amount)
+#       >>)
 #
-# This will return: <sum(total_amount) column for all records>
+#       This will return: <sum(total_amount) column for all records>
 #
-# 2- annotate(): that can be used to add extra field for every single record
-#    been return from the tabel:
+#       2- annotate(): that can be used to add extra field for every single
+#       record been return from the tabel:
 #
-# >><model_class_name>.objects.filter(purchase_order=po_id).annotate(
-# >>                         sum=Sum('total_amount)
-# >>)
+#       >><model_class_name>.objects.filter(purchase_order=po_id).annotate(
+#       >>                         sum=Sum('total_amount)
+#       >>)
 #
-# This will return for example if we have two records, will add extra field in
-# addition to the fields of the record:
+#       This will return for example if we have two records, will add extra
+#       field in addition to the fields of the record:
 #
-# <QuerySet [{'<first_record_fields>': <their values>,
-#               'sum': Decimal('220.00')},
-#            {'<second_record_fields>': <their values>,
-#               'sum': Decimal('300.00')}]
-# >
-#
+#       <QuerySet [{'<first_record_fields>': <their values>,
+#                   'sum': Decimal('220.00')},
+#                 {'<second_record_fields>': <their values>,
+#                   'sum': Decimal('300.00')}]
+#       >
+
 # Info: The Decimal() means the type of the field that have summed is Decimal.
 
 # Info: An django ORM F() object represents the value of a model field,
@@ -275,7 +298,7 @@ import os
 #
 #       # noinspection PyTypeChecker
 
-# Info: What difference between only() and values in django ORM?
+# Info: What difference between only() and values() in django ORM?
 #
 #       When you use the 'only' method, you still get full Django objects back
 #       from the database. These are expensive to set up and take a lot more
@@ -432,6 +455,16 @@ import os
 #       Also, you can use sorted/sort methods with Money values.
 
 
+def calculate_discount_amount(amount, discount_percentage):
+    """Return the amount of discount"""
+
+    # Calculate the rounded after discount value of the given amount.
+    amount_after_discount = round((amount * Decimal(discount_percentage))/100)
+
+    # Return the amount.
+    return amount - amount_after_discount
+
+
 def round_money(amount, currency=settings.MONEY_DEFAULT_CURRENCY,
                 round_decimal=settings.MONEY_DECIMAL_PLACES):
     """Method to return Money amount"""
@@ -471,6 +504,16 @@ def instance_time_stamp(instance):
     return instance
 
 
+class ISOCode(models.CharField):
+    """Customized char field to save its values as lower case"""
+
+    def get_prep_value(self, value):
+        """Field class method to perform preliminary non-db specific value
+        checks and conversions"""
+
+        return str(value).lower()
+
+
 class TimeStampedModel(models.Model):
     """Abstract class to create time stamp"""
 
@@ -507,6 +550,9 @@ class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
         """Creates and save new use"""
 
+        # Note: checking the required fields by model is blank or not, it's
+        #       unnecessary because model itself will refuse the blank value.
+
         if not email:
             raise ValueError('User must have an email address')
         if not username:
@@ -539,7 +585,7 @@ class UserManager(BaseUserManager):
         # Add extra permissions and field values.
         user.is_superuser = True
         user.is_staff = True
-        user.role = 'Admin'
+        user.role = 'admin'
 
         # update user object in database with the extra permissions.
         user.save(using=self._db)
@@ -552,10 +598,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Specify role field choices.
     role_choices = (
-        ("Admin", "Admin"),
-        ("Sales", "Sales"),
-        ("Inventory", "Inventory"),
-        ("Customer", "Customer")
+        ("admin", "Admin"),
+        ("sales", "Sales"),
+        ("inventory", "Inventory"),
+        ("customer", "Customer")
     )
 
     # Define model fields.
@@ -570,12 +616,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
-    email = models.CharField(max_length=100, unique=True)
+    email = models.EmailField(max_length=100, unique=True)
     phone_number = PhoneNumberField(unique=True)
     role = models.CharField(
         max_length=30,
         choices=role_choices,
-        default='Customer'
+        default='customer'
     )
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField()
@@ -583,6 +629,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
 
     # Hook in the custom model manager.
+    # 'objects' is the alias name of model default manager, and you use it when
+    # do queryset on database tabel e.g. User.objects.get(email=<value>)
     objects = UserManager()
 
     # Change default username field of user model to be the email field.
@@ -622,6 +670,51 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
+class Meta(models.Model):
+    """Model for create meta instances"""
+
+    class Meta:
+        """Customize django default way to plural the class name"""
+
+        verbose_name = 'Meta'
+        verbose_name_plural = 'Meta'
+
+    # Define model fields.
+    title = models.CharField(max_length=30, unique=True)
+
+    def __str__(self):
+        """String representation of model objects"""
+
+        return self.title
+
+
+class MetaItem(models.Model):
+    """Model for create meta item instances"""
+
+    class Meta:
+        """A Meta-class customization of model"""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['value', 'meta'],
+                name='meta_item_unique_appversion'
+            ),
+        ]
+
+    # Define model fields.
+    value = models.CharField(max_length=56, unique=True)
+    meta = models.ForeignKey(
+        'Meta',
+        on_delete=models.CASCADE,
+        related_name='meta_items_meta'
+    )
+
+    def __str__(self):
+        """String representation of model objects"""
+
+        return f'{self.meta.title}, {self.value}'
+
+
 class Country(models.Model):
     """Model to create country instances"""
 
@@ -643,29 +736,28 @@ class Country(models.Model):
     #         )),
     #     )
 
-    class Country(models.TextChoices):
-        """Enumeration class to set choices for country field"""
-
-        # Note: Enumeration types do not support 'named groups'.
-
-        # You can access the details using (.name, .value, .label)
-        # Use the bellow formula:
-        # VAR_NAME = value, _(human readable label)
-
-        # Countries
-        IRAQ = 'IRQ', _('Iraq')
+    # class Country(models.TextChoices):
+    #     """Enumeration class to set choices for country field"""
+    #
+    #     # Note: Enumeration types do not support 'named groups'.
+    #
+    #     # You can access the details using (.name, .value, .label)
+    #     # Use the bellow formula:
+    #     # VAR_NAME = value, _(human readable label)
+    #
+    #     # Countries
+    #     IRAQ = 'IRQ', _('Iraq')
 
     # Define model fields.
-    title = models.CharField(
-        max_length=56,
-        unique=True,
-        choices=Country.choices
-    )
+    title = models.CharField(max_length=56, unique=True)
+    iso_code = ISOCode(max_length=2, unique=True)
+    display_order = models.PositiveSmallIntegerField(default=10)
+    is_available = models.BooleanField(default=True)
 
     def __str__(self):
         """String representation of model objects"""
 
-        return self.title
+        return f'{self.title}, {self.iso_code}, available: {self.is_available}'
 
 
 class Address(models.Model):
@@ -678,8 +770,8 @@ class Address(models.Model):
         verbose_name_plural = 'Addresses'
 
     # Define model fields.
-    unit_number = models.CharField(max_length=5, blank=True)
-    street_number = models.CharField(max_length=3, blank=True)
+    # unit_number = models.CharField(max_length=5, blank=True)
+    # street_number = models.CharField(max_length=3, blank=True)
     address_line_1 = models.CharField(max_length=100)
     address_line_2 = models.CharField(max_length=100, blank=True)
     city = models.CharField(max_length=85)
@@ -687,7 +779,7 @@ class Address(models.Model):
     postal_code = models.CharField(max_length=8, blank=True)
     country = models.ForeignKey(
         'Country',
-        on_delete=models.CASCADE,
+        on_delete=models.RESTRICT,
         related_name='Addresses_country'
     )
 
@@ -695,8 +787,8 @@ class Address(models.Model):
         """String representation of model objects"""
 
         address = [
-            self.unit_number,
-            self.street_number,
+            # self.unit_number,
+            # self.street_number,
             self.address_line_1,
             self.city,
             self.country
@@ -998,6 +1090,8 @@ class Promotion(TimeStampedModel):
         choices=promotion_type_choices,
         default='Deal'
     )
+    max_use_times = models.PositiveIntegerField(default=10)
+    used_times = models.PositiveIntegerField(default=0)
     start_date = models.DateTimeField(default=timezone.now)
     end_date = models.DateTimeField(default=timezone.now)
     # You can enter a duration with a string with following format:
@@ -1007,6 +1101,7 @@ class Promotion(TimeStampedModel):
     #     help_text="Set the duration time ([DD] [[hh:]mm:]ss) for the"
     #               " promotion"
     # )
+    unlimited_use = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
     @property
@@ -1305,11 +1400,16 @@ class Supplier(TimeStampedModel):
     """Model class to for supplier instances"""
 
     # Define model fields.
+    uuid = models.UUIDField(
+        db_index=True,
+        default=uuid.uuid4,
+        editable=False
+    )
     title = models.CharField(max_length=50, unique=True)
     email = models.CharField(max_length=100, blank=True)
     phone_number = PhoneNumberField()
     contact_name = models.CharField(max_length=50)
-    is_active = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
@@ -1378,63 +1478,427 @@ class SupplierAddress(models.Model):
         return f'{self.supplier}, {self.address}'
 
 
-class PurchaseOrder(TimeStampedModel):
-    """Model class to for purchase order instances"""
+class ShippingMethod(models.Model):
+    """Model class for create shipping method instances"""
+
+    # Define model fields.
+    title = models.CharField(max_length=20, unique=True)
+    contact_name = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(max_length=100, blank=True)
+    phone_number = PhoneNumberField(null=True, blank=True)
+    is_available = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        """Validate 'phone number' if provided"""
+
+        if self.phone_number:
+            validate_international_phonenumber(self.phone_number)
+        if self.email:
+            self.email = BaseUserManager.normalize_email(self.email)
+
+        return super(
+            ShippingMethod,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+        return self.title
+
+
+class POShipping(TimeStampedModel):
+    """Model class for create purchase order shipping instances"""
+
+    # Set your custom validators.
+    MONEY_VALIDATOR = [
+        MinMoneyValidator({'USD': 0}),
+    ]
+
+    class Meta:
+        """Set metadata for your Model class"""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['shipping_method', 'address'],
+                name='po_shipping_unique_appversion'
+            ),
+        ]
+
+    # Define model fields.
+    shipping_method = models.ForeignKey(
+        'ShippingMethod',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='po_shipping_shipping_method'
+    )
+
+    address = models.ForeignKey(
+        'Address',
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='po_shipping_address'
+    )
+
+    cost = MoneyField(
+        max_digits=8,
+        decimal_places=settings.MONEY_DECIMAL_PLACES,
+        default_currency=settings.MONEY_DEFAULT_CURRENCY,
+        validators=MONEY_VALIDATOR
+    )
+
+    def save(self, *args, **kwargs):
+        """On save() method call for this model, update timestamps"""
+
+        return super(
+            POShipping,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+
+        shipping = [
+            self.shipping_method,
+            self.address,
+            self.cost
+        ]
+
+        returned_value = []
+
+        for value in shipping:
+            if value:
+                returned_value.append(str(value))
+
+        return ", ".join(returned_value)
+
+
+class POProfileManager(models.Manager):
+    """Custom manager for POProfile model"""
+
+    def create(self, *args, **kwargs):
+        """Override the create method of Manager queryset"""
+
+        if kwargs['phone_number']:
+            validate_international_phonenumber(kwargs['phone_number'])
+        if kwargs['email']:
+            kwargs['email'] = BaseUserManager.normalize_email(kwargs['email'])
+
+        return super(POProfileManager, self).create(*args, **kwargs)
+
+
+class POProfile(TimeStampedModel):
+    """Model class for create purchase order profile instances"""
+
+    # Note: if you want to change the name of default model mager:
+    #
+    #       profiles = models.Manager()
+    #
+    #       now the default manager is named as 'profiles'
+
+    # Note: if you are using multiple manager objects in same model then you
+    #       need to be careful about the order of the manager objects defined.
+    #       The first defined manager object will be treated as default manager
+    #       object. For example – In above example, “profiles” is the default
+    #       manager as it is defined first. Django uses default managers in
+    #       some internal process. So, be careful about choosing your default
+    #       manager, or you may get some unexpected results. If you want to
+    #       make a manager default and that manager object is not defined first
+    #       then you can define it as default manager by setting:
+    #
+    #       class Meta:
+    #            default_manager_name = <value>
+    #
+
+    # Info: A “Client” is someone who uses your services on one or more
+    #       occasions, while the “Customer” is someone who purchases from your
+    #       business on a recurring basis.
+
+    # Define model fields.
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(max_length=100, unique=True)
+    phone_number = PhoneNumberField(unique=True)
+    role = models.CharField(max_length=30, default='client')
+
+    # Hook in the custom model manager.
+    # 'objects' is the alias name of model default manager, and you use it when
+    # do queryset on database tabel e.g. POProfile.objects.get(email=<value>)
+    objects = POProfileManager()
+
+    @property
+    def full_name(self):
+        """Returns the person's full name."""
+
+        return f'{self.first_name} {self.last_name}'
+
+    def save(self, *args, **kwargs):
+        """On save() method call for this model, update timestamps"""
+
+        return super(
+            POProfile,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+        return f'{self.full_name}, {self.email}'
+
+
+class PaymentMethod(models.Model):
+    """Model class for create payment method instances"""
+
+    # Define model fields.
+    title = models.CharField(max_length=20, unique=True)
+    is_card = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True)
+    icon = models.ForeignKey(
+        'Icon',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='payment_methods_icon'
+    )
+    icon_color = models.CharField(max_length=6, default='0F1111')
+
+    def __str__(self):
+        """String representation of model objects"""
+        return f'{self.title}'
+
+
+class POPayment(TimeStampedModel):
+    """Model class for create purchase order payment instances"""
+
+    # Define model fields.
+    uuid = models.UUIDField(
+        db_index=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    # 'Provider' means the issuer of card e.g. bank.
+    provider = models.CharField(max_length=50, blank=True)
+    card_number = models.IntegerField(null=True, blank=True)
+    cardholder_name = models.CharField(max_length=50, blank=True)
+    expiry_date = models.DateField(blank=True, null=True)
+    payment_method = models.ForeignKey(
+        'PaymentMethod',
+        on_delete=models.RESTRICT,
+        related_name='po_payments_payment_method'
+    )
+    # Billing address
+    address = models.ForeignKey(
+        'Address',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_payments_address'
+    )
+    use_shipping_address = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        """On save() method call for this model, update timestamps"""
+
+        return super(
+            POPayment,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+
+        payment = [
+            self.provider,
+            self.card_number,
+            self.cardholder_name,
+            self.expiry_date,
+            self.payment_method
+        ]
+
+        returned_value = []
+
+        for value in payment:
+            if value:
+                returned_value.append(str(value))
+
+        return ", ".join(returned_value)
+
+
+class Tax(TimeStampedModel):
+    """Model class for create tax instances"""
 
     # Specify tax fulfill field choices.
     TAX_FULFILL_CHOICES = (
-        ("After discount", "After discount"),
-        ("Before discount", "Before discount")
-    )
-
-    # Specify PO status field choices.
-    PO_STATUS_CHOICES = (
-        ("Processing", "Processing"),
-        ("Shipped", "Shipped"),
-        ("Delivered", "Delivered"),
-        ("Returned", "Returned")
+        ("after discount", "After discount"),
+        ("before discount", "Before discount")
     )
 
     # Set your custom validators.
     PERCENTAGE_VALIDATOR = [MinValueValidator(0), MaxValueValidator(100)]
 
     # Define model fields.
-    # 'po_code' set by signal.
-    po_code = models.CharField(max_length=50, verbose_name='PO code')
-    summary = models.TextField(max_length=255, blank=True)
-    discount_percentage = models.DecimalField(
-        max_digits=3,
-        decimal_places=0,
-        validators=PERCENTAGE_VALIDATOR,
-        default='0',
-        help_text="%"
-    )
+    title = models.CharField(max_length=30, unique=True)
     tax_percentage = models.DecimalField(
         max_digits=3,
         decimal_places=0,
         validators=PERCENTAGE_VALIDATOR,
         default='0',
-        help_text="%"
+        help_text="Set tax percentage (0-100)"
     )
     tax_fulfill = models.CharField(
         max_length=20,
         choices=TAX_FULFILL_CHOICES,
-        default='After discount'
+        default='after discount'
     )
-    status = models.CharField(
+
+    def save(self, *args, **kwargs):
+        """On save() method call for this model, update timestamps"""
+
+        return super(
+            Tax,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+        return f'{self.title}, {self.tax_percentage}%, {self.tax_fulfill}'
+
+
+# class CountryTax(models.Model):
+#     """Model class for create country tax instance"""
+#
+#     class Meta:
+#         """Set metadata for your Model class"""
+#
+#         verbose_name = 'Country tax'
+#         verbose_name_plural = 'Country taxes'
+#
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=['country', 'tax'],
+#                 name='country_tax_unique_appversion'
+#             ),
+#         ]
+#
+#     # Define model fields.
+#     country = models.ForeignKey(
+#         'Country',
+#         on_delete=models.CASCADE,
+#         related_name='country_tax_country'
+#     )
+#     tax = models.ForeignKey(
+#         'Tax',
+#         on_delete=models.CASCADE,
+#         related_name='country_tax_tax'
+#     )
+#     is_customer_tax = models.BooleanField(default=False)
+#
+#     def __str__(self):
+#         """String representation of model objects"""
+#         return f'{self.country.title}, {self.tax.title}'
+
+
+class POStatus(models.Model):
+    """Model class for create purchase order status instances"""
+
+    # Specify PO status field choices.
+    PO_STATUS_CHOICES = (
+        ("processing", "Processing"),
+        ("shipped", "Shipped"),
+        ("delivered", "Delivered"),
+        ("returned", "Returned"),
+        ("canceled", "canceled")
+    )
+
+    # Define model fields.
+    title = models.CharField(
         max_length=20,
         choices=PO_STATUS_CHOICES,
         default='Processing'
+    )
+
+    def __str__(self):
+        """String representation of model objects"""
+        return self.title
+
+
+class PurchaseOrder(TimeStampedModel):
+    """Model class for create purchase order instances"""
+
+    # Define model fields.
+    # 'po_code' set by signal.
+    po_code = models.CharField(max_length=50, verbose_name='PO code')
+    summary = models.TextField(max_length=255, blank=True)
+    po_profile = models.ForeignKey(
+        'POProfile',
+        on_delete=models.PROTECT,
+        related_name='purchase_orders_po_profile'
+    )
+    po_payment = models.ForeignKey(
+        'POPayment',
+        on_delete=models.PROTECT,
+        related_name='purchase_orders_po_payment'
+    )
+    promotion = models.ForeignKey(
+        'Promotion',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='purchase_orders_promotion'
+    )
+    tax = models.ForeignKey(
+        'Tax',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='purchase_orders_tax'
+    )
+    po_shipping = models.ForeignKey(
+        'POShipping',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='purchase_orders_po_shipping'
     )
     supplier = models.ForeignKey(
         'Supplier',
         on_delete=models.PROTECT,
         related_name='purchase_orders_supplier'
     )
+    po_status = models.ForeignKey(
+        'POStatus',
+        on_delete=models.PROTECT,
+        related_name='purchase_orders_po_status'
+    )
 
     @property
-    def amount(self):
-        """Calculate the total payable amount of the order items"""
+    def po_status_title(self):
+        """Return the title of purchase order status"""
+        return self.po_status.title
+
+    @property
+    def po_discount_percentage(self):
+        """Return the decimal discount percentage of promotion if exist"""
+
+        if self.promotion:
+            return self.promotion.discount_percentage
+
+    @property
+    def po_tax_fulfill(self):
+        """Return tax fulfill"""
+        if self.tax:
+            return self.tax.tax_fulfill
+
+    @property
+    def po_tax_percentage(self):
+        """Return tax percentage"""
+        if self.tax:
+            return self.tax.tax_percentage
+
+    @property
+    def subtotal(self):
+        """Calculate the total payable amount money of the order items without
+        discount"""
 
         # Get the sum of total amount of all POItem instances those related
         # to this PO instance.
@@ -1444,7 +1908,7 @@ class PurchaseOrder(TimeStampedModel):
         #       dictionary.
 
         # Info: for below queryset call it's unnecessary to use all() method.
-        queryset = self.po_items_purchase_order.all().values(
+        queryset = self.po_items_purchase_order.values(
             'price_per_unit',
             'quantity'
         ).aggregate(
@@ -1454,44 +1918,98 @@ class PurchaseOrder(TimeStampedModel):
         # Our queryset call will return one object as dictionary not a list.
         if queryset:
             return round_money(queryset['sum'])
+        else:
+            return round_money(0)
 
     @property
-    def discount_amount(self):
-        """Calculate the discount amount"""
+    def savings(self):
+        """Calculate the total discount money of product items those related to
+        promotion instance"""
 
         # Note: You can't make math operations(add, multiply..etc) of Decimal
         #       field values directly, you need to use 'decimal.Decimal' class,
         #       also you can't use the value of Decimal() in math operation
         #       with None type.
-        if self.amount:
 
-            # noinspection PyTypeChecker
-            return (self.amount * Decimal(self.discount_percentage))/100
+        # Initialize discount amount
+        discount = round_money(0)
+
+        if self.promotion:
+
+            discount_percentage = self.po_discount_percentage
+
+            po_items = self.po_items_purchase_order.all()
+
+            for item in po_items:
+
+                # Get the promotion item instance.
+                promotion_item = PromotionItem.objects.filter(
+                    promotion=self.promotion,
+                    product_item=item.product_item
+                ).first()
+
+                # If promotion item instance is not None.
+                if promotion_item:
+
+                    item_price_amount = item.price_per_unit.amount
+
+                    # Get amount after discount for the item price.
+                    amount_after_discount = calculate_discount_amount(
+                        amount=item_price_amount,
+                        discount_percentage=discount_percentage
+                    )
+
+                    # Find the discount amount:
+                    # price amount minus amount after discount.
+                    discount_amount = item_price_amount - amount_after_discount
+
+                    # Add rounded money amount of 'discount amount' multiplied
+                    # by the requested quantity value into 'discount'.
+                    discount += round_money(
+                        amount=discount_amount * item.quantity
+                    )
+
+        return discount
 
     @property
-    def tax_amount(self):
-        """Calculate the tax amount value in depend on tax_fulfill value"""
+    def po_tax(self):
+        """Calculate the tax money in depend on tax_fulfill value"""
 
-        if self.amount:
+        # Note: 1- In case the tax calculated before discount, set the whole
+        #          purchase order amount.
+        #       2- In case the tax calculated after discount. set the purchase
+        #          order amount minus discount.
 
-            # In case the tax calculated before discount, set the whole amount.
-            amount = self.amount
+        tax = 0
 
-            # In case the tax calculated after discount. set the amount after
-            # discount.
-            if self.tax_fulfill == 'After discount':
-                amount -= self.discount_amount
+        if self.tax:
 
-            # noinspection PyTypeChecker
-            return (amount * Decimal(self.tax_percentage))/100
+            subtotal = self.subtotal
+
+            if self.po_tax_fulfill == 'after discount':
+
+                # Minus the purchase order discount money from the subtotal.
+                subtotal -= self.savings
+
+            tax = (subtotal.amount * Decimal(self.po_tax_percentage)) / 100
+
+        return round_money(tax)
 
     @property
-    def total_amount(self):
-        """calculate the next formula:
-         total_amount = (amount - discount_amount) + tax_amount
-         """
-        if self.amount:
-            return (self.amount - self.discount_amount) + self.tax_amount
+    def shipping_cost(self):
+        """Return the shipping cost"""
+
+        if self.po_shipping:
+            return self.po_shipping.cost
+
+        return round_money(0)
+
+    @property
+    def grand_total(self):
+        """Return the total amount money for current purchase order instance
+        after taking out the discount and then add tax plus shipping cost"""
+
+        return (self.subtotal-self.savings) + self.po_tax + self.shipping_cost
 
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
@@ -1503,7 +2021,7 @@ class PurchaseOrder(TimeStampedModel):
 
     def __str__(self):
         """String representation of model objects"""
-        return f'{self.po_code}, {self.supplier}'
+        return f'{self.po_code}, {self.supplier}, {self.po_status}'
 
 
 class ProductGroup(TimeStampedModel):
@@ -1669,6 +2187,10 @@ class Product(TimeStampedModel):
 class ProductItem(TimeStampedModel):
     """Model class to create product's item instances"""
 
+    # Set max and min prices amount, it's useful in filtering to set conditions
+    USD_MIN_PRICE_AMOUNT = 0
+    USD_MAX_PRICE_AMOUNT = 5000
+
     # Set your custom validators.
     MONEY_VALIDATOR = [
         MinMoneyValidator({'USD': 1}),
@@ -1683,10 +2205,17 @@ class ProductItem(TimeStampedModel):
                 fields=['product'],
                 condition=models.Q(is_default=True),
                 name='one_default_item_per_product'
-            )
+            ),
+            # This constraint can't be use, since the value of stock is
+            # changeable.
+            # models.CheckConstraint(
+            #     check=models.Q(limit_per_order__lte=models.F('stock')),
+            #     name='limit_per_order_lte_stock'
+            # )
         ]
 
     # Define model fields.
+    # 'slug' set by signal.
     slug = models.SlugField(max_length=100)
     thumbnail = ProcessedImageField(
         blank=True,
@@ -1702,6 +2231,12 @@ class ProductItem(TimeStampedModel):
         validators=MONEY_VALIDATOR
     )
     stock = models.PositiveSmallIntegerField(default=10)
+    # 'limit_per_order' set by signal.
+    limit_per_order = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)]
+    )
     # You can't set unique constraint on HstoreField since it's {key: value}.
     details = pg_fields.HStoreField(null=True, blank=True)
     product = models.ForeignKey(
@@ -1728,11 +2263,25 @@ class ProductItem(TimeStampedModel):
         # this instance.
         try:
             promotion_item = self.promotion_items_product_item.filter(
-                promotion__promotion_type='Deal',
-                promotion__is_active=True,
-                promotion__start_date__lte=timezone.now(),
-                promotion__end_date__gt=timezone.now()
-            ).latest('pk')
+                models.Q(
+                    promotion__promotion_type='Deal',
+                    promotion__is_active=True,
+                    promotion__unlimited_use=True,
+                    promotion__start_date__lte=timezone.now(),
+                    promotion__end_date__gt=timezone.now()
+                ) |
+                models.Q(
+                    promotion__promotion_type='Deal',
+                    promotion__is_active=True,
+                    promotion__unlimited_use=False,
+                    promotion__used_times__lt=models.F(
+                        'promotion__max_use_times'
+                    ),
+                    promotion__start_date__lte=timezone.now(),
+                    promotion__end_date__gt=timezone.now()
+                )
+            ).distinct().latest('pk')
+
         except ObjectDoesNotExist:
             # latest() will throw an exception if it doesn't return an object.
             return None
@@ -1804,14 +2353,14 @@ class ProductItem(TimeStampedModel):
             # Get the discount percentage of promotion.
             discount_percentage = instance.promotion.discount_percentage
 
-            # Calculate the rounded discount value of list price amount.
-            discount = round((amount * Decimal(discount_percentage))/100)
-
-            # Calculate the deal price amount.
-            deal_price = amount - discount
+            # Get the calculated amount of discount.
+            deal_price_amount = calculate_discount_amount(
+                amount=amount,
+                discount_percentage=discount_percentage
+            )
 
             # Return the deal_price as Money value.
-            return round_money(deal_price, self.list_price.currency)
+            return round_money(deal_price_amount, self.list_price.currency)
             ########################################################
 
     @property
@@ -1903,6 +2452,7 @@ class ProductItemImage(TimeStampedModel):
     """Model class to create image instances for product item"""
 
     # Define model fields.
+    # 'slug' set by signal.
     slug = models.SlugField(max_length=100)
     image = ProcessedImageField(
         upload_to=create_image_file_path,
@@ -2259,502 +2809,3 @@ class POItem(models.Model):
     def __str__(self):
         """String representation of model objects"""
         return f'{self.purchase_order}, {self.product_item}'
-
-
-# class Offer(TimeStampedModel):
-#     """Model class to set offer instances"""
-#
-#     class Meta:
-#
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=['offer_name', 'offer_info'],
-#                 name='offer_unique_appversion'
-#                 # include=['uuid']
-#             )
-#         ]
-#
-#     # Define model fields.
-#     offer_name = models.CharField(max_length=25, unique=True)
-#     offer_info = models.CharField(max_length=30, blank=True)
-#     offer_discount = models.SmallIntegerField(default=0)
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             Offer,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return "{offer_name} {offer_info}".format(
-#             offer_name=self.offer_name,
-#             offer_info=self.offer_info
-#         )
-
-
-# class Subject(TimeStampedModel):
-#     """Model Class to create instance of subject related to Type model"""
-#
-#     subject_name = models.CharField(max_length=20, unique=True)
-#     details = models.CharField(max_length=30)
-#     type = models.ManyToManyField(
-#         'Type',
-#         related_name='subject_type'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             Subject,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#
-#         return '{}: {}'.format(self.subject_name, self.details)
-
-
-# class Style(TimeStampedModel):
-#     """Model to create style objects"""
-#
-#     # Define model fields.
-#     style_name = models.CharField(max_length=40, default='ST', unique=True)
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(Style, instance_time_stamp(self)).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.style_name
-#
-#
-# class ColorGroup(TimeStampedModel):
-#     """Model to create color group objects"""
-#
-#     # Define model fields.
-#     slug = models.SlugField(max_length=100, unique=True)
-#     color_group_thumbnail = ProcessedImageField(
-#         blank=True,
-#         upload_to=create_image_file_path,
-#         format='JPEG',
-#         options={'quality': 90}
-#     )
-#     color_group_name = models.CharField(max_length=30, unique=True)
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             ColorGroup,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.color_group_name
-#
-#
-# class Color(TimeStampedModel):
-#     """Model to create color objects"""
-#
-#     # Choices of colors.
-#     # COLOR_PALETTE = [
-#     #     ('#FFFFFF', 'white',),
-#     #     ('#000000', 'black',),
-#     #     ('#afb8bd', 'Dove Grey',),
-#     #     ('#631D20', 'Red Plum',),
-#     #     ('#ff66cc', 'Rose Pink',),
-#     #     ('#022658', 'French Navy',),
-#     # ]
-#
-#     # Define model fields.
-#     slug = models.SlugField(max_length=100, unique=True)
-#     color_name = models.CharField(max_length=40, unique=True)
-#     color_thumbnail = ProcessedImageField(
-#         blank=True,
-#         upload_to=create_image_file_path,
-#         format='JPEG',
-#         options={'quality': 90}
-#     )
-#     # Note: 'samples' option is not restrictive and allows the selection of
-#     #        another color from the spectrum.
-#     # color_hex = ColorField(default='ST', samples=COLOR_PALETTE)
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(Color, instance_time_stamp(self)).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.color_name
-#
-#
-# class Size(TimeStampedModel):
-#     """Model class to set size instances"""
-#
-#     class Size(models.TextChoices):
-#         """Enumeration class to set choices to size field"""
-#
-#         # Note: Enumeration types do not support 'named groups'.
-#
-#         # You can access the details using (.name, .value, .label)
-#         # Use the bellow formula:
-#         # VAR_NAME = value, _(human readable label)
-#
-#         # Default
-#         STANDARD = 'ST', _('Standard')
-#
-#         # Adults
-#         SMALL = 'S', _('Small')
-#         MEDIUM = 'M', _('Medium')
-#         LARGE = 'L', _('Large')
-#         X_LARGE = 'XL', _('X-Large')
-#         X2_LARGE = '2XL', _('XX-Large')
-#         X3_LARGE = '3XL', _('3X-Large')
-#         X4_LARGE = '4XL', _('4X-Large')
-#         X5_LARGE = '5XL', _('5X-Large')
-#
-#         # Children/Youngsters
-#         Y3 = '3Y', _('3Y')
-#         Y4 = '4Y', _('4Y')
-#         Y5 = '5Y', _('5Y')
-#         Y6 = '6Y', _('6Y')
-#         Y7 = '7Y', _('7Y')
-#         Y8 = '8Y', _('8Y')
-#         Y9 = '9Y', _('9Y')
-#         Y10 = '10Y', _('10Y')
-#         Y11 = '11Y', _('11Y')
-#         Y12 = '12Y', _('12Y')
-#         Y13 = '13Y', _('13Y')
-#         Y14 = '14Y', _('14Y')
-#         Y15 = '15Y', _('15Y')
-#         Y16 = '16Y', _('16Y')
-#         Y17 = '17Y', _('17Y')
-#         Y18 = '18Y', _('18Y')
-#         Y19 = '19Y', _('19Y')
-#         Y20 = '20Y', _('20Y')
-#
-#         # Baby
-#         PREEMIE = 'PR', _('Preemie')
-#         NEWBORN = 'NE', _('Newborn')
-#         M3 = '3M', _('0-3 mos.')
-#         M6 = '6M', _('3-6 mos.')
-#         M9 = '9M', _('6-9 mos.')
-#         M12 = '12M', _('9-12 mos.')
-#         M18 = '18M', _('12-18 mos.')
-#         M24 = '24M', _('18-24 mos.')
-#         T2 = '2T', _('T2')
-#
-#     # Define model fields.
-#     size_name = models.CharField(
-#         max_length=20,
-#         unique=True,
-#         choices=Size.choices,
-#         default=Size.STANDARD
-#     )
-#     type = models.ManyToManyField(
-#         'Type',
-#         related_name='sizes_type'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(Size, instance_time_stamp(self)).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.size_name
-
-
-# class Product(TimeStampedModel):
-#     """Model to create product"""
-#
-#     class Meta:
-#
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=[
-#                     'department',
-#                     'category_variation',
-#                     'type_variation',
-#                     'product_name'
-#                 ],
-#                 name='product_unique_appversion'
-#             )
-#         ]
-#         verbose_name = 'Product Details'
-#         verbose_name_plural = 'Product Details'
-#
-#     # Define model fields.
-#     product_name = models.CharField(max_length=30, unique=True)
-#     product_overview = models.TextField(max_length=300, blank=True)
-#     department = models.ForeignKey(
-#         'Department',
-#         on_delete=models.CASCADE,
-#         related_name='products_department'
-#     )
-#     category_variation = models.ForeignKey(
-#         'CategoryVariation',
-#         on_delete=models.PROTECT,
-#         related_name='products_category_variation'
-#     )
-#     type_variation = models.ForeignKey(
-#         'TypeVariation',
-#         on_delete=models.PROTECT,
-#         related_name='products_type_variation'
-#     )
-#     brand = models.ForeignKey(
-#         'Brand',
-#         null=True,
-#         blank=True,
-#         on_delete=models.PROTECT,
-#         related_name='products_brand'
-#     )
-#     subject = models.ManyToManyField(
-#         'Subject',
-#         on_delete=models.SET_NULL,
-#         related_name='products_subject'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             Product,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.product_name
-#
-#
-# class ProductStyleVariation(TimeStampedModel):
-#     """Model class to create instance of style variation for each product"""
-#
-#     class Meta:
-#
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=['product', 'style'],
-#                 name='style_variation_unique_appversion'
-#             )
-#         ]
-#
-#     # Define model fields.
-#     slug = models.SlugField(max_length=100, unique=True)
-#     thumbnail = ProcessedImageField(
-#         upload_to=create_image_file_path,
-#         format='JPEG',
-#         options={'quality': 90},
-#         null=True,
-#         blank=True
-#     )
-#     product_group = models.ForeignKey(
-#         'ProductGroup',
-#         null=True,
-#         blank=True,
-#         on_delete=models.SET_NULL,
-#         related_name='product_style_variations_product_group'
-#     )
-#     product_style_headline = models.CharField(max_length=80, unique=True)
-#     product = models.ForeignKey(
-#         'ProductDetails',
-#         on_delete=models.CASCADE,
-#         related_name='product_style_variations_product_details'
-#     )
-#     style = models.ForeignKey(
-#         'Style',
-#         on_delete=models.CASCADE,
-#         related_name='product_style_variations_style'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             ProductStyleVariation,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.style.style_name
-#
-#
-# class ProductColorVariation(TimeStampedModel):
-#     """Model class to create instance of color variation for each size
-#     variation"""
-#
-#     class Meta:
-#
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=['style_variation', 'color'],
-#                 name='color_variation_unique_appversion'
-#             )
-#         ]
-#
-#     # Define model fields.
-#     style_variation = models.ForeignKey(
-#         'ProductStyleVariation',
-#         on_delete=models.CASCADE,
-#         related_name='product_color_variations_style_variation'
-#     )
-#     color = models.ForeignKey(
-#         'Color',
-#         on_delete=models.CASCADE,
-#         related_name='product_color_variations_color'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             ProductColorVariation,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.color.color_name
-#
-#
-# class ProductSizeVariation(TimeStampedModel):
-#     """Model class to create instance of size variation for each color
-#     variation"""
-#
-#     class Meta:
-#
-#         constraints = [
-#             models.UniqueConstraint(
-#                 fields=['color_variation', 'size'],
-#                 name='size_variation_unique_appversion'
-#             )
-#         ]
-#
-#     # Define model fields.
-#     list_price = MoneyField(
-#         max_digits=8,
-#         decimal_places=2,
-#         default_currency='USD',
-#         validators=[
-#             MinMoneyValidator({'USD': 1, 'IQD': 1000}),
-#             MaxMoneyValidator({'USD': 5000, 'IQD': 10000000})
-#         ]
-#     )
-#     deal_price = MoneyField(
-#         max_digits=8,
-#         decimal_places=2,
-#         null=True,
-#         blank=True,
-#         default_currency=None,
-#         validators=[
-#             MinMoneyValidator({'USD': 1, 'IQD': 1000}),
-#             MaxMoneyValidator({'USD': 5000, 'IQD': 10000000})
-#         ]
-#     )
-#     stock = models.SmallIntegerField(default=1)
-#     is_available = models.BooleanField(default=True)
-#     size_variation = models.ForeignKey(
-#         'ProductSizeVariation',
-#         on_delete=models.CASCADE,
-#         related_name='product_details_size_variation'
-#     )
-#     offer = models.ForeignKey(
-#         'Offer',
-#         null=True,
-#         blank=True,
-#         on_delete=models.SET_NULL,
-#         related_name='product_details_offer'
-#     )
-#     color_variation = models.ForeignKey(
-#         'ProductColorVariation',
-#         on_delete=models.CASCADE,
-#         related_name='product_size_variations_color_variation'
-#     )
-#     size = models.ForeignKey(
-#         'Size',
-#         on_delete=models.CASCADE,
-#         related_name='product_size_variations_size'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             ProductSizeVariation,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.size.size_name
-#
-#
-# class ProductImage(TimeStampedModel):
-#     """Model Class to create instance of image for each product instance"""
-#
-#     # Define model fields.
-#     slug = models.SlugField(max_length=100, unique=True)
-#     thumbnail = ProcessedImageField(
-#         upload_to=create_image_file_path,
-#         format='JPEG',
-#         options={'quality': 90},
-#         null=True,
-#         blank=True
-#     )
-#     style_variation = models.ForeignKey(
-#         'StyleVariation',
-#         on_delete=models.CASCADE,
-#         related_name='style_variation_images_product'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             ProductImage,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.style_variation
-#
-#
-# class ProductSizeDetailsVariation(TimeStampedModel):
-#     """Model Class to create instance of subject for each product instance"""
-#
-#     # Define model fields.
-#     product = models.ForeignKey(
-#         'Product',
-#         on_delete=models.CASCADE,
-#         related_name='product_subject_variations_product'
-#     )
-#     subject = models.ForeignKey(
-#         'Subject',
-#         on_delete=models.CASCADE,
-#         related_name='product_subject_variations_subject'
-#     )
-#
-#     def save(self, *args, **kwargs):
-#         """On save() method call for this model, update timestamps"""
-#
-#         return super(
-#             ProductImage,
-#             instance_time_stamp(self)
-#         ).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         """String representation of model objects"""
-#         return self.subject

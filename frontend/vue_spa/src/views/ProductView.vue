@@ -234,14 +234,14 @@ const triggerGetDataResult = async (method, slug, itemS, attr=null, onlyItem=fal
 
   // Check if return response is empty or not.
   if(Object.keys(storeProduct.dataResult).length === 0 || Object.keys(storeProduct.selectedProductItem).length === 0){
-    await router?.replace(
+    await router.replace(
         {
           name: 'page-not-found',
           // preserve current path and remove the first char to avoid the target URL starting with `//`
-          params: { pathMatch: route?.path.substring(1).split('/') },
+          params: { pathMatch: route.path.substring(1).split('/') },
           // preserve existing query and hash if any
-          query: route?.query,
-          hash: route?.hash
+          query: route.query,
+          hash: route.hash
         }
     );
   }
@@ -256,8 +256,8 @@ const cleanUrl = (registeredArray, queryObj) =>{
   if (Object.keys(cleanedQueryObj).length !== Object.keys(queryObj).length) {
     // Note: When trying to replace current router values, set 'name' value not 'path'
     //       because will not work.
-    router?.replace({
-      name: route?.name,
+    router.replace({
+      name: route.name,
       query: cleanedQueryObj
     });
   }
@@ -266,18 +266,8 @@ const cleanUrl = (registeredArray, queryObj) =>{
 /*
   call functions
 */
-setPageTitle(`Jamie & Cassie | ${storeProduct.dataResult?.title}`);
-if( route ){
-  /*
-   Info: Somtimes when press back button in the browser, happen to raise the below error:
-
-         typeError: Cannot read properties of undefined (reading 'query')
-
-         So we check that route is exists (not null or undefined) and has 'query' object
-         as property before run cleanUrl method.
-   */
-  cleanUrl(['itemS'], route?.query);
-}
+setPageTitle(`Jamie & Cassie | ${storeProduct.dataResult.title}`);
+cleanUrl(['itemS'], route.query);
 
 /*
   call functions with top-level await, to trigger <suspense> in parent component.

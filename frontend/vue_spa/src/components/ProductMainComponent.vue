@@ -10,17 +10,17 @@
           <span v-if="props.promotionSummary" class="badge bg-white">{{ props.promotionSummary }}</span>
       </div>
 
-      <div class="mb-3">
+      <div class="mt-2 mb-3">
 
           <div v-if="props.dealPriceAmount">
-            <span class="price-symbol h6">{{ props.priceCurrencySymbol }}</span>
-            <span class="price h4">{{ props.dealPriceAmount }}</span>
-            <del class="price-old h5">{{ props.listPriceAmount }}</del>
+            <span class="price-symbol">{{ props.priceCurrencySymbol }}</span>
+            <span class="price">{{ props.dealPriceAmount }}</span>
+            <del class="price-old">{{ props.listPriceAmount }}</del>
           </div>
 
           <div v-else>
-            <span class="price-symbol h6">{{ props.priceCurrencySymbol }}</span>
-            <span class="price h4">{{ props.listPriceAmount }}</span>
+            <span class="price-symbol">{{ props.priceCurrencySymbol }}</span>
+            <span class="price">{{ props.listPriceAmount }}</span>
           </div>
 
         </div>
@@ -29,7 +29,19 @@
 
       <hr>
 
-      <product-select-component :store-product="storeProduct"
+      <div class="mb-1" style="display: block">
+        <span class="me-2" style="font-weight: 400">SKU:</span>
+        <span>{{storeProduct.selectedProductItem['sku']}}</span>
+      </div>
+
+      <product-select-component :product-options="storeProduct.productOptions"
+                                :data-loading="storeProduct.dataLoading"
+                                :selected-options="storeProduct.selectedProductItemOptions"
+                                :selected-same-option-status="storeProduct.selectedProductItemSameOptionsStatus"
+                                :product-options-combination="storeProduct.productOptionsCombination"
+                                :product-items-slugs="storeProduct.productItemsSlugs"
+                                :use-color-shape="storeProduct.dataResult['use_item_attribute_color_shape']"
+                                :use-img="storeProduct.dataResult['use_item_attribute_img']"
                                 :trigger-get-data-result="props.triggerGetDataResult"
                                 @active-option="activeOption = $event.status"
       />
@@ -42,7 +54,7 @@
 
       <template v-if="!props.temporarilyNotAvailable">
 
-        <template v-if="storeCart.isItemsExists(storeProduct.selectedProductItem['slug']) === true">
+        <template v-if="storeCheckout.isItemExist(storeProduct.selectedProductItem['slug']) === true">
 
           <div class="row" style="padding: 0;margin: 0">
 
@@ -61,9 +73,9 @@
 
           <div class="row" style="padding: 0;margin: 0" @click="addToCart">
 
-            <div :class="['btn', activeOption ? 'btn-add-cart' : 'disabled-btn-add-cart']">
+            <div :class="['btn', !activeOption || storeProduct.dataLoading ? 'disabled-btn-add-cart' : 'btn-add-cart']">
 
-              <template v-if="!activeOption">
+              <template v-if="!activeOption || storeProduct.dataLoading">
 
                 <span style="color: #464646; font-weight: 400; transition: all 0.3s ease-in-out">Select from above</span>
 
@@ -97,7 +109,7 @@
 /*
   Libraries, methods, variables and components imports
 */
-import {useCartStore} from "@/store/Cart";
+import {useCheckoutStore} from "@/store/Checkout";
 import ProductSelectComponent from "@/components/ProductSelectComponent";
 import{toRef, defineProps, ref} from "vue";
 
@@ -114,6 +126,7 @@ export default {
 /*
   Define handlers (properties, props and computed)
 */
+
 const props = defineProps({
   storeProduct: {
     type: Object,
@@ -166,7 +179,7 @@ const props = defineProps({
   }
 });
 const storeProduct = toRef(props, 'storeProduct');
-const storeCart = useCartStore();
+const storeCheckout = useCheckoutStore();
 const activeOption = ref(false);
 
 /*
@@ -208,23 +221,27 @@ const addToCart = () =>{
       }
     }
 
-    // Set the price.
-    let itemPrice = ['', null, undefined, 0].includes(item['deal_price_amount']) ?
+    // Set the price amount of item.
+    let itemPriceAmount = ['', null, undefined, 0].includes(item['deal_price_amount']) ?
         item['list_price_amount'] : item['deal_price_amount'];
 
     // Set the object to add into 'products' in cart store.
     let obj = {
       slug: props.slug,
-      itemS: item['slug'],
       title: props.title,
-      currencySymbol: item['price_currency_symbol'],
-      price: itemPrice,
       attributes: attributes,
-      thumbnail: item['thumbnail']
+      sku: item['sku'],
+      itemS: item['slug'],
+      currencySymbol: item['price_currency_symbol'],
+      priceAmount: itemPriceAmount,
+      limitPerOrder: item['limit_per_order'],
+      thumbnail: item['thumbnail'],
+      supplierUUID: item['supplier']['uuid'],
+      quantity: 1
     };
 
-    // Trigger 'addProduct' with a given value.
-    storeCart.addItem(obj);
+    // Trigger checkout store 'addItem' with a given value.
+    storeCheckout.addItem(obj);
   }
 };
 
@@ -248,6 +265,16 @@ const addToCart = () =>{
   color: #B12704 !important;
 }
 
+.price-symbol{
+  font-size: 13px!important;
+}
+.price{
+  font-size: 18px!important;
+}
+.price-old{
+  font-size: 16px!important;
+}
+
 /*.link-title a{*/
 /*  color: #0F1111 !important;*/
 /*  text-decoration: none;*/
@@ -257,12 +284,13 @@ const addToCart = () =>{
 /*}*/
 
 .btn-add-cart, .disabled-btn-add-cart {
+  margin-top: 8px!important;
   padding: 9px 0 9px 0 !important;
   letter-spacing: 1px;
   border-width: 1px;
   border-style: solid;
   border-color: #D5D9D9 !important;
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: 0 2px 5px 0 rgb(213 217 217 / 50 ) !important;
   transition: all 400ms ease-in-out;
 }

@@ -26,7 +26,7 @@ export const usePaginationStore = defineStore('Pagination', {
     dataResult: [],
     dataCount: 0,
     page_size: 1,
-    pageArray: [],
+    range: [],
     dataLoading: false
   }),
   getters: {
@@ -53,7 +53,7 @@ export const usePaginationStore = defineStore('Pagination', {
         start = 1;
       }
       end = end > this.pagesCount ? this.pagesCount : end;
-      this.pageArray = range(start, (+end+1)); // since range() count from start to end-1, we add 1 to include the end.
+      this.range = range(start, (+end+1)); // since range() count from start to end-1, we add 1 to include the end.
     },
     async changePage(endpoint, pageNumber) {
       /**

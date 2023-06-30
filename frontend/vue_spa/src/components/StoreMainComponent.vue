@@ -32,7 +32,12 @@
           </div>
 
           <div>
-            <materialize-chips-component :store-filter="storeFilter" />
+            <materialize-chips-component :store-filter="storeFilter"
+                                         :checked-options="storeFilter.checkedOptions"
+                                         :min-price="storeFilter.price['minPrice']"
+                                         :max-price="storeFilter.price['maxPrice']"
+                                         :select-by-option="storeFilter.selectByOption"
+            />
           </div>
 
         </header><!-- sect-heading -->
@@ -65,7 +70,10 @@
 
         </div> <!-- row end.// -->
 
-        <pagination-component :store-pagination="props.storePagination"/>
+        <pagination-component :range="storePagination.range"
+                              :page-number="storePagination.pageNumber"
+                              :pages-count="storePagination.pagesCount"
+        />
 
       </template>
 
@@ -123,6 +131,7 @@ const props = defineProps({
     required: true
   }
 });
+const storePagination = toRef(props, 'storePagination');
 const storeFilter = toRef(props, 'storeFilter');
 // Define the list of events that you want to emit.
 const emits = defineEmits(['toggle-filter-side-panel']);

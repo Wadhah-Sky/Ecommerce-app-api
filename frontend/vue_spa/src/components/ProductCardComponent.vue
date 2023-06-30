@@ -32,7 +32,7 @@
                     v-tooltip
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
-                    title="Multi variations of the product"
+                    title="This product has multi variations"
               >Multi variations
               </span>
 

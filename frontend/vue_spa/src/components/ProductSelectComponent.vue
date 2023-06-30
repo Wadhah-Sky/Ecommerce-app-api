@@ -3,7 +3,7 @@
   <template v-if="Object.keys(productOptions).length > 0">
 
     <div style="display: inline-block">
-      <div v-if="storeProduct.dataLoading">
+      <div v-if="props.dataLoading">
         <font-awesome-icon :icon="['fa-solid', 'spinner']"
                            style="color: #0f1111; font-size: 15px;"
                            spin
@@ -36,10 +36,11 @@
 
             </div>
 
-            <product-single-select-component v-model="selectedOption[index]"
+            <product-single-select-component v-model="selectedOptions[index]"
                                              :group-name="index"
                                              :options="options"
                                              :use-img="useImg ? checkThumbnailsAvailability(index) : false"
+                                             :rise-picker-syllable="risePickerSyllable"
                                              track-by="value"
                                              parent-attr="parentAttribute"
                                              @mouseenter="setSelectLabel(index, $event.label)"
@@ -81,7 +82,7 @@
 
             </div>
 
-            <multi-select v-model="selectedOption[index]"
+            <multi-select v-model="selectedOptions[index]"
                           :options="options"
                           :multiple="selectedSameOptionStatus[index]"
                           :preselect-first="true"
@@ -97,7 +98,7 @@
                           @remove="Object.keys(productOptions).length > 1 ?
                             updateProductOptionsStatus(index, $event, selectedSameOptionStatus[index], true) : ''"
                           :placeholder="selectedSameOptionStatus[index] ? 'Pick multiple values' : 'Pick a value'"
-                          :disabled="storeProduct.dataLoading"
+                          :disabled="props.dataLoading"
             />
           </template>
         </div>
@@ -133,7 +134,7 @@
 */
 import ProductSingleSelectComponent from "@/components/ProductSingleSelectComponent";
 import {useRouter, useRoute} from "vue-router";
-import{ref, toRef, defineProps, defineEmits, watch, onMounted} from "vue";
+import{ref, defineProps, defineEmits, watch, onMounted} from "vue";
 
 export default {
   name: "ProductSelectComponent",
@@ -149,25 +150,56 @@ export default {
   Define handlers (properties, props and computed)
 */
 const props = defineProps({
-  storeProduct: {
+  productOptions: {
+    type: Object,
+    required: true
+  },
+  selectedOptions: {
+    type: Object,
+    required: true
+  },
+  productOptionsCombination: {
+    type: Object,
+    required: true,
+  },
+  productItemsSlugs: {
     type: Object,
     required: true
   },
   triggerGetDataResult:{
     type: Function,
     required: true
-  }
+  },
+  selectedSameOptionStatus: {
+    type: Object,
+    required: false,
+    default: null
+  },
+  useColorShape: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  useImg: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
+  dataLoading: {
+    type: Boolean,
+    required: false,
+    default: false
+  },
 });
-const storeProduct = toRef(props, 'storeProduct');
-const productOptions = ref(storeProduct.value.productOptions);
+const productOptions = ref(props.productOptions);
 // selected option should looks like below:
 // {'Color': [{'value': 'Black'}, {'value': 'Ocean blue'}], 'Size': [{'value': '38'}]}
-const selectedOption = ref(storeProduct.value.selectedProductItemOptions);
-const selectedSameOptionStatus = ref(storeProduct.value.selectedProductItemSameOptionsStatus);
-const productOptionsCombination = ref(storeProduct.value.productOptionsCombination);
-const productItemsSlugs = ref(storeProduct.value.productItemsSlugs);
-const useColorShape = storeProduct.value.dataResult['use_item_attribute_color_shape'];
-const useImg = storeProduct.value.dataResult['use_item_attribute_img'];
+const selectedOptions = ref(props.selectedOptions);
+const selectedSameOptionStatus = ref(props.selectedSameOptionStatus);
+const productOptionsCombination = ref(props.productOptionsCombination);
+const productItemsSlugs = ref(props.productItemsSlugs);
+const useColorShape = ref(props.useColorShape);
+const useImg = ref(props.useImg);
 const router = useRouter();
 const route = useRoute();
 const selectLabel = ref({});
@@ -215,12 +247,12 @@ const resetOption = (index) => {
    */
 
   /*
-    Note: the value of selectedOption.value[index] can be:
+    Note: the value of selectedOptions.value[index] can be:
           1- array of objects/object whether it's come from multi-select with multiple is true or not.
           2- single object whether it's come from multi-select with multiple is true or not.
    */
-  // Store the array/object of selectedOption.value[index]
-  let selected = selectedOption.value[index];
+  // Store the array/object of selectedOptions.value[index]
+  let selected = selectedOptions.value[index];
 
   // Check that 'selected' is not null.
   if (selected !== null) {
@@ -242,8 +274,8 @@ const resetOption = (index) => {
       updateProductOptionsStatus(index, selected, false, true);
     }
 
-  // Reset the selectedOption.value[index] to be null.
-  selectedOption.value[index] = null;
+  // Reset the selectedOptions.value[index] to be null.
+  selectedOptions.value[index] = null;
   }
 };
 const duplicates = async (arr) => {
@@ -253,7 +285,7 @@ const duplicates = async (arr) => {
 
   /*
     Info: about filter() method:
-          1- Creates a new array filled with elements that pass a test provided by a function.
+          1- Creates a new array filled with elements that pass a tests provided by a function.
           2- Does not execute the function for empty elements, and return empty array in this case.
           3- Does not change the original array.
 
@@ -265,7 +297,7 @@ const duplicates = async (arr) => {
                   4- arr:	Optional. The array of the current element.
                   5- thisValue:	Optional. Default undefined, A value passed to the function as its this value.
 
-          Return Value: array, containing the elements that pass the test. If no elements pass the test
+          Return Value: array, containing the elements that pass the tests. If no elements pass the tests
                         it returns an empty array.
    */
 
@@ -284,8 +316,8 @@ const updateProductOptionsStatus = async (index, selectedObj, multi=false, remov
   let dictionary = {};
 
   // Check if trigger come from product option related to multi-select with attribute :multiple is true.
-  // if so, check that related selectedOption contains more than one element.
-  if (multi === true && Object.values(selectedOption.value[index]).length > 1) {
+  // if so, check that related selectedOptions contains more than one element.
+  if (multi === true && Object.values(selectedOptions.value[index]).length > 1) {
 
     /*
        The idea of this part of the code is to get combination for each selected product option object
@@ -299,7 +331,7 @@ const updateProductOptionsStatus = async (index, selectedObj, multi=false, remov
     let commonDict = {};
 
     // Loop over value (array) of objects.
-    for (let obj of selectedOption.value[index]) {
+    for (let obj of selectedOptions.value[index]) {
       // in Javascript, object parameter passed by value by its keys passed by reference, so it's better
       // to clone the obj that you will change its keys.
       dictOfObj[obj.value] = structuredClone(productOptionsCombination.value[index][obj.value]);
@@ -384,7 +416,7 @@ const updateProductOptionsStatus = async (index, selectedObj, multi=false, remov
 onMounted( () => {
 
   /*
-    Note: the value of selectedOption.value[index] will be, array of objects/object whether it's come
+    Note: the value of selectedOptions.value[index] will be, array of objects/object whether it's come
           from multi-select with multiple is true or not.
    */
 
@@ -397,29 +429,29 @@ onMounted( () => {
   if (Object.keys(productOptions.value).length > 1 ){
 
     // Loop over selected options.
-    // selectedOption => {color: [{}, {}], size: [{}]}
+    // selectedOptions => {color: [{}, {}], size: [{}]}
     // key => color, size ..etc
-    for (let key of Object.keys(selectedOption.value)) {
+    for (let key of Object.keys(selectedOptions.value)) {
 
       // Check if 'productOptions' for current selected option key has array of more than one item.
       if (Object.values(productOptions.value[key]).length > 1) {
 
-        // Check if current selected option key is a multiple selected values AND this key in selectedOption
+        // Check if current selected option key is a multiple selected values AND this key in selectedOptions
         // is already has array of more than one object. so tigger the 'updateProductOptionsStatus' method
         // for whole selected option objects.
-        if (selectedSameOptionStatus.value[key] && Object.values(selectedOption.value[key]).length > 1) {
+        if (selectedSameOptionStatus.value[key] && Object.values(selectedOptions.value[key]).length > 1) {
 
-          updateProductOptionsStatus(key, selectedOption.value[key], true);
+          updateProductOptionsStatus(key, selectedOptions.value[key], true);
         }
-        else if (Array.isArray(selectedOption.value[key])) {
-          // Since value of the current key for selectedOption is an array (have one element), loop over it.
-          for (let obj of selectedOption.value[key]) {
+        else if (Array.isArray(selectedOptions.value[key])) {
+          // Since value of the current key for selectedOptions is an array (have one element), loop over it.
+          for (let obj of selectedOptions.value[key]) {
             updateProductOptionsStatus(key, obj);
           }
         }
         else {
-          // In case happen to be selectedOption.value[key] is an object and not an array.
-          updateProductOptionsStatus(key, selectedOption.value[key]);
+          // In case happen to be selectedOptions.value[key] is an object and not an array.
+          updateProductOptionsStatus(key, selectedOptions.value[key]);
         }
       }
     }
@@ -443,7 +475,7 @@ onMounted( () => {
 
 
 // Watch the selectOption object.
-watch(() => selectedOption.value, (currentValue, oldValue) =>
+watch(() => selectedOptions.value, (currentValue, oldValue) =>
     {
 
       /*

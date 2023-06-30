@@ -60,12 +60,32 @@ const props = defineProps({
   storeFilter: {
     type: Object,
     required: true
+  },
+  checkedOptions: {
+    type: Array,
+    required: true
+  },
+  selectByOption: {
+    type: [Object, undefined],
+    required: false,
+    default: null
+  },
+  minPrice: {
+    type: [Number, String, undefined],
+    required: false
+  },
+  maxPrice: {
+    type: [Number, String, undefined],
+    required: false
   }
 });
 const storeFilter = toRef(props, 'storeFilter');
-const selectByObj = ref(storeFilter.value.selectByOption)
-const options = ref(storeFilter.value.checkedOptions);
-const priceObj = ref(storeFilter.value.price);
+const selectByObj = ref(props.selectByOption)
+const options = ref(props.checkedOptions);
+const priceObj = ref({
+  'minPrice': props.minPrice,
+  'maxPrice': props.maxPrice
+});
 
 // Define methods
 const removeSelectByOption = () => {
@@ -124,13 +144,14 @@ const removePrice = (key) => {
 
   // Re-set price value using key.
   priceObj.value[key] = null;
+
   /*
     Change state of 'price' using key in filter store.
     Note: Here we prefer to use patch object because this type being watched in
           'PriceRangeComponent' by subscribe method.
    */
   storeFilter.value.$patch({
-    price: {key: null}
+    price: priceObj.value
   });
 
 };
@@ -161,7 +182,7 @@ div.scroll-menu .chip {
 .chip {
   color: #464646;
   display: inline-block;
-  padding: 3px 6px 3px 7px;
+  padding: 3px 6px 3px 9px;
   font-size: 12px;
   border-radius: 25px;
   background-color: #e9ecef;

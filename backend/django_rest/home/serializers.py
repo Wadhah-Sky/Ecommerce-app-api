@@ -208,21 +208,23 @@ class ProductSerializer(serializers.ModelSerializer):
         """Return the related product item depending on if 'attr' query string
         set or not"""
 
-        # Get the dictionary of product selected item.
-        product_selected_item = self.context.get(
-            'product_selected_item',
+        # Get the dictionary of selected product items.
+        selected_items_dict = self.context.get(
+            'selected_items_dict',
             None
         )
-
+        # print("product:", instance.pk)
         # Initialize instance variable.
         instance_var = None
 
-        # Return the product item instance if this product 'pk' if found in the
-        # dictionary, or return None (which means we will serialize the item of
-        # current product instance.)
-        if product_selected_item:
-            instance_var = product_selected_item[instance.pk]
+        # Return the product item instance if this product 'pk' is found in the
+        # dictionary, or return None (which means we will serialize the default
+        # product item of current product instance).
+        if selected_items_dict and instance.pk in selected_items_dict:
+            instance_var = selected_items_dict[instance.pk]
 
+        # By using item_instance property of 'Product' model get the related
+        # product item instance.
         item_instance = instance.item_instance(item=instance_var)
 
         # You can use Response class to return data or directly return

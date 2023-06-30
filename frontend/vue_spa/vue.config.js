@@ -72,9 +72,12 @@ module.exports = defineConfig({
     //   }
     // }
     resolve: {
+      extensions: ['.js', '.jsx', '.vue'],
       symlinks: false,
       alias: {
-        vue: path.resolve('./node_modules/vue')
+        "@": path.resolve(__dirname, './src'),
+        'vue$': 'vue/dist/vue.esm-bundler.js',
+        vue: path.resolve(__dirname, `./node_modules/vue`)
       }
     }
   },

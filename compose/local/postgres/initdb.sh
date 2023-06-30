@@ -10,7 +10,7 @@ set -o nounset
 #while true; do ping -c1 localhost > /dev/null && break; done
 
 # 1- Must quote extension names or else symbolic error will be thrown.
-# 2- Adds the extensions to database and test database (template1)
+# 2- Adds the extensions to database and tests database (template1)
 PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
 create extension if not exists "citext";
 create extension if not exists "hstore";

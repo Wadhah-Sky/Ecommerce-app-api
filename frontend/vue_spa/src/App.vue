@@ -2,10 +2,7 @@
 
 <!--  <transition name="nested" mode="out-in">-->
 
-    <div v-if="storeContentLoading.homeViewDataLoading || storeContentLoading.navSidebarDataLoading"
-
-
-    >
+    <div v-if="storeContentLoading.homeViewDataLoading || storeContentLoading.navSidebarDataLoading">
 
       <transition name="nested" mode="out-in">
 
@@ -21,7 +18,7 @@
 
         <div id="nav-sidebar">
 
-            <nav-sidebar-component/>
+            <nav-sidebar-component :store-nav-sidebar="storeNavSidebar"/>
 
         </div>
 
@@ -34,13 +31,15 @@
 
           <div id="nav">
 
-              <navbar-component />
+              <navbar-component :store-checkout="storeCheckout"
+                                :show-cart-drop-down-menu="storeCheckout.showCartDropDownMenu"
+              />
 
           </div>
 
         </transition>
 
-        <router-view name="default" v-slot="{ Component, route }">
+        <router-view name="default" v-slot="{ Component, route }" >
 
           <div v-if="errMsg" class="container mt-3">
             <h2 class="text-center">
@@ -52,13 +51,14 @@
 
             <transition :name=" route.meta.transition || 'nested' "
                         mode="out-in">
-              <div>
+              <div >
                 <suspense :timeout="timeOut">
 
-                  <template #default>
+                  <template #default >
 
                     <component :is="Component"
-                               :key="route.meta.usePathKey ? route.path : undefined">
+                               :key="route.meta.usePathKey ? route.path : undefined"
+                    >
 
                     </component>
 
@@ -74,31 +74,8 @@
               </div>
             </transition>
           </div>
+
         </router-view>
-
-<!--        <router-view name="default" v-slot="{ Component, route }">-->
-
-<!--          <div >-->
-
-<!--            <transition :name=" route.meta.transition || 'nested' " mode="out-in">-->
-<!--              <div :key="route.path">-->
-
-<!--                      <component :is="Component"-->
-<!--                                 :key="route.meta.usePathKey ? route.path : undefined"-->
-<!--                      >-->
-
-<!--                      </component>-->
-<!--                -->
-<!--              </div>-->
-<!--            </transition>-->
-
-<!--          </div>-->
-
-<!--        </router-view>-->
-
-        <transition name="nested" mode="out-in">
-
-        </transition>
 
         <transition name="nested" mode="out-in">
 
@@ -117,6 +94,22 @@
 </template>
 
 <script>
+
+/*
+  Info: By design, JavaScript is a synchronous programming language. This means that when code
+        is executed, JavaScript (within block of async) starts at the top of the file and runs
+        through code line by line, until it is done.
+        An async function can contain an await expression, that pauses the execution of the async
+        function and waits for the passed Promise's resolution, and then resumes the async function's
+        execution and returns the resolved value.
+        So, Every async function returns a Promise object. The await statement operates on a Promise,
+        waiting until the Promise resolves or rejects.
+        You can't do tasks (without await) on the result of an async function directly, even if you
+        use await when call that async function.
+        Using await will make your function wait and then return a Promise which resolves immediately, but
+        it won't unwrap the Promise for you. You still need to unwrap the Promise returned by the async
+        function, either using 'await' or using '.then()'.
+ */
 
 /*
 * Note: If you want to use both of Vue 3 'Option' and 'Composition' API, then make sure to
@@ -140,6 +133,30 @@
 *       So to solve it, just import the 'defineProps', even if Vue/Cli show a warning at compile time.
 *       INFO: DON'T try to change your parser to another one because will lead to another issues.
 */
+
+/*
+   Note: props that type Object or Array with default values should be:
+
+         const props = defineProps({
+               // Object with a default value
+               propE: {
+               type: Object,
+               // Object or array defaults must be returned from
+               // a factory function. The function receives the raw
+               // props received by the component as the argument.
+               default(rawProps) {
+                 return { message: 'hello' }
+               },
+
+               // Custom validator function for type Array
+               propF: {
+                 type: Array
+                 validator(value) {
+                   // The value must match one of these strings
+                   return ['success', 'warning', 'danger'].includes(value)
+               }
+          });
+ */
 
 /*
  Info: Unlike ref(), the inner value of a shallow ref is stored and exposed as-is, and will not be made
@@ -276,13 +293,16 @@
 
        <input v-for="el in elements" ref="inputs" />
 
+       Note: you can't use array reference variable for multiple elements as shown above unless
+             it's in v-for block otherwise you have to set each element a defined reference variable.
+
   :ref : this the dynamic reference that can be used to hold ref of single/multiple elements and
          can be use with v-for, and remember to define its const as ref:
 
          <input v-for="el in elements" :ref="inputs" />
 
          * The big deference that :ref is dynamic and can be change when component is updating,
-           so be careful if you use as array:
+           so be careful if you use it as array:
 
            <input v-for="el in elements" :ref="el => inputs.push(el)" />
 
@@ -310,6 +330,57 @@
      {flush: 'post'} option.
   7- In the rare case where you need to stop a watcher before the owner component unmounts using:
      unwatch()
+ */
+
+/*
+  What are watch() source types?
+
+  watch's first argument can be different types of reactive "sources": it can be a ref (including computed refs),
+  a reactive object, a getter function, or an array of multiple sources, e.g.
+
+  >> const x = ref(0);
+  >> const y = ref(0);
+
+  // single ref
+  >> watch(x, (newX) => {
+  >>  console.log(`x is ${newX}`)
+  >> });
+
+  // getter
+  >> watch(
+  >>  () => x.value + y.value,
+  >>  (sum) => {
+  >>  console.log(`sum of x + y is: ${sum}`)
+  >>  }
+  >> );
+
+  // array of multiple sources
+  >> watch([x, () => y.value], ([newX, newY]) => {
+  >>  console.log(`x is ${newX} and y is ${newY}`)
+  >> });
+
+  Do note that you can't watch a property of a reactive object like this:
+
+  >> const obj = reactive({ count: 0 });
+
+  // this won't work because we are passing a number to watch()
+  >> watch(obj.count, (count) => {
+  >>  console.log(`count is: ${count}`)
+  >> });
+
+  Instead, use a getter:
+
+  >> watch(
+  >> () => obj.count,
+  >> (count) => {
+  >>  console.log(`count is: ${count}`)
+  >> }
+  >> )
+
+  * Note: we can't watch ref of property of constant object, e.g.
+
+          const test = {x: ref(false)};
+
  */
 
 /*
@@ -386,6 +457,23 @@
         setup() stage of the component OR register it as global property for registered 'app'.
      3- make sure the local & network is available.
      4- restart the vue-cli by re-run the command: npm run serve
+
+  4- [Vue warn]: There is already an app instance mounted on the host container. If you want to mount
+                 another app on the same host container, you need to unmount the previous app by calling
+                 app.unmount() first.
+
+     This is the mean reason in add to the list mentioned above (4 reasons) for all faults that keep
+     happens and make vue-router crash.
+     finally, to solve this issue you should see if app (App.vue) is already mount, it's useful:
+
+     1- When refresh the page, so you don't need to mount another app instance as Webpack server suggest
+        in the warning.
+
+     2- Will prevent trigger the methods these defined in App.vue <script setup> twice (one for update
+        life-cycle of component and second when re-mount the component again, which happens when refresh
+        the page).
+
+     See the update code in 'main.js' file.
  */
 
 /*
@@ -404,11 +492,82 @@
  */
 
 /*
+  What is difference between v-show and v-if?
+
+  While v-if will stop something being rendered if the expression within it returns false ,
+  v-show will still render the element - but it will apply display: none to the element.
+ */
+
+/*
+  What is difference if used regex format with flag 'g' or not?
+
+  'g' is the global search flag. The global search flag makes the RegExp search for a pattern
+  throughout the string, creating an array of all occurrences it can find matching the given pattern.
+
+  A very important side effect of this is if you are reusing the same regex instance against a matching
+  string, it will eventually fail because it only starts searching at the 'lastIndex'.
+
+  > 'aaa'.match(/a/g)
+    [ 'a', 'a', 'a' ]
+
+  > 'aaa'.match(/a/)
+    [ 'a', index: 0, input: 'aaa' ]
+
+  It will break things if you re-use the RegExp:
+  > var r = /a/g;
+  > console.log(r.test('a') // true
+  > r.test('a')); // false
+ */
+
+/*
+  Info: 1- if you set 'null' to any attribute of html tag or component boolean property, will
+           remove that attribute/property.
+        2- if you set empty string '' value to boolean html attribute or component boolean
+           property, will consider as true.
+        3- 'undefined' value consider as 'null' when set to html tag attribute or component
+           boolean property.
+ */
+
+/*
+  Info: If you are trying to get the data of pressed key, use:
+
+        @input="<method($event.data)>"
+
+        Or with:
+
+        @keydown="<method($event.keyCode)>"
+
+        And inside the method can get the character of 'keyCode':
+
+        String.fromCharCode(keyCode)
+ */
+
+/*
+  Note: Any html element is inserted using innerHTML property or v-html directive, its defined class style
+        will be ignored and to solve that you need to set its style inside <style> tag that is NOT scoped.
+ */
+
+/*
+  How to deal with string value of 'true'/'false' as boolean?
+
+  Using the identity operator (===), which doesn't make any implicit type conversions when the compared
+  variables have different types.
+
+  You should probably be cautious about using these two methods for your specific needs:
+
+  >> var myBool = Boolean("false");  // == true
+
+  >> var myBool = !!"false";  // == true
+
+  Note: Any string which isn't the empty string will evaluate to true by using them.
+ */
+
+/*
   Libraries, methods, variables and components imports
 */
 // @ is an alias to /src
 import {useEndpointStore} from "@/store/StaticEndpoint";
-import {useCartStore} from "@/store/Cart";
+import {useCheckoutStore} from "@/store/Checkout";
 import {useContentLoadingStore} from "@/store/ContentLoading";
 import {useHomeStore} from "@/store/Home";
 import {useNavSidebarStore} from "@/store/NavSidebar";
@@ -417,6 +576,7 @@ import ContentLoaderComponent from "@/components/ContentLoaderComponent";
 import NavSidebarComponent from "@/components/NavSidebarComponent";
 import NavbarComponent from "@/components/NavbarComponent";
 import FooterComponent from "@/components/FooterComponent";
+import {useRouter} from "vue-router";
 import {ref, onErrorCaptured} from 'vue';
 
 export default {
@@ -438,43 +598,100 @@ export default {
 /*
   Define handlers (properties, props and computed)
 */
-/*
-Set the value for 'timeout' prop of <suspense>, to override behavior of display
-the previous #default content while waiting for the new content and its async
-dependencies to be resolved.
-*/
 const storeEndpoint = useEndpointStore();
-const storeCart = useCartStore();
+const storeCheckout = useCheckoutStore();
 const storeContentLoading = useContentLoadingStore();
 const storeHome = useHomeStore();
 const storeNavSidebar = useNavSidebarStore();
+const router = useRouter();
+
+/*
+  Set the value for 'timeout' prop of <suspense>, to override behavior of display
+  the previous #default content while waiting for the new content and its async
+  dependencies to be resolved.
+*/
 const timeOut = 0;
 const errMsg = ref(null);
 
 /*
   Define functions
 */
-const loadCartInfo = () => {
+const loadCheckoutInfo = async () => {
   /**
-   * Load info from local storage into 'cart' store state.
+   * Load info from local storage into 'Checkout' store state.
    */
 
-  // Get the 'products' json string from local storage api.
-  // Note: local storage only work with strings, so we have to parse the json string into equivalent data type.
+  // Get the cart json string from local storage api.
+  // Note: local storage only work with strings, so we have to parse the json string into
+  //       equivalent data type.
 
   // Mutate with $patch function.
-  storeCart.$patch((state) => {
-    state.products = JSON.parse(window.localStorage.getItem("jamie&CassieCart"));
+  // Note: we set default value type the same as the initialize type in the store state,
+  //       otherwise will cause an issue.
+  storeCheckout.$patch((state) => {
+    state.cartProducts = JSON.parse(window.localStorage.getItem("jamie&CassieCart")) || [];
+    state.shippingDetails = JSON.parse(window.localStorage.getItem("jamie&CassieShippingDetails")) || {};
+    state.paymentDetails = JSON.parse(window.localStorage.getItem("jamie&CassiePaymentDetails")) || {};
+
   });
+};
+const refreshCartItems = async () =>{
+  /**
+   * Method to refresh cart product items details from backend server.
+   */
+
+  /*
+     Note: the same method is being use inside 'CheckoutView.vue', so in case the current
+           route path of router is pointing on the route of that view, we don't want to
+           trigger same code of method twice (one in App.vue because it's root component and
+           second in CheckoutView.vue) specially when you refresh the page when you on
+           'CheckoutView.vue'.
+   */
+
+  /*
+     Info: By using matched() method, get the path name of parent for current route, if it's
+           'checkout' (this is what we define in 'index.js' file for 'CheckoutView.vue') so we count
+           on the method that implement same concept inside that view and no need to trigger the one
+           inside root component.
+   */
+  if(router.currentRoute.value.matched[0].name !== 'checkout') {
+    // Update the cart items details from backend server.
+    await storeCheckout.refreshCartItems(storeEndpoint.cartCheckEndpoint);
+  }
 };
 const triggerGetDataResult = async () => {
   /**
    * Get all data list from backend server for the frontend landing homepage.
    */
 
-  await storeHome.getDataResult(storeEndpoint.HomeEndpoint);
+  await storeHome.getDataResult(storeEndpoint.homeEndpoint);
   await storeNavSidebar.getDataResult(storeEndpoint.storeCategoriesEndpoint);
 };
+
+// initialize steps of App.vue
+/*
+     Important: Since our child components of App.vue using vue-router methods like
+                useRoute() and useRouter() and depend on info these methods provide,
+                and because the router hasn't yet completely resolved the initial navigation
+                when you enter/refresh the page, so route refers to the default (/) initially
+                in your methods that depend on.
+                Vue Router's isReady() method returns a Promise that resolves when the router
+                has completed the initial navigation,
+
+     Note: if you didn't do this step will face issue when navigate between views
+           and vue router will throw an exception.
+ */
+router.isReady().then(()=>{
+  // Here we wrap method calls without await in then wrap that will make sure to run these
+  // method when a promise is return by isReady().
+
+  /*
+    call functions
+   */
+  triggerGetDataResult();
+  loadCheckoutInfo();
+  refreshCartItems();
+});
 
 /*
   call imported method
@@ -483,15 +700,16 @@ onErrorCaptured(() => {
   errMsg.value = "Something went wrong!";
 });
 
-/*
-  call functions
-*/
-triggerGetDataResult();
-loadCartInfo();
-
 </script>
 
 <style lang="sass">
+
+/*
+  Note: The focusout event fires when an element has lost focus, after the blur event.
+        The two events differ in that focusout bubbles (means detect by child elements), while blur does not.
+        The opposite of focusout is the focusin event, which fires when the element has received focus.
+        The focusout event is not cancelable.
+ */
 
 /*
  If you want to override Sass variables of specific imported file:
@@ -526,6 +744,9 @@ $tooltip-bg: $color-1
 
 $input-color: $color-3
 $input-bg: $color-2
+
+$input-border-radius: 0
+$input-border-color: $color-1
 @import "bootstrap"
 
 /* vue-sidebar-menu */
@@ -586,6 +807,62 @@ body {
   cursor: pointer;
   user-select: none;
   transition: 0.3s opacity ease;
+}
+
+/* Override the black color of Maz input */
+:root {
+  --maz-color-black: hsl(180, 6%, 6%)!important;
+  --maz-color-black-contrast: hsl(0deg 0% 100%)!important;
+}
+
+.--bottom{
+  max-width: 240px!important;
+  max-height: 250px!important;
+}
+
+.m-phone-number-input__input{
+  width: 100%!important;
+}
+
+/* This will effect all Maz input in parent and children components */
+.m-input-wrapper{
+  border-radius: 0!important;
+}
+
+.shipping-method .m-input-wrapper-input,
+.shipping-method .m-input-wrapper-right,
+.shipping-method .m-select-list{
+  background-color: rgb(247, 247, 247)!important;
+  outline: none;
+}
+
+.shipping-method .m-select-list{
+  background-color: rgb(247, 247, 247)!important;
+  outline: none;
+  width: 100%!important;
+}
+
+.m-input-label {
+  font-weight: 400;
+  color: #0f1111;
+  font-size: 14px;
+}
+/* for phones and tablets */
+@media(max-width:767px){
+  .m-phone-number-input{
+    display: block!important;
+  }
+  .m-phone-number-input__country-flag{
+    margin-bottom: 58px!important;
+  }
+  .m-phone-number-input__select{
+    display: inline-block!important;
+  }
+  .m-phone-number-input__input{
+    display: inline-block!important;
+    margin-left: 2px!important;
+    margin-top: 8px!important;
+  }
 }
 
 /* Transition rules that target nested elements */

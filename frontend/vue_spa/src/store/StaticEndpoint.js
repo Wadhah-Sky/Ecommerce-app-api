@@ -12,14 +12,18 @@ import { defineStore, acceptHMRUpdate } from 'pinia';
 
 export const useEndpointStore = defineStore('Endpoint',{
     state: () => ({
-        HomeEndpoint:'/api/v1/home/',
+        homeEndpoint: '/api/v1/home/',
         storeCategoryDetailsEndpoint: '/api/v1/store/category/details/',
         storeCategoriesEndpoint: '/api/v1/store/categories/',
         storeProductsEndpoint: '/api/v1/store/products/category/',
         storeAttributesEndpoint: '/api/v1/store/attributes/category/',
         storeProductDetailsEndpoint: '/api/v1/product/details/',
+        cartCheckEndpoint: '/api/v1/cart/check/',
+        shippingCountiesEndpoint: '/api/v1/shipping/countries/',
+        shippingMethodsEndpoint: '/api/v1/shipping/methods/',
+        shippingCostEndpoint: '/api/v1/shipping/cost/',
+        paymentMethodsEndpoint: '/api/v1/payment/methods/',
     }),
-
 });
 
 // Check if HMR is true (means in development environment), then import HMR for this store.

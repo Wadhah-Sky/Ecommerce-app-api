@@ -125,7 +125,8 @@ class ProductRetrieveAPIView(generics.RetrieveAPIView):
 
 
 # class ProductRetrieveItemDetailsAPIView(generics.RetrieveAPIView):
-#     """APIView to retrieve specific product item details given product slug"""
+#     """APIView to retrieve specific product item details given product slug
+#     """
 #
 #     serializer_class = serializers.ProductDetailsSerializer
 #     # The default lookup_field is 'pk' and should be pass as argument in URL.

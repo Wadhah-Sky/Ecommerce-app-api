@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model
 
 # Define default user info.
 PAYLOAD = {
-    'username': 'username test',
+    'username': 'username tests',
     'password': 'test12345678',
     'first_name': 'first',
     'last_name': 'last',
@@ -45,7 +45,7 @@ class ModelTest(TestCase):
         """Test creating a new user with an email is successful"""
 
         # Public user details.
-        email = 'test@yahoo.com'
+        email = 'tests@yahoo.com'
         password = 'test123456'
         user = sample_user(email=email, password=password)
 
@@ -56,7 +56,7 @@ class ModelTest(TestCase):
         """Test the email for a new user is normalized"""
 
         # Public user details.
-        email = 'test@TEST.COM'
+        email = 'tests@TEST.COM'
 
         user = sample_user(email=email)
 
@@ -77,7 +77,7 @@ class ModelTest(TestCase):
         """Test creating a new superuser"""
 
         # Public user details.
-        email = 'superuser@test.com'
+        email = 'superuser@tests.com'
 
         superuser = sample_superuser(email=email)
 
@@ -88,7 +88,7 @@ class ModelTest(TestCase):
         """Test that ValidationError exception will raise when enter invalid
         phone number to create a user"""
 
-        email = 'test@test.com'
+        email = 'tests@tests.com'
         invalid_phone_number = '788787'
         PAYLOAD['phone_number'] = invalid_phone_number
 
@@ -117,7 +117,7 @@ class ModelTest(TestCase):
         uuid = 'test_uuid'
         mock_uuid4.return_value = uuid
 
-        file_path = models.create_image_file_path(category, 'test.jpg')
+        file_path = models.create_image_file_path(category, 'tests.jpg')
 
         class_name = category.__class__.__name__.lower()
         expected_path = f'uploads/{class_name}/{category.slug}/{uuid}.jpg'

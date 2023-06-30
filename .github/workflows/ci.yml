@@ -17,6 +17,8 @@ jobs:
 
   test:
     name: Run Tests
+    # So far if you use the next line, will cause an issue of queued jobs, so instead use the line after.
+    # runs-on: ${{matrix.os}}
     runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     strategy:
       matrix:
@@ -43,11 +45,10 @@ jobs:
           EOF
       - run: docker-compose build
       - run: docker-compose up db
-      - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh && python manage.py test"
+      - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh && python manage.py tests"
 
   lint:
     name: Lint
-#    runs-on: ${{matrix.os}}
     runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     strategy:
       matrix:
@@ -81,7 +82,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-20.04 ]
-    needs: [test, lint]
+    needs: [tests, lint]
     if: github.ref == 'refs/heads/staging'
 
     steps:
@@ -94,7 +95,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-20.04 ]
-    needs: [test, lint]
+    needs: [tests, lint]
     if: github.ref == 'refs/heads/production'
 
     steps:

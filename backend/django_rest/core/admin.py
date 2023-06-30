@@ -28,6 +28,7 @@ import nested_admin
 
 # Note: if you want to show the @property methods of your class models, then
 #       you need to declare these properties in the related Admin class.
+#       Info: you can't set @property method in fieldsets/add_fieldsets lists.
 
 # Info: Django admin NOT necessary store the nested children models before
 #       parent model.
@@ -240,6 +241,36 @@ class UserAdmin(BaseUserAdmin, nested_admin.NestedModelAdmin):
     ]
 
 
+class MetaItemInline(admin.TabularInline):
+    """Class to show tabular of model info inside another model in admin page
+    """
+
+    # Set either:
+    # 1- a model to be use and has ForeignKey to the model that this inline
+    #    class going to use inside.
+    # 2- or you can use 'Model.m2m_field.through' concept with same conditions
+    #    to show ManyToMany field as inline.
+    model = models.MetaItem
+    # extra default value is 3
+    extra = 0
+    # Controls the maximum number of forms to show in the inline
+    # max_num = 4
+
+
+class MetaAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for Meta model"""
+
+    inlines = [MetaItemInline]
+    # readonly_fields = ['total_amount']
+
+
+class CountryAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for Country model"""
+
+    list_display = ['title', 'iso_code', 'is_available']
+    search_fields = ['title', 'iso_code']
+
+
 class PromotionAdmin(BaseModelAdmin):
     """Customize variables of your django admin web page for Promotion model"""
 
@@ -256,7 +287,11 @@ class PromotionAdmin(BaseModelAdmin):
     ordering = ['created_at']
     list_display = [
         'title',
+        'promotion_type',
         'discount_percentage',
+        'max_use_times',
+        'used_times',
+        'unlimited_use',
         'start_date',
         'end_date',
         'duration',
@@ -266,7 +301,7 @@ class PromotionAdmin(BaseModelAdmin):
         'is_active'
     ]
     list_display_links = ['title']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['used_times', 'created_at', 'updated_at']
 
 
 class CategoryAdmin(MPTTModelAdmin):
@@ -493,16 +528,17 @@ class SupplierAdmin(BaseModelAdmin):
     list_display = [
         'title',
         'email',
+        'uuid',
+        'is_available',
         'created_at',
         'updated_at',
-        'is_active'
     ]
     list_display_links = ['title', 'email']
     fieldsets = (
         (
             None,
             {
-                'fields': ('title', 'email')
+                'fields': ('title', 'email', 'uuid')
             }
         ),
         (
@@ -514,7 +550,7 @@ class SupplierAdmin(BaseModelAdmin):
         (
             _('Permissions'),
             {
-                'fields': ('is_active',)
+                'fields': ('is_available',)
             }
         ),
         (
@@ -525,6 +561,7 @@ class SupplierAdmin(BaseModelAdmin):
         )
     )
     readonly_fields = [
+        'uuid',
         'created_at',
         'updated_at'
     ]
@@ -568,6 +605,53 @@ class POItemInline(admin.TabularInline):
         return formset
 
 
+class ShippingMethodAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for ShippingMethod
+     model"""
+
+    # Override admin web page form-fields specifications.
+    formfield_overrides = {
+        PhoneNumberField: {
+            'widget': PhoneNumberPrefixWidget(initial='IQ'),
+            'help_text': _('Choose the country code.')
+        },
+    }
+
+
+class POShippingAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for POShipping
+     model"""
+
+    readonly_fields = ['created_at', 'updated_at']
+
+
+class POPaymentAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for POPayment model"""
+
+    readonly_fields = ['created_at', 'updated_at']
+
+
+class TaxAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for Tax model"""
+
+    readonly_fields = ['created_at', 'updated_at']
+
+
+class POProfileAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for POProfile
+     model"""
+
+    # Override admin web page form-fields specifications.
+    formfield_overrides = {
+        PhoneNumberField: {
+            'widget': PhoneNumberPrefixWidget(initial='IQ'),
+            'help_text': _('Choose the country code.')
+        },
+    }
+
+    readonly_fields = ['created_at', 'updated_at']
+
+
 class PurchaseOrderAdmin(BaseModelAdmin):
     """Customize variables of your django admin web page for PurchaseOrder
     model"""
@@ -576,69 +660,18 @@ class PurchaseOrderAdmin(BaseModelAdmin):
     ordering = ['created_at']
     list_display = [
         'po_code',
-        'supplier',
-        'total_amount',
-        'status',
-        'created_at',
-        'updated_at'
+        'subtotal',
+        'savings',
+        'po_tax_percentage',
+        'po_tax',
+        'shipping_cost',
+        'grand_total',
+        'po_status_title',
+        'created_at'
     ]
-    list_display_links = ['po_code', 'supplier']
+    list_display_links = ['po_code']
 
-    # Specify the sections and fields those will show in django admin 'change'
-    # web page.
-    fieldsets = (
-        (
-            None,
-            {
-                'fields': (
-                    'po_code',
-                    'summary',
-                    'supplier',
-                    'amount'
-                )
-            }
-        ),
-        (
-            _('Order discount details'),
-            {
-                'fields': (
-                    'discount_percentage', 'discount_amount'
-                )
-            }
-        ),
-        (
-            _('Order tax details'),
-            {
-                'fields': (
-                    'tax_percentage', 'tax_fulfill', 'tax_amount'
-                )
-            }
-        ),
-        (
-            _('Order total amount'),
-            {
-                'fields': (
-                    'total_amount',
-                )
-            }
-        ),
-        (
-            _('Order status'),
-            {
-                'fields': (
-                    'status',
-                )
-            }
-        ),
-        (
-            _('Important Dates'),
-            {
-                'fields': (
-                    'created_at', 'updated_at'
-                )
-            }
-        )
-    )
+    # Note: you can't set @property method in fieldsets/add_fieldsets lists.
 
     # Specify the sections and fields those will include in django admin 'add'
     # web page.
@@ -651,25 +684,12 @@ class PurchaseOrderAdmin(BaseModelAdmin):
                 ),
                 'fields': (
                     'summary',
-                    'discount_percentage',
-                    'tax_percentage',
-                    'tax_fulfill',
-                    'status',
-                    'supplier'
                 )
             }
         ),
     )
 
-    readonly_fields = [
-        'amount',
-        'po_code',
-        'discount_amount',
-        'tax_amount',
-        'total_amount',
-        'created_at',
-        'updated_at'
-    ]
+    readonly_fields = ['po_code', 'created_at', 'updated_at']
     autocomplete_fields = ['supplier']
 
 
@@ -859,7 +879,8 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
 
 
 admin.site.register(models.User, UserAdmin)
-admin.site.register(models.Country)
+admin.site.register(models.Meta, MetaAdmin)
+admin.site.register(models.Country, CountryAdmin)
 admin.site.register(models.Address)
 admin.site.register(models.Icon)
 admin.site.register(models.Promotion, PromotionAdmin)
@@ -871,6 +892,14 @@ admin.site.register(models.Card, CardAdmin)
 admin.site.register(models.Section, SectionAdmin)
 admin.site.register(models.Supplier, SupplierAdmin)
 admin.site.register(models.POItem, POItemAdmin)
+admin.site.register(models.ShippingMethod, ShippingMethodAdmin)
+admin.site.register(models.POShipping, POShippingAdmin)
+admin.site.register(models.POProfile, POProfileAdmin)
+admin.site.register(models.PaymentMethod)
+admin.site.register(models.POPayment, POPaymentAdmin)
+admin.site.register(models.Tax, TaxAdmin)
+# admin.site.register(models.CountryTax)
+admin.site.register(models.POStatus)
 admin.site.register(models.PurchaseOrder, PurchaseOrderAdmin)
 admin.site.register(models.ProductGroup, ProductGroupAdmin)
 admin.site.register(models.Attribute, AttributeAdmin)

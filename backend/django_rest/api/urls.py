@@ -10,7 +10,7 @@ Class-based views
     1. Add an import:  from other_app.views import Home
     2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
 Including another URLconf
-    1. Import the include() function: from django.urls import include, path
+    1. Import include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
@@ -25,13 +25,18 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('_nested_admin/', include('nested_admin.urls')),
 
-    path('api-auth/',
-         include('rest_framework.urls', namespace='rest_framework')),
+    path(
+        'api-auth/', include('rest_framework.urls', namespace='rest_framework')
+         ),
 
     path('api/v1/', include('core.urls')),
     path('api/v1/', include('home.urls')),
     path('api/v1/', include('store.urls')),
     path('api/v1/', include('product.urls')),
+    path('api/v1/', include('cart.urls')),
+    path('api/v1/', include('shipping.urls')),
+    path('api/v1/', include('payment.urls')),
+    path('api/v1/', include('order.urls')),
 ]
 
 # in case running on development server, can access media files urls.
