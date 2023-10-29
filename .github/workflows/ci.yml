@@ -18,8 +18,8 @@ jobs:
   test:
     name: Test
     # if you faced issue of queued jobs, it's related to matrix option and its strategy option (we deleted it).
-    # runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
-    runs-on: Ubuntu 20.04
+    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    # runs-on: Ubuntu 20.04
     environment: development
     steps:
       - uses: actions/checkout@v4
