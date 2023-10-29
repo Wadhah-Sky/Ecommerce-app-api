@@ -153,7 +153,7 @@ jobs:
   deploy_staging:
     name: Deploy to Staging
     runs-on: Ubuntu 20.04
-    needs: [tests, lint]
+    needs: [test]
     if: github.ref == 'refs/heads/staging'
 
     steps:
@@ -163,7 +163,7 @@ jobs:
   deploy_production:
     name: Deploy to Production
     runs-on: Ubuntu 20.04
-    needs: [tests, lint]
+    needs: [test]
     if: github.ref == 'refs/heads/production'
 
     steps:
