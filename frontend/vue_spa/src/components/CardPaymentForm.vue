@@ -2,7 +2,7 @@
 
   <div class="row row-cols-auto mb-3">
 
-    <div class="col-md-6" style="min-width: 230px;">
+    <div class="col-md-6" style="min-width: 230px; min-height: 120px">
 
       <div :class="['container', preload ? 'preload' : '']">
         <div ref="creditcard"
@@ -44,13 +44,13 @@
                       </text>
 
                       <text transform="matrix(1 0 0 1 54.1074 389.8793)" class="st7 st5 st8">cardholder name</text>
-                      <text transform="matrix(1 0 0 1 479.7754 388.8793)" class="st7 st5 st8">expiration</text>
+                      <text transform="matrix(1 0 0 1 479.7754 388.8793)" class="st7 st5 st8">expiry</text>
                       <text transform="matrix(1 0 0 1 65.1054 241.5)" class="st7 st5 st8">card number</text>
 
                       <g>
 
-                        <text ref="svgExpire" transform="matrix(1 0 0 1 574.4219 433.8095)" id="svg-expire" class="st2 st5 st9">
-                          {{cardDefaultValues.cardExpire}}
+                        <text ref="svgExpiry" transform="matrix(1 0 0 1 574.4219 433.8095)" id="svg-expiry" class="st2 st5 st9">
+                          {{cardDefaultValues.cardExpiry}}
                         </text>
                         <text transform="matrix(1 0 0 1 479.3848 417.0097)" class="st2 st10 st11">VALID</text>
                         <text transform="matrix(1 0 0 1 479.3848 435.6762)" class="st2 st10 st11">THRU</text>
@@ -192,15 +192,20 @@
 
           <li>
 
-            <div :class="['row row-cols-auto ms-0 me-0 pt-0 clearfix', props.generateRandomCardNumber ? 'mt-4' : 'mt-2']">
+            <div :class="['row row-cols-auto ms-0 me-0 pt-0 clearfix', props.generateRandomCardNumber ? 'mt-2' : 'mt-3']">
 
               <div class="col-md-12 pt-0 mt-0 pe-1 ps-0">
 
                 <div class="input-wrapper" id="card-number-wrapper">
 
-                  <span v-if="props.generateRandomCardNumber"
-                        id="generate-card"
-                        @click="randomCard">Generate random</span>
+                  <div style="text-align: right; margin-bottom: -5px;">
+                    <span v-if="props.generateRandomCardNumber"
+                          id="generate-card"
+                          @click="randomCard"
+                    >
+                    Generate random
+                  </span>
+                  </div>
 
                   <label for="card-number">Card Number*</label>
                   <input :ref="cardNumber.el"
@@ -252,16 +257,16 @@
               <div class="col-md-6 pt-0 mt-0 pe-1 ps-0 mb-2" style="min-width: 160px;">
 
                 <div class="input-wrapper">
-                  <label for="expiration-date">Expire (mm/yy)*</label>
-                  <input :ref="cardExpireDate.el"
-                         v-imask="cardExpireDate.mask"
+                  <label for="expiration-date">Expiry (mm/yy)*</label>
+                  <input :ref="cardExpiry.el"
+                         v-imask="cardExpiry.mask"
                          id="expiration-date"
-                         :class="[cardExpireDateValid ? 'valid' : '']"
+                         :class="[cardExpiryValid ? 'valid' : '']"
                          type="text"
                          pattern="[0-9]*"
                          inputmode="numeric"
                          autocomplete="off"
-                         :required="cardExpireDate.isRequired"
+                         :required="cardExpiry.isRequired"
                          @focus="($event) => {
                            flip = false;
                            dynamicInputLabel($event);
@@ -270,14 +275,14 @@
                          @accept="($event) => {
                            setSvgInnerHTML(
                                $event.target.value,
-                               cardDefaultValues.cardExpire,
-                               [svgExpire]
+                               cardDefaultValues.cardExpiry,
+                               [svgExpiry]
                            );
-                           cardExpireDateValid = false;
+                           cardExpiryValid = false;
                            // Also if current input value is empty, trigger isValidForm()
                            $event.target.value === '' ? isValidForm() : '';
                          }"
-                         @complete="$event.target.value !== '' ? cardExpireDateValid = true : ''"
+                         @complete="$event.target.value !== '' ? cardExpiryValid = true : ''"
                   />
                 </div>
 
@@ -369,6 +374,10 @@
 
 /*
   Note: about vue-mask:
+
+        Info: First of all any method/object that related to (maskRef) object and start with underscore (_)
+              means this only read property, you can call it with underscore or not.
+
         1- using directive v-imask it's working with defined mask:
 
            const cardNameMask = { mask: /(?=^.{0,50}$)(^[A-Za-z]*$)/, dispatch: () => {}  };
@@ -438,10 +447,18 @@
             B- for object that use single mask:
 
                <ref-to>.el.value.maskRef.mask
+
+        17- If you want to get unmasked value from (maskRef) object:
+
+            <ref-to>.el.value.maskRef.unmaskedValue
+
+            OR
+
+            <ref-to>.el.value.maskRef._unmaskedValue
  */
 
 import {
-  cardNameProps, cardExpireDateProps, cardNumberProps, cardSecurityCodeProps,
+  cardNameProps, cardExpiryProps, cardNumberProps, cardSecurityCodeProps,
   cardSecurityNoSecretCodeProps
 } from "@/common/inputMask"
 // import {cardPaymentMask} from "@/common/inputMask";
@@ -480,7 +497,7 @@ if (currentMonth < 10){
 const cardDefaultValues = {
   cardholderName: 'John Doe',
   cardNumber: '0123 4567 8910 1112',
-  cardExpire: `${currentMonth}/${nextYear}`,
+  cardExpiry: `${currentMonth}/${nextYear}`,
   cardSecurityCode: '987'
 };
 const preload = ref(true);
@@ -489,7 +506,7 @@ const creditcard = ref(null);
 const svgName = ref(null);
 const svgNameBack = ref(null);
 const svgNumber = ref(null);
-const svgExpire = ref(null);
+const svgExpiry = ref(null);
 const svgSecurity = ref(null);
 const ccIcon = ref(null);
 const ccSingle = ref(null);
@@ -516,9 +533,9 @@ const cardNumber = {
   mask: cardNumberProps,
   isRequired: true,
 };
-const cardExpireDate = {
+const cardExpiry = {
   el: ref(null),
-  mask: cardExpireDateProps,
+  mask: cardExpiryProps,
   isRequired: true,
 };
 const cardSecurityCode = {
@@ -529,9 +546,9 @@ const cardSecurityCode = {
 
 const cardNameValid = ref(false);
 const cardNumberValid = ref(false);
-const cardExpireDateValid = ref(false);
+const cardExpiryValid = ref(false);
 const cardSecurityCodeValid = ref(false);
-let validInputs = [cardNameValid, cardNumberValid, cardExpireDateValid, cardSecurityCodeValid];
+let validInputs = [cardNameValid, cardNumberValid, cardExpiryValid, cardSecurityCodeValid];
 
 const testCards = [
     '4000056655665556',
@@ -545,7 +562,16 @@ const testCards = [
 ];
 
 // Define the list of events that you want to emit.
-const emits = defineEmits(['isValid', 'isRequiredSet']);
+const emits = defineEmits(
+    [
+      'cardName',
+      'cardNumber',
+      'cardExpiry',
+      'cardSecurityCode',
+      'isValid',
+      'isRequiredSet'
+    ]
+);
 
 // Define functions
 const setSvgInnerHTML = (val, defaultVal, elements) => {
@@ -715,7 +741,7 @@ const isValidForm = () => {
    * Return true if form inputs is set correctly and all required inputs are set, otherwise return false.
    */
 
-  let eleArray = [cardName.el, cardNumber.el, cardExpireDate.el, cardSecurityCode.el]
+  let eleArray = [cardName.el, cardNumber.el, cardExpiry.el, cardSecurityCode.el]
 
   for (let el of eleArray){
     // Check if 'el' has required attribute and its current field value is empty.
@@ -736,7 +762,11 @@ const isValidForm = () => {
     }
   }
 
-  // In case everything pass ok, emits the required events with true value.
+  // In case everything pass ok, emits the required events with required value.
+  emits('cardName', cardName.el.value.maskRef.value)
+  emits('cardNumber', cardNumber.el.value.maskRef.unmaskedValue)
+  emits('cardExpiry', cardExpiry.el.value.maskRef.value)
+  emits('cardSecurityCode', cardSecurityCode.el.value.maskRef.value)
   emits('isRequiredSet', true);
   emits('isValid', true);
 };
@@ -998,8 +1028,7 @@ input[type=text]:focus {
   border-radius: 4px;
   cursor: pointer;
   position: relative;
-  float: right;
-  top: -17px;
+  display: inline-block;
   z-index: 11;
 }
 #generate-card:hover{

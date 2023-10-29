@@ -14,9 +14,9 @@
               <div class="col-md-9">
                 <ul class="bc">
 
-                  <li :class="['bc_item', views['cart'] ? 'bc_complete' : '']">
+                  <li :class="['bc_item', views['checkoutCart'] ? 'bc_complete' : '']">
 
-                    <router-link v-if="views['cart']" :to="{name: 'cart'}">
+                    <router-link v-if="views['checkoutCart']" :to="{name: 'checkoutCart'}">
                       Cart
                     </router-link>
 
@@ -24,27 +24,27 @@
 
                   </li>
 
-                  <li :class="['bc_item', views['shippingDetails'] ? 'bc_complete' : '']">
+                  <li :class="['bc_item', views['checkoutShipping'] ? 'bc_complete' : '']">
 
-                    <router-link v-if="views['shippingDetails']" :to="{name: 'shippingDetails'}">
-                      Shipping Details
+                    <router-link v-if="views['checkoutShipping']" :to="{name: 'checkoutShipping'}">
+                      Shipping
                     </router-link>
 
-                    <span v-else>Shipping Details</span>
+                    <span v-else>Shipping</span>
 
                   </li>
 
-                  <li :class="['bc_item', views['paymentDetails'] ? 'bc_complete' : '']">
+                  <li :class="['bc_item', views['checkoutPayment'] ? 'bc_complete' : '']">
 
-                    <router-link v-if="views['paymentDetails']" :to="{name: 'paymentDetails'}">
-                      Payment Details
+                    <router-link v-if="views['checkoutPayment']" :to="{name: 'checkoutPayment'}">
+                      Payment
                     </router-link>
 
-                    <span v-else>Payment Details</span>
+                    <span v-else>Payment</span>
 
                   </li>
 
-                  <li class="bc_item">Order</li>
+<!--                  <li class="bc_item">Order</li>-->
 
                 </ul>
               </div>
@@ -151,9 +151,9 @@ onBeforeRouteUpdate(async (to, from, next) => {
     // Set and check if 'to.name' to be true if fulfills the requirements.
     await setViews(to.name);
 
-    // if views for 'to.name' is false, set 'to.name' to be 'cart'.
+    // if views for 'to.name' is false, set 'to.name' to be 'checkoutCart'.
     if(views.value[to.name] === false){
-      // redirect to 'cart' view.
+      // redirect to 'checkoutCart' view.
       // Note: redirect will not change the original url path
       return next({path: '/checkout/cart'});
     }
@@ -172,7 +172,10 @@ onBeforeRouteLeave(() => {
   storeCheckout.$patch((state) => {
     state.cartApiCouponCode = '';
     state.cartApiErrorMsg = '';
+    state.orderAPIPOCode = '';
+    state.orderApiErrorMsg = '';
   });
+  storeCheckout.resetShippingApiState();
 });
 
 /*
@@ -186,9 +189,9 @@ const timeOut = 0;
 const errMsg = ref(null);
 // Note: keys should be ordered correctly
 const views = ref({
-  cart: false,
-  shippingDetails: false,
-  paymentDetails: false
+  checkoutCart: false,
+  checkoutShipping: false,
+  checkoutPayment: false
 });
 
 /*
@@ -210,18 +213,18 @@ const refreshCartItems = async () =>{
 };
 const checkViewRequirements = async (matchedName='') => {
   /**
-   * Method to check path name of current route, if it's not 'cart' then you need to check all required
+   * Method to check path name of current route, if it's not 'checkoutCart' then you need to check all required
    * data for the requested view is available.
    */
 
-  // Check if 'matchedName' it's not 'cart' view.
-  if(matchedName !== 'cart'){
+  // Check if 'matchedName' it's not 'checkoutCart' view.
+  if(matchedName !== 'checkoutCart'){
     // Need to check count of products in the cart and return true or false.
     if(storeCheckout.itemsCount <= 0){
       return false
     }
-    // Need to check if current route path name is 'paymentDetails' and the 'shippingDetails' is set or not.
-    else return !(matchedName === 'paymentDetails' && !storeCheckout.isShippingDetailsSet);
+    // Need to check if current route path name is 'checkoutPayment' and the 'shippingDetails' is set or not.
+    else return !(matchedName === 'checkoutPayment' && !storeCheckout.isShippingDetailsSet);
   }
   else {
     return true
@@ -281,9 +284,9 @@ setPageTitle(`Jamie & Cassie | Checkout`);
 */
 await refreshCartItems();
 await setViews(router.currentRoute.value.name).then(() => {
-  // if views for 'to.name' is false, replace current route to be 'cart'.
+  // if views for 'to.name' is false, replace current route to be 'checkoutCart'.
   if (views.value[router.currentRoute.value.name] === false) {
-    router.replace({name: 'cart'});
+    router.replace({name: 'checkoutCart'});
   }
 });
 
@@ -299,13 +302,13 @@ storeCheckout.$subscribe((mutation, state) => {
   // You can specify type of mutation.
   if ( [MutationType.direct].includes(mutation.type) ) {
 
-    // Check that if current cart items count is zero or less and current route path name is not 'cart' OR
+    // Check that if current cart items count is zero or less and current route path name is not 'checkoutCart' OR
     // the current route path name is 'paymentDetails' and all required shipping details is not set yet.
     if (
-        (router.currentRoute.value.name !== 'cart' && storeCheckout.itemsCount <= 0 ) ||
+        (router.currentRoute.value.name !== 'checkoutCart' && storeCheckout.itemsCount <= 0 ) ||
         (router.currentRoute.value.name === 'paymentDetails' && storeCheckout.isShippingDetailsSet === false)
     ){
-      router.replace({name: 'cart'});
+      router.replace({name: 'checkoutCart'});
     }
   }
 });
@@ -315,8 +318,9 @@ storeCheckout.$subscribe((mutation, state) => {
 <style scoped>
 
 .bc {
-  font-size: 2.1vmin;
+  /*font-size: 2.1vmin;*/
   /*font-size: 1.7vmin;*/
+  font-size: 14px;
   text-transform: uppercase;
   font-weight: 400;
   text-align: center;
@@ -330,12 +334,17 @@ storeCheckout.$subscribe((mutation, state) => {
   position: relative;
 }
 
+/*
+  Here we can control the length line between crumbs and center of crumbs:
+  1- change value of width (related to center the crumbs)
+  2- change value of left (related with the line)
+ */
 .bc:before {
   position: absolute;
   top: 21px;
-  left: 12.5%;
+  left: 15%;
   content: '';
-  width: 75%;
+  width: 70%;
   height: 2px;
   background: #0F1111;
 }
@@ -343,13 +352,14 @@ storeCheckout.$subscribe((mutation, state) => {
 .bc .bc_item {
   float: left;
   padding-top: 58px;
-  width: 25%;
+  width: 33.333%;
   position: relative;
 }
 
 .bc .bc_item:after {
-  font-size: 3.2vmin!important;
+  /*font-size: 3.2vmin!important;*/
   /*font-size: 2.8vmin!important;*/
+  font-size: 15px;
   counter-increment: breadcrumb;
   content: counter(breadcrumb);
   position: absolute;

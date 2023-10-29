@@ -18,7 +18,7 @@ from django.utils.text import slugify
 
 from core.models import (User, Category, Attribute, PromotionCategory, Banner,
                          Card, PurchaseOrder, Product, ProductItem,
-                         ProductItemAttribute, ProductItemImage)
+                         ProductItemAttribute, ProductItemImage, MetaItem)
 from core.tasks import (set_product_item_promotion)
 
 import string
@@ -105,6 +105,14 @@ def set_slug_to_user(sender, instance, *args, **kwargs):
         instance.slug = create_slug(instance.username)
 
 
+@receiver(pre_save, sender=MetaItem)
+def set_slug_to_meta_item(sender, instance, *args, **kwargs):
+    """Create a slug for MetaItem instance when pre_save signal is emit"""
+
+    if instance and not instance.slug:
+        instance.slug = create_slug(instance.meta.title)
+
+
 @receiver(pre_save, sender=Category)
 def set_slug_to_category(sender, instance, *args, **kwargs):
     """Create a slug for category instance when pre_save signal is emit"""
@@ -118,7 +126,7 @@ def set_slug_to_category(sender, instance, *args, **kwargs):
 
 
 @receiver(pre_save, sender=Attribute)
-def set_slug_to_category(sender, instance, *args, **kwargs):
+def set_slug_to_attribute(sender, instance, *args, **kwargs):
     """Create a slug for attribute instance when pre_save signal is emit"""
 
     if instance and not instance.slug:
@@ -159,7 +167,7 @@ def set_slug_to_card(sender, instance, *args, **kwargs):
 def set_slug_to_product(sender, instance, *args, **kwargs):
     """Create a slug for product instance when pre_save signal is emit"""
 
-    if instance and (not instance.slug):
+    if instance and not instance.slug:
         # Get the first 8 characters of product.title (without spaces)
         product_title = instance.title.replace(" ", "")[:8]
 
@@ -171,7 +179,7 @@ def set_sku_to_product_item(sender, instance, *args, **kwargs):
     """Create (Stock Keeping Unit) value for product item instance when
     pre_save signal is emit"""
 
-    if instance and (not instance.sku):
+    if instance and not instance.sku:
 
         # Our formula for sku (Stock Keeping Unit) field:
         # sku (12) = category_title(3)-product_title(4)-random(3)
@@ -211,7 +219,7 @@ def set_slug_to_product_item(sender, instance, *args, **kwargs):
     """Create a slug for product's item instance when pre_save signal is
     emit"""
 
-    if instance and (not instance.slug):
+    if instance and not instance.slug:
         instance.slug = create_slug(instance.sku)
 
 
@@ -235,7 +243,7 @@ def set_slug_to_product_item_image(sender, instance, *args, **kwargs):
     """Create a slug for product item image instance when pre_save signal is
     emit"""
 
-    if instance and (not instance.slug):
+    if instance and not instance.slug:
         instance.slug = create_slug(instance.product_item.sku)
 
 
@@ -265,33 +273,22 @@ def set_po_code_to_po(sender, instance, *args, **kwargs):
         #     # Get the first 4 characters of user.last_name
         #     last_name = request.user.last_name[:4]
 
-        # Get the last 4 characters of supplier.uuid
-        uuid = str(instance.supplier.uuid)[-4:]
-
         # Get the first 4 characters of last name from purchase order profile
         last_name = instance.po_profile.last_name[:4]
-
-        # Get the first 4 characters of role from purchase order profile
-        role = instance.po_profile.role[:4]
 
         # Get the last 4 digit of phone number from purchase order profile
         phone_number = str(instance.po_profile.phone_number)[-4:]
 
-        # the formula our system use to generate PO code of 24 characters:
-        # uuid(-4)-l_name(4)-role(4)-ph_num(-4)-random number(up to 24)
+        # the formula our system use to generate PO code of 16 characters:
+        # l_name(up to first 4)-ph_num(last 4 digits)-random number(up to 16)
 
         # Format the first part of formula.
-        first_part = "{}-{}-{}-{}".format(
-            uuid,
-            last_name,
-            role,
-            phone_number
-        )
+        first_part = "{}-{}".format(last_name, phone_number)
 
         # Count the length of the random Characters.
         # Note: We minus 1 as space for the dash (-) character before random
         #       part.
-        random_char_length = (24 - len(first_part)) - 1
+        random_char_length = (16 - len(first_part)) - 1
 
         # Generate random string(characters and digits)
         random_part = "".join(

@@ -62,32 +62,25 @@
       </header><!-- sect-heading -->
 
       <div class="row">
-        <div v-for="( card, index ) in section.cards" :key="index" class="col-md-3">
+        <div v-for="( card, index ) in section.cards" :key="index" class="col-sm-6 col-md-6 col-lg-3 col-xxl-2">
 
           <div v-if="card.category_slug" class="card card-product-grid" >
 
             <router-link
-                :to="{ name: 'categoryStore', params:{ slug: card.category_slug }, query: {page: 1} }"
+                :to="{ name: 'storeCategory', params:{ slug: card.category_slug }, query: {page: 1} }"
             >
-              <img v-lazy="card.thumbnail" :alt="card.title" class="card-img-top img-wrap" >
+              <img v-lazy="card.thumbnail" :alt="card.title" class="card-img-top img-wrap" style="object-fit: contain; -o-object-fit: contain">
             </router-link>
 
             <div class="card-body">
 
-              <h5 class="title">{{card.title}}</h5>
-              <p class="card-text"
-                 style="height: 113px;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        margin-bottom: 10px;
-                        text-align: justify;
-                        text-justify: inter-word;"
-              >
+              <h5 class="title" style="text-align: center">{{card.title}}</h5>
+              <p class="card-text" style="text-align: center">
                 {{card.summary}}
               </p>
-              <div class="a-button-div">
+              <div class="a-button-div" style="margin-top: 10px">
                 <router-link
-                    :to="{ name: 'categoryStore', params:{ slug: card.category_slug }, query: {page: 1} }"
+                    :to="{ name: 'storeCategory', params:{ slug: card.category_slug }, query: {page: 1} }"
                     class="a-button"
                 >
                   <span style="text-transform:none">{{card.frontend_link_text}}</span>
@@ -236,5 +229,27 @@ await checkDataResultAvailability();
   //height: 500px
   object-fit: cover
   width: 100%
+
+p .card-text
+  position: absolute
+  height: 113px
+  overflow: hidden
+  text-overflow: ellipsis
+  margin-bottom: 10px
+  //text-align: justify
+  text-justify: inter-word
+
+</style>
+
+<style lang="scss" scoped>
+
+// override the default min-width value (576px) of .col-sm-* column to be 330px
+// also you should set the of max-width to same column as breakpoint to .col-md-* which by default it's 768px
+@media (min-width: 330px) and (max-width: 767px) {
+  .col-sm-6 {
+    flex: 0 0 auto;
+    width: 50%;
+  }
+}
 
 </style>

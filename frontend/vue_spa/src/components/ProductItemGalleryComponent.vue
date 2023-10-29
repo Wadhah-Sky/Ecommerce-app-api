@@ -19,8 +19,7 @@
               <!-- Required swiper-lazy class and image source specified in data-src attribute -->
               <img :src="img" :alt="`img-${index}`" class="swiper-lazy" />
               <!-- Preloader image -->
-              <div class="swiper-lazy-preloader swiper-lazy-preloader-black" style="transition: all 0.3s ease-in-out">
-              </div>
+              <div class="swiper-lazy-preloader swiper-lazy-preloader-black" style="transition: all 0.3s ease-in-out"></div>
 
               <!-- Use to non-lazy -->
               <!-- <img :src="img" :alt="`img-${index}`"/> -->
@@ -32,6 +31,7 @@
 
         <swiper v-if="images.length > 1"
                 @swiper="setThumbsSwiper"
+                :modules="modules"
                 :cssMode="true"
                 :mousewheel="true"
                 :keyboard="true"
@@ -46,8 +46,10 @@
         >
           <swiper-slide v-for="( img, index ) in props.images" :key="index" class="item-thumb">
 
-            <!-- use vue lazy loading-->
-            <img v-lazy="img" :alt="`img-${index}`" />
+            <!-- Required swiper-lazy class and image source specified in data-src attribute -->
+            <img :src="img" :alt="`img-${index}`" class="swiper-lazy" />
+            <!-- Preloader image -->
+            <div class="swiper-lazy-preloader swiper-lazy-preloader-black" style="transition: all 0.3s ease-in-out"></div>
 
             <!-- Use to non-lazy -->
             <!-- <img :src="img" :alt="`img-${index}`"/> -->
@@ -68,7 +70,7 @@
   Libraries, methods, variables and components imports
 */
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import SwiperCore, { Navigation, Mousewheel, Keyboard, FreeMode, Thumbs } from "swiper";
+import { Navigation, Mousewheel, Keyboard, FreeMode, Thumbs } from "swiper/modules";
 import{ ref, defineProps } from "vue";
 
 export default {
@@ -93,11 +95,8 @@ const props = defineProps({
   }
 });
 // const storeProduct = toRef(props, 'storeProduct');
-const modules = [Mousewheel, Keyboard];
+const modules = [Thumbs, Navigation, Mousewheel, Keyboard, FreeMode];
 const thumbsSwiper = ref(null);
-
-// install Swiper modules
-SwiperCore.use([Thumbs, Navigation, Mousewheel, Keyboard, FreeMode]);
 
 /*
   Define functions

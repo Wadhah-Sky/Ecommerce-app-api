@@ -447,8 +447,8 @@ class ProductFilter(filters.FilterSet):
         # In case only one value passed within query parameter.
         else:
             # This is in case you want to set lookup with value.
-            # Note: sine our lookup expr using (in), so our value should be
-            #       iterable.
+            # Note: since our lookup expr using (in), so our value should be
+            #       iterable (list, set or tuple).
             return queryset.filter(**{lookup: titles[0]})
 
             # alternatively, you could opt to hardcode the lookup after remove

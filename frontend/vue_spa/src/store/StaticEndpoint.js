@@ -18,11 +18,13 @@ export const useEndpointStore = defineStore('Endpoint',{
         storeProductsEndpoint: '/api/v1/store/products/category/',
         storeAttributesEndpoint: '/api/v1/store/attributes/category/',
         storeProductDetailsEndpoint: '/api/v1/product/details/',
+        storeSearchEndpoint: '/api/v1/store/search/',
         cartCheckEndpoint: '/api/v1/cart/check/',
         shippingCountiesEndpoint: '/api/v1/shipping/countries/',
         shippingMethodsEndpoint: '/api/v1/shipping/methods/',
         shippingCostEndpoint: '/api/v1/shipping/cost/',
         paymentMethodsEndpoint: '/api/v1/payment/methods/',
+        OrderCreateEndpoint: '/api/v1/order/create/'
     }),
 });
 

@@ -38,7 +38,9 @@ export const useCheckoutStore = defineStore('Checkout', {
     shippingApiCostPriceAmount: 0,
     shippingApiErrorMsg: '',
     paymentDetails: {},
-    paymentMethods: []
+    paymentMethods: [],
+    orderApiErrorMsg: '',
+    orderAPIPOCode: ''
   }),
   getters: {
     cartItemsQuantity (state){
@@ -154,7 +156,7 @@ export const useCheckoutStore = defineStore('Checkout', {
       // join array items as string seperated by comma (,)
       return arr.join();
     },
-    shippingAddress(state) {
+    shippingCostCheckDetails(state) {
       /**
        * Return the shipping address object. the return object contains:
        * country_iso_code, region, city, postal_code
@@ -169,12 +171,12 @@ export const useCheckoutStore = defineStore('Checkout', {
     },
     isShippingInfoSet(state) {
       /**
-       * Method to return true if certain required shipping address and shipping method are set,
+       * Method to return true if certain required shipping details and shipping method are set,
        * useful to trigger cost calculation from backend server.
        */
 
       // Set required values.
-      let shippingAddress = Object.values(state.shippingAddress);
+      let shippingAddress = Object.values(state.shippingCostCheckDetails);
       let shippingMethod = state.shippingDetails['shippingMethod'] || '';
 
       // Check that if shipping method is set.
@@ -204,7 +206,7 @@ export const useCheckoutStore = defineStore('Checkout', {
         let address1 = state.shippingDetails['address1'] || '';
 
         // let shippingMethod = state.shippingDetails['shippingMethod'] || '';
-        // let shippingAddress = Object.values(state.shippingAddress);
+        // let shippingAddress = Object.values(state.shippingCostCheckDetails);
         // Merge array of 'shippingAddress' with array of other details.
         // let mergeResult = [...[shippingMethod, address1, phoneNumber, firstName, lastName, email], ...shippingAddress];
 
@@ -458,6 +460,29 @@ export const useCheckoutStore = defineStore('Checkout', {
 
       this.shippingMethods = await this.getDataResult(endpoint);
     },
+    async setShippingMethod(){
+      /**
+       *  Method to check that current shipping method is exists in the retrieved list
+       *  of shipping method from backend server, remove it if not exist.
+       */
+
+      // Get the shipping method value.
+      let method = this.shippingDetails['shippingMethod'] || '';
+
+      // Check that the 'shippingMethod' is not null/empty/undefined.
+      if (![undefined, '', null].includes(method)) {
+        for (let item of this.shippingMethods) {
+          if (item.value === method) {
+            // Return and end the method process.
+            return
+          }
+        }
+
+        // Update the current shipping method because is no longer exist in backend server.
+        this.shippingDetails['shippingMethod'] = '';
+        await this.setShippingDetails('shippingMethod', this.shippingDetails['shippingMethod']);
+      }
+    },
     async shippingCost(endpoint, data){
       /**
        * Method to make HTTP POST request to backend server in order to check
@@ -535,6 +560,40 @@ export const useCheckoutStore = defineStore('Checkout', {
         }
       }
       return isCard;
+    },
+    async setPurchaseOrder(endpoint, data){
+      /**
+       * Method to make HTTP POST request to backend server in order to set purchase order
+       * and get response.
+       *
+       * @param {String} endpoint the backend api endpoint.
+       * @param {Object} data the json object to send with HTTP POST request.
+       */
+
+      this.dataLoading = true;
+
+      try{
+        let response = await axios.post(endpoint, data);
+        this.orderApiErrorMsg = '';
+        this.orderAPIPOCode = response.data['po_code'];
+
+        // Reset the cart product items, means we have to remove all items from cart.
+        this.cartProducts = [];
+        // Store cart products into local storage.
+        this.saveCart(this.cartProducts);
+      }
+      catch (error){
+        if(error.response.data['message'] !== undefined){
+          this.orderApiErrorMsg = error.response.data['message'];
+        }
+        else {
+          this.orderApiErrorMsg = "Error while trying to retrieve the requested data from backend server!"
+        }
+      }
+      finally {
+        this.dataLoading = false;
+      }
+
     }
   }
 });

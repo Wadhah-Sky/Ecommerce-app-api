@@ -14,7 +14,13 @@ def restart_celery():
     if sys.platform == 'win32':
         cmd = 'taskkill /f /t /im celery.exe'
 
+    # call the cmd command of kill process to celery worker.
+    # Note: shlex.split method will create list of strings that can be executed
+    #       by call() method, it's useful for long command that consists of
+    #       multiple sub-commands and arguments.
+    #       Info: it's not working with subprocess run() method.
     subprocess.call(shlex.split(cmd))
+    # call command to start celery worker.
     subprocess.call(
         shlex.split('celery -A api worker --loglevel=info')
     )

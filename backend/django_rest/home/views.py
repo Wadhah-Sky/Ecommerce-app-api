@@ -3,7 +3,7 @@
 from drf_multiple_model.views import ObjectMultipleModelAPIView
 
 from home import serializers
-from core.models import Banner, Section, ProductGroup
+from core.models import Banner, TopBanner, Section, ProductGroup
 
 
 # Info: if you want to make queryset filtering for list APIView/ViewSet:
@@ -103,6 +103,13 @@ class HomeListAPIView(ObjectMultipleModelAPIView):
                 ).order_by('display_order'),
                 'serializer_class': serializers.BannerSerializer
             },
+            # queryset with its serializer for active top banners.
+            {
+                'queryset': TopBanner.objects.filter(
+                    is_active=True
+                ).order_by('display_order'),
+                'serializer_class': serializers.TopBannerSerializer
+            },
             # queryset with its serializer for sections.
             {
                 'queryset': Section.objects.filter(
@@ -115,7 +122,7 @@ class HomeListAPIView(ObjectMultipleModelAPIView):
                 'queryset': ProductGroup.objects.filter(
                     is_active=True,
                     products_product_group__isnull=False
-                ).distinct().order_by('display_order')[:12],
+                ).distinct().order_by('display_order')[:3],
                 'serializer_class': serializers.ProductGroupSerializer
             }
         ]

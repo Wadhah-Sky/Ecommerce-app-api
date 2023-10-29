@@ -2,9 +2,11 @@
 
 from unittest.mock import patch
 from django.test import TestCase
-from django.core.exceptions import ValidationError
-from core import models
+# from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.conf import settings
+
+from core import models
 
 
 # Notice:
@@ -84,17 +86,6 @@ class ModelTest(TestCase):
         self.assertTrue(superuser.is_superuser)
         self.assertTrue(superuser.is_staff)
 
-    def test_new_user_invalid_phone_number(self):
-        """Test that ValidationError exception will raise when enter invalid
-        phone number to create a user"""
-
-        email = 'tests@tests.com'
-        invalid_phone_number = '788787'
-        PAYLOAD['phone_number'] = invalid_phone_number
-
-        with self.assertRaises(ValidationError):
-            sample_user(email=email)
-
     def test_category_str(self):
         """Test the Category class objects string representation"""
 
@@ -116,11 +107,16 @@ class ModelTest(TestCase):
 
         uuid = 'test_uuid'
         mock_uuid4.return_value = uuid
+        # An important SEO (Google search) step that your website brand its
+        # uploaded images.
+        website_brand_title = settings.WEBSITE_BRAND_TITLE
 
-        file_path = models.create_image_file_path(category, 'tests.jpg')
+        file_path = models.create_file_path(category, 'tests.jpg')
 
-        class_name = category.__class__.__name__.lower()
-        expected_path = f'uploads/{class_name}/{category.slug}/{uuid}.jpg'
+        # class_name = category.__class__.__name__.lower()
+
+        expected_path = f'uploads/{website_brand_title}/' \
+                        f'{category.slug}/{uuid}.jpg'
 
         self.assertEqual(expected_path, file_path)
 
@@ -141,4 +137,4 @@ class ModelTest(TestCase):
             category=category
         )
 
-        self.assertEqual(str(product), f'{category.title} / {product.title}')
+        self.assertEqual(str(product), f'{category.title} >> {product.title}')

@@ -26,8 +26,9 @@ urlpatterns = [
     path('_nested_admin/', include('nested_admin.urls')),
 
     path(
-        'api-auth/', include('rest_framework.urls', namespace='rest_framework')
-         ),
+        'api-auth/',
+        include('rest_framework.urls', namespace='rest_framework')
+    ),
 
     path('api/v1/', include('core.urls')),
     path('api/v1/', include('home.urls')),

@@ -118,9 +118,10 @@ from django.db import models
 from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin,
                                         BaseUserManager)
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+# from django.utils.translation import gettext_lazy as _
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import (MinValueValidator, MaxValueValidator,
+                                    RegexValidator)
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -149,7 +150,79 @@ from mptt import models as mptt_models
 # import logging
 import uuid
 import os
+import re
 
+# How to create/update multiple records in database with one query?
+#
+# 1- for create you can use the following method:
+#
+#    bulk_create(objs, batch_size=None, ignore_conflicts=False,
+#               update_conflicts=False, update_fields=None, unique_fields=None)
+#
+#    * Where 'batch_size' parameter determine the size of records to create in
+#    one query call. The default is to create all objects in one batch, except
+#    for SQLite where the default is such that at most 999 variables per query
+#    are used.
+#
+#    This has a number of caveats though:
+#
+#    A- The model’s save() method will not be called, and the pre_save and
+#        post_save signals will not be sent.
+#
+#    B- It does not work with child models in a multi-table inheritance
+#       scenario.
+#
+#    C- If the model’s primary key is an AutoField, the primary key attribute
+#       can only be retrieved on certain databases (currently PostgreSQL,
+#       MariaDB 10.5+, and SQLite 3.35+). On other databases, it will not be
+#       set.
+#
+#    D- It does not work with many-to-many relationships.
+#
+#    E- It casts objs to a list, which fully evaluates objs if it’s a generator
+#
+# 2- for update use the following method:
+#
+#    bulk_update(objs, fields, batch_size=None)
+#
+# Note: both of methods have async version of it.
+
+
+# Info: caching and queryset?
+#
+#       Each QuerySet contains a cache to minimize database access.
+#       Understanding how it works will allow you to write the most efficient
+#       code.
+#       In a newly created QuerySet, the cache is empty. The first time
+#       a QuerySet is evaluated – and, hence, a database query happens –
+#       Django saves the query results in the QuerySet’s cache and returns the
+#       results that have been explicitly requested (e.g., the next element,
+#       if the QuerySet is being iterated over). Subsequent evaluations of the
+#       QuerySet reuse the cached results, for example:
+#
+#       >>> queryset = Entry.objects.all()
+#       >>> print([p.headline for p in queryset])  # Evaluate the query set.
+#       >>> print([p.pub_date for p in queryset])  # Reuse the cache from the
+#                                                  # evaluation.
+#
+#       So, When QuerySets are not cached?
+#
+#       Querysets do not always cache their results. When evaluating only part
+#       of the queryset, the cache is checked, but if it is not populated then
+#       the items returned by the subsequent query are not cached.
+#       Specifically, this means that limiting the queryset using an array
+#       slice or an index will not populate the cache, for example:
+#
+#       >>> queryset = Entry.objects.all()
+#       >>> print(queryset[5])  # Queries the database
+#       >>> print(queryset[5])  # Queries the database again
+#
+#       But:
+#
+#       >>> queryset = Entry.objects.all()
+#       >>> [entry for entry in queryset]  # Queries the database
+#       >>> print(queryset[5])  # Uses cache
+#       >>> print(queryset[5])  # Uses cache
 
 # Info: if you want to access details of model fields details e.g. max_length,
 #       you have two ways:
@@ -262,6 +335,37 @@ import os
 #       into Python memory.
 #       Instead, Django uses the F() object to generate an SQL expression that
 #       describes the required operation at the database level.
+#       Also, it's possible to use it to mention another field value for same
+#       model:
+#
+#       class Promotion(models.Model):
+#
+#             max_use_times = models.models.PositiveIntegerField(default=10)
+#             used_times = models.models.PositiveIntegerField(default=0)
+#             ...
+#
+#       # Sql query
+#       promotion_instance = Promotion.objects.get(
+#                     models.Q(
+#                         title=coupon,
+#                         promotion_type='Coupon',
+#                         is_available=True,
+#                         unlimited_use=True,
+#                         start_date__lte=timezone.now(),
+#                         end_date__gt=timezone.now()
+#                     ) |
+#                     models.Q(
+#                         title=coupon,
+#                         promotion_type='Coupon',
+#                         is_available=True,
+#                         unlimited_use=False,
+#                         used_times__lt=models.F(
+#                             'max_use_times'
+#                         ),
+#                         start_date__lte=timezone.now(),
+#                         end_date__gt=timezone.now()
+#                     )
+#                 )
 
 # Info: When using django ORM methods in case the queryset is empty:
 #
@@ -454,6 +558,67 @@ import os
 #       return Money value.
 #       Also, you can use sorted/sort methods with Money values.
 
+# Info: If you want to use manager get() method to retrieve instance from
+#       database, so be careful when using lookup keys that lead to retrieve
+#       multiple instance like 'icontains'.
+
+
+def match_with_regex(field_name, value):
+    """Return true if value passed field_name regex"""
+
+    # Note: 're.match' implicitly matches on the start of the string.
+    #       While 're.search' is needed if you want to generalize to the whole
+    #       string.
+
+    name_pattern = r"(?=^.{0,50}$)(^[A-Za-z]*$)"
+
+    email_pattern = r"(?=^.{0,255}$)(^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]" \
+                    r"+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$)"
+
+    # for postal code should cover:
+    # 1- Every postal code system uses only A-Z and/or 0-9 and sometimes
+    #    space/dash
+    # 2- Not every country uses postal codes (ex. Ireland outside of Dublin),
+    #    but we'll ignore that here.
+    # 3- The shortest postal code format is Sierra Leone with NN
+    # 4- The longest is American Samoa with NNNNN-NNNNNN
+    # 5- You should allow one space or dash.
+    # 6- Should not begin or end with space or dash
+    postal_code_pattern = r"(^[a-z0-9][a-z0-9\- ]{0,10}[a-z0-9]$)"
+
+    address_pattern = r"(?=^.{0,100}$)(^[#/.0-9a-zA-Z\s,-]+$)"
+
+    cardholder_name_pattern = r"^(?=.{0,20}$)(?!\s)((?:[A-Za-z]+\s?){1,3}$)"
+
+    # card number support 16 digits as maximum.
+    card_number_pattern = r"^(?=.{0,16}$)([0-9]+)$"
+
+    card_expiry_pattern = r"^(?=.{0,5}$)((0[1-9]|1[0-2])\/?([0-9]{2})$)"
+
+    # card security code support at least 3 digits and maximum is 4 digits.
+    card_ccv_pattern = r"^[0-9]{3,4}$"
+
+    match field_name:
+        case 'name':
+            return bool(re.match(name_pattern, value))
+        case 'email':
+            return bool(re.match(email_pattern, value))
+        case 'postal_code':
+            return bool(re.match(postal_code_pattern, value))
+        case 'address':
+            return bool(re.match(address_pattern, value))
+        case 'cardholder_name':
+            return bool(re.match(cardholder_name_pattern, value))
+        case 'card_number':
+            return bool(re.match(card_number_pattern, value))
+        case 'card_expiry':
+            return bool(re.match(card_expiry_pattern, value))
+        case 'card_ccv':
+            return bool(re.match(card_ccv_pattern, value))
+        case _:
+            # Default case
+            return False
+
 
 def calculate_discount_amount(amount, discount_percentage):
     """Return the amount of discount"""
@@ -473,10 +638,10 @@ def round_money(amount, currency=settings.MONEY_DEFAULT_CURRENCY,
         return Money(round(amount, round_decimal), currency)
 
 
-def create_image_file_path(instance, filename):
-    """Generate file path for a new image"""
+def create_file_path(instance, filename):
+    """Generate file path for a given instance"""
 
-    # Info: 'filename' is the name of uploaded image by user.
+    # Info: 'filename' is the name of uploaded file by user.
 
     # Get the extension from the filename.
     extension = filename.split('.')[-1]
@@ -489,9 +654,9 @@ def create_image_file_path(instance, filename):
 
     # An important SEO (Google search) step that your website brand its
     # uploaded images.
-    website_brand_name = 'Jamie-&-Cassie'
+    website_brand_title = settings.WEBSITE_BRAND_TITLE
 
-    return os.path.join(f'uploads/{website_brand_name}', filename)
+    return os.path.join(f'uploads/{website_brand_title}', filename)
 
 
 def instance_time_stamp(instance):
@@ -557,8 +722,6 @@ class UserManager(BaseUserManager):
             raise ValueError('User must have an email address')
         if not username:
             raise ValueError('User must have an username')
-        if extra_fields['phone_number']:
-            validate_international_phonenumber(extra_fields['phone_number'])
 
         # create a record.
         user = self.model(
@@ -609,7 +772,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     slug = models.SlugField(max_length=100, unique=True)
     thumbnail = ProcessedImageField(
         blank=True,
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 90},
     )
@@ -617,7 +780,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
-    phone_number = PhoneNumberField(unique=True)
+    phone_number = PhoneNumberField(
+        unique=True,
+        validators=[validate_international_phonenumber]
+    )
     role = models.CharField(
         max_length=30,
         choices=role_choices,
@@ -691,18 +857,33 @@ class Meta(models.Model):
 class MetaItem(models.Model):
     """Model for create meta item instances"""
 
-    class Meta:
-        """A Meta-class customization of model"""
-
-        constraints = [
-            models.UniqueConstraint(
-                fields=['value', 'meta'],
-                name='meta_item_unique_appversion'
-            ),
-        ]
+    # Set the required values of following Meta model title after initializing
+    # the database:
+    # 1- 'Main logo' title, related values in 'thumbnail' and 'file' (svg file)
+    #    field
 
     # Define model fields.
-    value = models.CharField(max_length=56, unique=True)
+    # 'slug' set by signal.
+    slug = models.SlugField(max_length=100, unique=True)
+    thumbnail = ProcessedImageField(
+        blank=True,
+        upload_to=create_file_path,
+        format='PNG',
+        options={'quality': 100}
+    )
+    file = models.FileField(blank=True, upload_to=create_file_path)
+    value = models.CharField(max_length=255, blank=True)
+    source_url = models.URLField(
+        max_length=255,
+        blank=True,
+        help_text="You can set URL for icon SVG source"
+    )
+    source2_url = models.URLField(
+        max_length=255,
+        blank=True,
+        help_text="You can set URL for icon image source e.g. PNG or JPG"
+    )
+    use_source = models.BooleanField(default=False)
     meta = models.ForeignKey(
         'Meta',
         on_delete=models.CASCADE,
@@ -712,7 +893,7 @@ class MetaItem(models.Model):
     def __str__(self):
         """String representation of model objects"""
 
-        return f'{self.meta.title}, {self.value}'
+        return f'{self.meta.title}, {self.slug}'
 
 
 class Country(models.Model):
@@ -763,6 +944,10 @@ class Country(models.Model):
 class Address(models.Model):
     """Model to create address instances"""
 
+    NAME_REGEX = r"(?=^.{0,85}$)(^[A-Za-z]*$)"
+    ADDRESS_REGEX = r"(?=^.{0,100}$)(^[#/.0-9a-zA-Z\s,-]+$)"
+    POSTAL_CODE_REGEX = r"(^[a-z0-9][a-z0-9\- ]{0,10}[a-z0-9]$)"
+
     class Meta:
         """Customize django default way to plural the class name"""
 
@@ -772,11 +957,58 @@ class Address(models.Model):
     # Define model fields.
     # unit_number = models.CharField(max_length=5, blank=True)
     # street_number = models.CharField(max_length=3, blank=True)
-    address_line_1 = models.CharField(max_length=100)
-    address_line_2 = models.CharField(max_length=100, blank=True)
-    city = models.CharField(max_length=85)
-    region = models.CharField(max_length=85)
-    postal_code = models.CharField(max_length=8, blank=True)
+    address1 = models.CharField(
+        max_length=100,
+        validators=[
+            RegexValidator(
+                regex=ADDRESS_REGEX,
+                message='Wrong e.g, 13 Main str.',
+                code='invalid_address1'
+            )
+        ]
+    )
+    address2 = models.CharField(
+        max_length=100,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=ADDRESS_REGEX,
+                message='Wrong e.g, Apt/Suite/Building',
+                code='invalid_address2'
+            )
+        ]
+    )
+    city = models.CharField(
+        max_length=85,
+        validators=[
+            RegexValidator(
+                regex=NAME_REGEX,
+                message='Wrong, City name',
+                code='invalid_city'
+            )
+        ]
+    )
+    region = models.CharField(
+        max_length=85,
+        validators=[
+            RegexValidator(
+                regex=NAME_REGEX,
+                message='Wrong, State or Province',
+                code='invalid_region'
+            )
+        ]
+    )
+    postal_code = models.CharField(
+        max_length=12,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex=POSTAL_CODE_REGEX,
+                message='Wrong, Postal or Zip code',
+                code='invalid_postal_code'
+            )
+        ]
+    )
     country = models.ForeignKey(
         'Country',
         on_delete=models.RESTRICT,
@@ -789,7 +1021,7 @@ class Address(models.Model):
         address = [
             # self.unit_number,
             # self.street_number,
-            self.address_line_1,
+            self.address1,
             self.city,
             self.country
         ]
@@ -805,6 +1037,8 @@ class Address(models.Model):
 
 class UserAddress(models.Model):
     """Model to create user's address instances"""
+
+    # Note: it's possible to have multiple persons living in the same house.
 
     # 'UniqueConstraints' expects a list of the fields you’d like to be unique
     # together, and you can add condition to enforce on fields to make sure
@@ -836,6 +1070,8 @@ class UserAddress(models.Model):
         verbose_name = 'User Address'
         verbose_name_plural = 'User Addresses'
         constraints = [
+            # Note: in unique constraint list you should never list field that
+            #       can be null/blank.
             models.UniqueConstraint(
                 fields=['user', 'address'],
                 name='user_address_unique_appversion'
@@ -885,7 +1121,18 @@ class Icon(models.Model):
     """Model to create icon instances"""
 
     title = models.CharField(max_length=30, unique=True)
-    class_attribute_value = models.CharField(max_length=40)
+    class_attribute_value = models.CharField(max_length=40, blank=True)
+    source_url = models.URLField(
+        max_length=255,
+        blank=True,
+        help_text="Set URL for icon SVG source"
+    )
+    source2_url = models.URLField(
+        max_length=255,
+        blank=True,
+        help_text="Set URL for icon image source e.g. PNG or JPG"
+    )
+    # use_source = models.BooleanField(default=False)
 
     def __str__(self):
         """String representation of model objects"""
@@ -966,7 +1213,7 @@ class Category(mptt_models.MPTTModel, TimeStampedModel):
     slug = models.SlugField(max_length=100, unique=True)
     thumbnail = ProcessedImageField(
         blank=True,
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         processors=[ResizeToFit(70, 70)],
         format='JPEG',
         options={'quality': 100}
@@ -1050,7 +1297,7 @@ class Category(mptt_models.MPTTModel, TimeStampedModel):
         #       dropped.
         #       list_name[::3] is every third element of the sequence
         #       (jumping), or can be used to print a list in reverse order.
-        return ' / '.join(full_path[::-1])
+        return ' >> '.join(full_path[::-1])
 
 
 class Promotion(TimeStampedModel):
@@ -1091,7 +1338,6 @@ class Promotion(TimeStampedModel):
         default='Deal'
     )
     max_use_times = models.PositiveIntegerField(default=10)
-    used_times = models.PositiveIntegerField(default=0)
     start_date = models.DateTimeField(default=timezone.now)
     end_date = models.DateTimeField(default=timezone.now)
     # You can enter a duration with a string with following format:
@@ -1102,7 +1348,14 @@ class Promotion(TimeStampedModel):
     #               " promotion"
     # )
     unlimited_use = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_available = models.BooleanField(default=True)
+
+    @property
+    def purchase_orders_count(self):
+        """Return the count of purchase order uses of this promotion
+        instance"""
+
+        return self.purchase_orders_promotion.count()
 
     @property
     def duration(self):
@@ -1118,7 +1371,7 @@ class Promotion(TimeStampedModel):
 
     @property
     def promotion_status(self):
-        """Return the status of promotion depending on start and end date"""
+        """Return the status of promotion depending on some fields value"""
 
         # In case the current time is less than start date.
         if timezone.now() < self.start_date:
@@ -1126,9 +1379,24 @@ class Promotion(TimeStampedModel):
         # In case the current time is bigger than end date.
         elif timezone.now() > self.end_date:
             return "Expired"
+        # In case the unlimited_use field is False, check purchase_order_count
+        # if it's equal or bigger than 'max_use_time' filed value.
+        elif self.unlimited_use is False and \
+                self.purchase_orders_count >= self.max_use_times:
+            return "Reached the max use times"
         # Otherwise the promotion is active.
         else:
             return "Active"
+
+    @property
+    def is_active(self):
+        """Return True if promotion status property return 'Active' otherwise
+        return false"""
+
+        if self.promotion_status == "Active":
+            return True
+        else:
+            return False
 
     def clean(self):
         """Restrict the add/change to model fields"""
@@ -1199,7 +1467,7 @@ class Banner(TimeStampedModel):
     # 'slug' set by signal.
     slug = models.SlugField(max_length=100)
     thumbnail = ProcessedImageField(
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 100},
         processors=[Resize(1118, 280)]
@@ -1232,6 +1500,47 @@ class Banner(TimeStampedModel):
 
         return super(
             Banner,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+        return self.title
+
+
+class TopBanner(TimeStampedModel):
+    """Model to create top banner objects"""
+
+    # Specify url target field choices.
+    URL_TARGET_CHOICES = (
+        ("_self", "_self"),
+        ("_blank", "_blank"),
+        ("_parent", "_parent"),
+        ("_top", "_top")
+    )
+
+    # Define model fields.
+    title = models.CharField(max_length=20, unique=True)
+    summary = models.TextField(max_length=60)
+    url = models.URLField(max_length=255, blank=True)
+    url_target = models.CharField(
+        max_length=7,
+        choices=URL_TARGET_CHOICES,
+        default='_blank'
+    )
+    frontend_link_text = models.CharField(max_length=20, default="Go")
+    display_order = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        unique=True
+    )
+    is_active = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        """On save() method call for this model, update timestamps"""
+
+        return super(
+            TopBanner,
             instance_time_stamp(self)
         ).save(*args, **kwargs)
 
@@ -1324,7 +1633,7 @@ class Card(TimeStampedModel):
     slug = models.SlugField(max_length=100)
     # processors=[ResizeToFit(220, 221)]
     thumbnail = ProcessedImageField(
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 100},
         processors=[ResizeToFit(220, 221)]
@@ -1407,7 +1716,11 @@ class Supplier(TimeStampedModel):
     )
     title = models.CharField(max_length=50, unique=True)
     email = models.CharField(max_length=100, blank=True)
-    phone_number = PhoneNumberField()
+    phone_number = PhoneNumberField(
+        null=True,
+        blank=True,
+        validators=[validate_international_phonenumber]
+    )
     contact_name = models.CharField(max_length=50)
     is_available = models.BooleanField(default=True)
 
@@ -1485,15 +1798,18 @@ class ShippingMethod(models.Model):
     title = models.CharField(max_length=20, unique=True)
     contact_name = models.CharField(max_length=50, blank=True)
     email = models.EmailField(max_length=100, blank=True)
-    phone_number = PhoneNumberField(null=True, blank=True)
+    phone_number = PhoneNumberField(
+        null=True,
+        blank=True,
+        validators=[validate_international_phonenumber]
+    )
     is_available = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         """Validate 'phone number' if provided"""
 
-        if self.phone_number:
-            validate_international_phonenumber(self.phone_number)
         if self.email:
+            # normalize email before saving in database.
             self.email = BaseUserManager.normalize_email(self.email)
 
         return super(
@@ -1514,17 +1830,12 @@ class POShipping(TimeStampedModel):
         MinMoneyValidator({'USD': 0}),
     ]
 
-    class Meta:
-        """Set metadata for your Model class"""
-
-        constraints = [
-            models.UniqueConstraint(
-                fields=['shipping_method', 'address'],
-                name='po_shipping_unique_appversion'
-            ),
-        ]
-
     # Define model fields.
+    uuid = models.UUIDField(
+        db_index=True,
+        default=uuid.uuid4,
+        editable=False
+    )
     shipping_method = models.ForeignKey(
         'ShippingMethod',
         on_delete=models.SET_NULL,
@@ -1547,6 +1858,7 @@ class POShipping(TimeStampedModel):
         default_currency=settings.MONEY_DEFAULT_CURRENCY,
         validators=MONEY_VALIDATOR
     )
+    track_number = models.CharField(max_length=100, blank=True)
 
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
@@ -1561,6 +1873,7 @@ class POShipping(TimeStampedModel):
 
         shipping = [
             self.shipping_method,
+            self.uuid,
             self.address,
             self.cost
         ]
@@ -1580,8 +1893,6 @@ class POProfileManager(models.Manager):
     def create(self, *args, **kwargs):
         """Override the create method of Manager queryset"""
 
-        if kwargs['phone_number']:
-            validate_international_phonenumber(kwargs['phone_number'])
         if kwargs['email']:
             kwargs['email'] = BaseUserManager.normalize_email(kwargs['email'])
 
@@ -1611,6 +1922,16 @@ class POProfile(TimeStampedModel):
     #            default_manager_name = <value>
     #
 
+    class Meta:
+        """Set metadata for your Model class"""
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['first_name', 'last_name', 'email', 'phone_number'],
+                name='po_profile_unique_appversion'
+            )
+        ]
+
     # Info: A “Client” is someone who uses your services on one or more
     #       occasions, while the “Customer” is someone who purchases from your
     #       business on a recurring basis.
@@ -1618,9 +1939,10 @@ class POProfile(TimeStampedModel):
     # Define model fields.
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(max_length=100, unique=True)
-    phone_number = PhoneNumberField(unique=True)
-    role = models.CharField(max_length=30, default='client')
+    email = models.EmailField(max_length=100)
+    phone_number = PhoneNumberField(
+        validators=[validate_international_phonenumber]
+    )
 
     # Hook in the custom model manager.
     # 'objects' is the alias name of model default manager, and you use it when
@@ -1670,21 +1992,51 @@ class PaymentMethod(models.Model):
 class POPayment(TimeStampedModel):
     """Model class for create purchase order payment instances"""
 
+    # What is PCI?
+    #
+    # Because of the security issues surrounding credit cards, a standard
+    # called Payment Card Industry Data Security Standard, commonly referred to
+    # as PCI (or PCI DSS), was developed by the major credit card processors
+    # through the PCI Security Standards Council (www.pcisecuritystandards.org)
+    # The PCI standard requires a number of security measures be in place for
+    # any business that handles credit card information to ensure the data is
+    # well protected from theft. PCI compliance is a requirement in using
+    # payment providers to process credit card payments.
+
+    # Info: In most cases, credit card information shouldn't be stored in the
+    #       database at any time. Storing this information is not only
+    #       a liability for security reasons, but it results in more compliance
+    #       actions that need to be taken to be PCI-compliant. Credit card
+    #       information is stored by the credit card provider you integrate
+    #       with (Paypal, DataCash, DIBS, etc), which are required to be
+    #       PCI-compliant. There are ways that these providers allow you to
+    #       access those cards for processing later in certain circumstances.
+    #       Simply using a third-party credit card processing company is not
+    #       sufficient to ensure full PCI-compliance by itself - but it reduces
+    #       the number of measures you'll need to implement to be PCI-compliant
+
     # Define model fields.
     uuid = models.UUIDField(
         db_index=True,
         default=uuid.uuid4,
         editable=False
     )
-    # 'Provider' means the issuer of card e.g. bank.
-    provider = models.CharField(max_length=50, blank=True)
-    card_number = models.IntegerField(null=True, blank=True)
-    cardholder_name = models.CharField(max_length=50, blank=True)
-    expiry_date = models.DateField(blank=True, null=True)
+    transaction_id = models.CharField(max_length=100, blank=True)
+    # You should store only last four digits of card number, the others is *
+    # So we don't use validator for it.
+    card_number = models.CharField(max_length=20, blank=True)
+    use_shipping_address = models.BooleanField(default=True)
     payment_method = models.ForeignKey(
         'PaymentMethod',
         on_delete=models.RESTRICT,
         related_name='po_payments_payment_method'
+    )
+    po_profile = models.ForeignKey(
+        'POProfile',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='po_payments_po_profile'
     )
     # Billing address
     address = models.ForeignKey(
@@ -1694,7 +2046,29 @@ class POPayment(TimeStampedModel):
         on_delete=models.SET_NULL,
         related_name='po_payments_address'
     )
-    use_shipping_address = models.BooleanField(default=True)
+
+    # 'Provider' means the issuer of card e.g. bank.
+    # provider = models.CharField(max_length=50, blank=True)
+    # cardholder_name = models.CharField(max_length=50, blank=True)
+    # month_expiry = models.CharField(max_length=2, blank=True)
+    # year_expiry = models.CharField(max_length=4, blank=True)
+
+    def scripted_card_number(self):
+        """Return the scripted version of card number in case it's not"""
+
+        # Get the card number
+        card_number = self.card_number
+
+        if card_number:
+
+            # Get length
+            len_card_num = len(str(card_number))
+
+            if len_card_num > 4:
+                # Create from card number a string looks like: *****6789
+                scripted_card_num = (len_card_num - 4) * '*' + card_number[-4:]
+
+                return scripted_card_num
 
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
@@ -1708,11 +2082,12 @@ class POPayment(TimeStampedModel):
         """String representation of model objects"""
 
         payment = [
-            self.provider,
-            self.card_number,
-            self.cardholder_name,
-            self.expiry_date,
-            self.payment_method
+            # self.provider,
+            # self.card_number,
+            # self.cardholder_name,
+            # self.expiry_date,
+            self.payment_method,
+            self.uuid
         ]
 
         returned_value = []
@@ -1726,6 +2101,12 @@ class POPayment(TimeStampedModel):
 
 class Tax(TimeStampedModel):
     """Model class for create tax instances"""
+
+    class Meta:
+        """Set metadata for your Model class"""
+
+        verbose_name = 'Tax'
+        verbose_name_plural = 'Taxes'
 
     # Specify tax fulfill field choices.
     TAX_FULFILL_CHOICES = (
@@ -1798,37 +2179,32 @@ class Tax(TimeStampedModel):
 #         return f'{self.country.title}, {self.tax.title}'
 
 
-class POStatus(models.Model):
-    """Model class for create purchase order status instances"""
+class PurchaseOrder(TimeStampedModel):
+    """Model class for create purchase order instances"""
+
+    # The most important thing in purchase order is 'po_code', everything else
+    # can be set as null/blank.
 
     # Specify PO status field choices.
     PO_STATUS_CHOICES = (
-        ("processing", "Processing"),
-        ("shipped", "Shipped"),
-        ("delivered", "Delivered"),
-        ("returned", "Returned"),
-        ("canceled", "canceled")
+        ("Processing", "Processing"),
+        ("Shipped", "Shipped"),
+        ("Delivered", "Delivered"),
+        ("Returned", "Returned"),
+        ("canceled", "canceled"),
+        ("Rejected", "Rejected"),
+        ("Error", "Error")
     )
-
-    # Define model fields.
-    title = models.CharField(
-        max_length=20,
-        choices=PO_STATUS_CHOICES,
-        default='Processing'
-    )
-
-    def __str__(self):
-        """String representation of model objects"""
-        return self.title
-
-
-class PurchaseOrder(TimeStampedModel):
-    """Model class for create purchase order instances"""
 
     # Define model fields.
     # 'po_code' set by signal.
     po_code = models.CharField(max_length=50, verbose_name='PO code')
     summary = models.TextField(max_length=255, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=PO_STATUS_CHOICES,
+        default='Processing'
+    )
     po_profile = models.ForeignKey(
         'POProfile',
         on_delete=models.PROTECT,
@@ -1836,6 +2212,8 @@ class PurchaseOrder(TimeStampedModel):
     )
     po_payment = models.ForeignKey(
         'POPayment',
+        blank=True,
+        null=True,
         on_delete=models.PROTECT,
         related_name='purchase_orders_po_payment'
     )
@@ -1860,21 +2238,11 @@ class PurchaseOrder(TimeStampedModel):
         on_delete=models.SET_NULL,
         related_name='purchase_orders_po_shipping'
     )
-    supplier = models.ForeignKey(
-        'Supplier',
-        on_delete=models.PROTECT,
-        related_name='purchase_orders_supplier'
-    )
-    po_status = models.ForeignKey(
-        'POStatus',
-        on_delete=models.PROTECT,
-        related_name='purchase_orders_po_status'
-    )
-
-    @property
-    def po_status_title(self):
-        """Return the title of purchase order status"""
-        return self.po_status.title
+    # supplier = models.ForeignKey(
+    #     'Supplier',
+    #     on_delete=models.PROTECT,
+    #     related_name='purchase_orders_supplier'
+    # )
 
     @property
     def po_discount_percentage(self):
@@ -1916,7 +2284,7 @@ class PurchaseOrder(TimeStampedModel):
         )
 
         # Our queryset call will return one object as dictionary not a list.
-        if queryset:
+        if queryset['sum']:
             return round_money(queryset['sum'])
         else:
             return round_money(0)
@@ -1972,8 +2340,19 @@ class PurchaseOrder(TimeStampedModel):
         return discount
 
     @property
+    def discount(self):
+        """Return the amount of discount if exist"""
+
+        # In case savings property amount of Money is bigger than zero, then
+        # return the value as negative, otherwise return savings property value
+        if self.savings.amount > 0:
+            return -abs(self.savings)
+
+        return self.savings
+
+    @property
     def po_tax(self):
-        """Calculate the tax money in depend on tax_fulfill value"""
+        """Calculate the tax money depending on tax_fulfill value"""
 
         # Note: 1- In case the tax calculated before discount, set the whole
         #          purchase order amount.
@@ -2021,7 +2400,7 @@ class PurchaseOrder(TimeStampedModel):
 
     def __str__(self):
         """String representation of model objects"""
-        return f'{self.po_code}, {self.supplier}, {self.po_status}'
+        return f'{self.po_code}, {self.status}'
 
 
 class ProductGroup(TimeStampedModel):
@@ -2063,7 +2442,7 @@ class Product(TimeStampedModel):
     # Define model fields.
     slug = models.SlugField(max_length=100)
     thumbnail = ProcessedImageField(
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 100}
     )
@@ -2174,6 +2553,55 @@ class Product(TimeStampedModel):
         )
         return attributes
 
+    @property
+    def common_attributes(self):
+        """Return related attribute instances that this product connect with"""
+
+        # Get the related product attribute instances that is_common_attribute
+        # is True.
+        common_product_attributes = self.product_attributes_product.filter(
+            is_common_attribute=True
+        ).distinct()
+
+        # Get the attribute instances that related to specific product
+        # attribute instances.
+        attributes = Attribute.objects.filter(
+            product_attributes_attribute__in=common_product_attributes
+        )
+        return attributes
+
+    @property
+    def category_to_string(self):
+        """Method to return category foreign key as specific field string
+         value"""
+
+        return str(self.category)
+
+    @property
+    def product_group_to_string(self):
+        """Method to return product_group foreign key as specific field string
+         value"""
+
+        if self.product_group:
+            return self.product_group.title
+
+    @property
+    def product_info(self):
+        """Method to create lower case string of all the required product's
+        info"""
+
+        # String required:
+        # Category | Product group | Attributes | Product title
+
+        attributes_str = ", ".join([str(ele) for ele in self.attributes])
+
+        val = f"{self.category_to_string} | " \
+              f"{self.product_group_to_string} | " \
+              f"{attributes_str} | " \
+              f"{self.title}"
+
+        return str(val).lower()
+
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
 
@@ -2181,7 +2609,7 @@ class Product(TimeStampedModel):
 
     def __str__(self):
         """String representation of model objects"""
-        return f'{self.category} / {self.title}'
+        return f'{self.category} >> {self.title}'
 
 
 class ProductItem(TimeStampedModel):
@@ -2219,7 +2647,7 @@ class ProductItem(TimeStampedModel):
     slug = models.SlugField(max_length=100)
     thumbnail = ProcessedImageField(
         blank=True,
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 100}
     )
@@ -2263,24 +2691,15 @@ class ProductItem(TimeStampedModel):
         # this instance.
         try:
             promotion_item = self.promotion_items_product_item.filter(
-                models.Q(
-                    promotion__promotion_type='Deal',
-                    promotion__is_active=True,
-                    promotion__unlimited_use=True,
-                    promotion__start_date__lte=timezone.now(),
-                    promotion__end_date__gt=timezone.now()
-                ) |
-                models.Q(
-                    promotion__promotion_type='Deal',
-                    promotion__is_active=True,
-                    promotion__unlimited_use=False,
-                    promotion__used_times__lt=models.F(
-                        'promotion__max_use_times'
-                    ),
-                    promotion__start_date__lte=timezone.now(),
-                    promotion__end_date__gt=timezone.now()
-                )
+                promotion__promotion_type='Deal',
+                promotion__is_available=True
             ).distinct().latest('pk')
+
+            # Check that the retrieved promotion item instance has is_active
+            # property return True for 'promotion' foreign key, otherwise
+            # raise the following exception
+            if not promotion_item.promotion.is_active:
+                raise ObjectDoesNotExist
 
         except ObjectDoesNotExist:
             # latest() will throw an exception if it doesn't return an object.
@@ -2380,7 +2799,7 @@ class ProductItem(TimeStampedModel):
     @property
     def attributes(self):
         """Return related attribute instances that this product item connect
-        with"""
+        with (uncommon attributes)"""
 
         # Get the related product attribute instances.
         product_attributes = ProductAttribute.objects.filter(
@@ -2400,6 +2819,51 @@ class ProductItem(TimeStampedModel):
         related with"""
 
         return self.product_item_images_product_item.all()
+
+    @property
+    def available_thumbnail(self):
+        """Return the thumbnail of instance, if it's not available return the
+        product parent thumbnail"""
+
+        # You can't use hasattr(instance, 'thumbnail') because instance has
+        # thumbnail field, but it could be blank.
+        if not self.thumbnail:
+            # This happens in situation where the selected product item had
+            # no thumbnail.
+            return self.product.thumbnail
+
+        # In case thumbnail is uploaded for current instance.
+        return self.thumbnail
+
+    @property
+    def product_item_info(self):
+        """Method to create lower case and normalized string of all the
+        required product item info"""
+
+        # Get related product common attributes.
+        common_attributes = self.product.common_attributes
+
+        # Convert attributes instance into string.
+        common_attr_str = ", ".join([str(ele) for ele in common_attributes])
+
+        # Get current product item attributes that connect with (uncommon).
+        item_attr_str = ", ".join([str(ele) for ele in self.attributes])
+
+        # String required:
+        # SKU | Common att, Item att | Category | Product group | Product title
+
+        val = f"{self.sku} | " \
+              f"{common_attr_str}, {item_attr_str} | " \
+              f"{self.product.category_to_string} | " \
+              f"{self.product.product_group_to_string} | " \
+              f"{self.product.title}"
+
+        # Normalize the val string by removing every special character with
+        # space.
+        # Note: you can use r"\W+" regex for every special character.
+        normalized_query = re.sub(r"\W+", " ", str(val).lower())
+
+        return normalized_query
 
     def clean(self):
         """Restrict the add/change to model fields"""
@@ -2455,7 +2919,7 @@ class ProductItemImage(TimeStampedModel):
     # 'slug' set by signal.
     slug = models.SlugField(max_length=100)
     image = ProcessedImageField(
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 100}
     )
@@ -2535,7 +2999,7 @@ class Attribute(mptt_models.MPTTModel, TimeStampedModel):
     slug = models.SlugField(max_length=100, unique=True)
     thumbnail = ProcessedImageField(
         blank=True,
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 100},
         processors=[ResizeToFit(90, 90)]
@@ -2616,7 +3080,7 @@ class Attribute(mptt_models.MPTTModel, TimeStampedModel):
         #       dropped.
         #       list_name[::3] is every third element of the sequence
         #       (jumping), or can be used to print a list in reverse order.
-        return ' / '.join(full_path[::-1])
+        return ' >> '.join(full_path[::-1])
 
 
 class CategoryAttribute(models.Model):
@@ -2677,7 +3141,7 @@ class ProductAttribute(models.Model):
     # slug = models.SlugField(max_length=100)
     # thumbnail = ProcessedImageField(
     #     blank=True,
-    #     upload_to=create_image_file_path,
+    #     upload_to=create_file_path,
     #     format='JPEG',
     #     options={'quality': 100}
     # )
@@ -2727,7 +3191,7 @@ class ProductItemAttribute(models.Model):
     slug = models.SlugField(max_length=100)
     thumbnail = ProcessedImageField(
         blank=True,
-        upload_to=create_image_file_path,
+        upload_to=create_file_path,
         format='JPEG',
         options={'quality': 70},
         processors=[Thumbnail(64, 64)],
@@ -2773,6 +3237,7 @@ class POItem(models.Model):
         related_name='po_items_product_item'
     )
     quantity = models.PositiveSmallIntegerField(default=1)
+    # Set by signal automatically.
     price_per_unit = MoneyField(
         max_digits=8,
         decimal_places=settings.MONEY_DECIMAL_PLACES,
@@ -2795,6 +3260,8 @@ class POItem(models.Model):
                 self.price_per_unit.currency
             )
 
+        return round_money(0.00)
+
     def save(self, *args, **kwargs):
         """On save() method call for this model, we set certain fields value"""
 
@@ -2809,3 +3276,55 @@ class POItem(models.Model):
     def __str__(self):
         """String representation of model objects"""
         return f'{self.purchase_order}, {self.product_item}'
+
+
+class Review(TimeStampedModel):
+    """Model class to create review instance"""
+
+    # Specify rating field choices.
+    INPUT_CLASS_CHOICES = (
+        ("1", "1"),
+        ("2", "2"),
+        ("3", "3"),
+        ("4", "4"),
+        ("5", "5")
+    )
+
+    # Define model fields.
+    uuid = models.UUIDField(
+        db_index=True,
+        default=uuid.uuid4,
+        editable=False
+    )
+    comment = models.TextField(max_length=1000, blank=True)
+    rating = models.PositiveSmallIntegerField(
+        choices=INPUT_CLASS_CHOICES,
+        default='4'
+    )
+    product = models.ForeignKey(
+        'Product',
+        on_delete=models.CASCADE,
+        related_name='reviews_product'
+    )
+    po_profile = models.ForeignKey(
+        'POProfile',
+        on_delete=models.CASCADE,
+        related_name='reviews_po_profile'
+    )
+    is_accepted = models.BooleanField(
+        default=False,
+        help_text="By selecting this to be True, means this review is allowed "
+                  "by system to show in customer reviews"
+    )
+
+    def save(self, *args, **kwargs):
+        """On save() method call for this model, update timestamps"""
+
+        return super(
+            Review,
+            instance_time_stamp(self)
+        ).save(*args, **kwargs)
+
+    def __str__(self):
+        """String representation of model objects"""
+        return f'{str(self.product)}, rating: {self.rating}'

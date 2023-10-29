@@ -55,7 +55,8 @@ def set_product_item_promotion(category_id, promotion_id):
 
             # Create a single record in PromotionItem model class using save()
             # or create() method:
-            # 1- save() method, needs to create model instance and then save it
+            # 1- save() method, first needs to create model instance and then
+            #    save it.
             # 2- create() method will create a model instance and save it
             #    automatically through model manager.
             try:

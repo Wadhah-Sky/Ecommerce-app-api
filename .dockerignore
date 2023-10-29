@@ -6,6 +6,9 @@
 .git
 .gitignore
 
+# Ignore OS artifacts
+**/.DS_Store
+
 # Docker
 .docker
 

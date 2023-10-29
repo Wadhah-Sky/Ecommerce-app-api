@@ -11,10 +11,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 
-import os
-
 from pathlib import Path
-
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -49,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
+    'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
@@ -62,6 +61,8 @@ INSTALLED_APPS = [
     'durationwidget',
     'django_admin_hstore_widget',
     'mptt',
+    'anymail',
+    'django_elasticsearch_dsl',
     'core',
     'home',
     'store',
@@ -88,7 +89,7 @@ ROOT_URLCONF = 'api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': ['public/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,6 +156,78 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Set global throttle classes for authenticated/unauthenticated user to be used
+# with api requests.
+# Note: Throttling is similar to Permissions, in that it determines if
+#       a request should be authorized. Throttles indicate a temporary state,
+#       and are used to control the rate of requests that clients can make to
+#       an API.
+#
+# Note: The 'X-Forwarded-For' (XFF) HTTP header which is a de-facto standard
+#       header for identifying the originating IP address of a client
+#       connecting to a web server through a proxy server:
+#
+#       X-Forwarded-For: <client>, <proxy1>, <proxy2>
+#
+#       and 'REMOTE_ADDR' WSGI variable are used to uniquely identify client IP
+#       addresses for throttling. If the 'X-Forwarded-For' header is present
+#       then it will be used, otherwise the value of the 'REMOTE_ADDR' variable
+#       from the 'WSGI' environment will be used.
+#       If you need to strictly identify unique client IP addresses, you'll
+#       need to first configure the number of application proxies that the API
+#       runs behind by setting the 'NUM_PROXIES' setting. This setting should
+#       be an integer of zero or more. If set to non-zero then the client IP
+#       will be identified as being the last IP address in the X-Forwarded-For
+#       header, once any application proxy IP addresses have first been
+#       excluded. If set to zero, then the 'REMOTE_ADDR' value will always be
+#       used as the identifying IP address.
+#
+# Info: As with permissions, multiple throttles may be used. Your API might
+#       have a restrictive throttle for unauthenticated requests, and a less
+#       restrictive throttle for authenticated requests.
+#       You should know that for authenticated user, Django will create key
+#       that can identify the authenticated user.
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        # Note: Multiple throttles can also be used if you want to impose both
+        #       burst throttling rates, and sustained throttling rates. For
+        #       example, you might want to limit a user to a maximum of 60
+        #       requests per minute, and 1000 requests per day.
+        # Info: The rate descriptions used in DEFAULT_THROTTLE_RATES may
+        #       include as the throttle period:
+        #       1- second
+        #       2- minute
+        #       3- hour
+        #       4- day
+
+        # Set default value for anonymous user.
+        'anon': '1500/day',
+        # Set default value for authenticated user.
+        'user': '2000/day',
+
+        # Set extra scopes.
+        # Note: take in consideration two persons living in same house that
+        #       using same IP address over NAT.
+        'anon_min': '1/minute',
+        'user_min': '1/minute'
+    }
+}
+
+# Specify Site ID to domain name that defined in Site table in database.
+# Note: default SITE_ID is '1' with domain/display name of 'example.com', you
+#       should change it through shell or django admin Site model page to value
+#       of production domain name.
+if DEBUG is True:
+    # In case we are in development environment, you should create/set domain
+    # name of 127.0.0.1:8000
+    SITE_ID = 2
+else:
+    # Otherwise set to your defined production environment domain name.
+    SITE_ID = 1
 
 # Static files are made at server run (CSS, JavaScript, Images)
 # Media files are made at runtime and uploaded by users like images, files or
@@ -186,35 +259,38 @@ AUTH_USER_MODEL = 'core.User'
 # NOTE: make sure to set env variable as:
 # redis://<service name OR service container name>:port/0
 CELERY_BROKER_URL = os.environ.get(
-    "CELERY_BROKER",
-    "redis://127.0.0.1:6379/0"
+    'CELERY_BROKER',
+    'redis://127.0.0.1:6379/0'
 )
 # Specify the URL of Backend Database for store the result of Celery tasks.
 # NOTE: make sure to set env variable as:
 # redis://<service name OR service container name>:port/0
 CELERY_RESULT_BACKEND = os.environ.get(
-    "CELERY_BACKEND",
-    "redis://127.0.0.1:6379/0"
+    'CELERY_BACKEND',
+    'redis://127.0.0.1:6379/0'
 )
 
 # Specify caches of your backend.
 CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://cache:6379/0",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.environ.get(
+            'CELERY_BACKEND',
+            'redis://127.0.0.1:6379/0'
+        ),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
     },
 }
 
 # Specify store phone numbers strings in database.
-# Choices: "E164", "INTERNATIONAL", "NATIONAL", "RFC3966".
-PHONENUMBER_DB_FORMAT = "E164"
+# Choices: 'E164', 'INTERNATIONAL', 'NATIONAL', 'RFC3966'.
+PHONENUMBER_DB_FORMAT = 'E164'
 
 # Specify string formatting of phone numbers.
-# Choices: "E164", "INTERNATIONAL", "NATIONAL", "RFC3966".
-PHONENUMBER_DEFAULT_FORMAT = "E164"
+# Choices: 'E164', 'INTERNATIONAL', 'NATIONAL', 'RFC3966'.
+PHONENUMBER_DEFAULT_FORMAT = 'E164'
 
 # Important: Don't store multiple currencies in the database because will be
 #            complicated to deal with them, rather than that store the base
@@ -238,3 +314,100 @@ MONEY_DECIMAL_PLACES = 2
 
 # Specify Money default currency.
 MONEY_DEFAULT_CURRENCY = 'USD'
+
+# Specify backend to send mail with Anymail’s Amazon SES.
+EMAIL_BACKEND = 'anymail.backends.amazon_ses.EmailBackend'
+
+# Specify Default email address to use for various automated correspondence
+# from the site manager(s). This does not include error messages sent to ADMINS
+# and MANAGERS;
+# Django’s defaults is “webmaster@localhost”
+DEFAULT_FROM_EMAIL = "noreply@jamieandcassie.store"
+
+# Specify the email address that error messages come from, such as those sent
+# to ADMINS and MANAGERS. Django’s defaults is “root@localhost”
+# Note: This address is used only for error messages. It is not the address
+#       that regular email messages sent with send_mail() come from.
+SERVER_EMAIL = "wadhah.sky@gmail.com"
+
+# Configure Anymail parameters. Not required but in case happen to change
+# default name of environment variables for AWS SDK (Boto3) or change some
+# details
+# Note: You should pass directly into docker service, the following environment
+#       variables (as shown or updated names) within (environment) parameters
+#       and remember to re-build the service before use it:
+#
+#       AWS_ACCESS_KEY_ID
+#       AWS_SECRET_ACCESS_KEY
+#       AWS_SESSION_TOKEN  # Required only for temporarily sessions
+#       AWS_DEFAULT_REGION
+#       AWS_DEFAULT_OUTPUT # Default is JSON
+#       AWS_PROFILE  # Profile name for (.aws) file that contains (credentials)
+#                    # and (config) files, if you set this parameter then no
+#                    # need to above parameters. Default is (.aws)
+ANYMAIL = {
+
+    # Optional. Additional client parameters Anymail should use to create the
+    # boto3 session client.
+    'AMAZON_SES_CLIENT_PARAMS': {
+        # example: override normal Boto credentials specifically for Anymail
+        'aws_access_key_id': os.getenv('AWS_ACCESS_KEY_ID', ''),
+        'aws_secret_access_key': os.getenv('AWS_SECRET_ACCESS_KEY', ''),
+        # Specify your Amazon SES identity region (that been created)
+        # Info: Here we are specified Bahrain (me-south-1)
+        'region_name': os.getenv('AWS_DEFAULT_REGION', ''),
+        # override other default options
+        # "config": {
+        #    "connect_timeout": 30,
+        #    "read_timeout": 30,
+        # }
+    },
+
+    # Some email capabilities aren’t supported by all ESPs. When you try to
+    # send a message using features Anymail can’t communicate to the current
+    # ESP, you’ll get an AnymailUnsupportedFeature error, and the message won’t
+    # be sent.
+    # If you’d like to silently ignore and send the email, Set the following
+    'IGNORE_UNSUPPORTED_FEATURES': True,
+
+    # Optional, Additional session parameters Anymail should use to create the
+    # boto3 Session.
+    # 'AMAZON_SES_SESSION_PARAMS': {
+    #      'profile_name': 'anymail-testing',
+    #  },
+
+    # Optional, The name of an Amazon SES Configuration Set Anymail should use
+    # when sending messages. The default is to send without any Configuration
+    # Set.
+    # Note: that a Configuration Set is required to receive SES Event
+    #       Publishing tracking events.
+    # AMAZON_SES_CONFIGURATION_SET_NAME: "",
+
+    # Optional, default None. The name of an Amazon SES “Message Tag” whose
+    # value is set from a message’s Anymail tags.
+    # AMAZON_SES_MESSAGE_TAG_NAME: '',
+}
+
+# Set Elasticsearch engine configuration.
+ELASTICSEARCH_DSL = {
+    'default': {
+        # Note: URL must include a 'scheme', 'host', and 'port'
+        #       If you want to pass 'http_auth' values within hosts:
+        #       <schema>://<username>:<password>@<host>:<port>
+        # Important: For Docker service you should set <host> as name of
+        #            service in docker compose file otherwise you will face
+        #            connection refused [error 111]
+        'hosts': [os.getenv('ELASTICSEARCH_HOSTS', 'http://localhost:9200')],
+        # Set authentication if you enabled X-Pack in Elasticsearch.
+        'http_auth': (
+            os.getenv('ELASTIC_USERNAME', 'elastic'),
+            os.getenv('ELASTIC_PASSWORD', 'changeme')
+        ),
+    }
+}
+
+# Set website brand title
+WEBSITE_BRAND_TITLE = 'Jamie and Cassie'
+
+# Set project main logo title
+WEBSITE_MAIN_LOGO_TITLE = 'Main logo'

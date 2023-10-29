@@ -1,6 +1,7 @@
 """Customize and manage your project django admin web page"""
 
 from django.contrib import admin
+from django.contrib.sites.models import Site
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.admin import ModelAdmin as BaseModelAdmin
 # from django.utils.safestring import mark_safe
@@ -93,6 +94,25 @@ class AdminThumbnailSpec(ImageSpec):
     # Set format of image with optional options.
     format = 'JPEG'
     options = {'quality': 100}
+
+
+class SiteAdmin(admin.ModelAdmin):
+    """Class of Django Site model class"""
+
+    # Note: before set this class you should do:
+    #
+    #       1- Add 'django.contrib.sites' to your INSTALLED_APPS setting.
+    #       2- Define a SITE_ID setting, usually it's '1' unless your project
+    #          serve multiple domains/subdomains:
+    #
+    #          SITE_ID = 1
+    #       3- run 'migrate' command
+
+    fields = ['id', 'name', 'domain']
+    list_display = ['id', 'name', 'domain']
+    list_display_links = ['name']
+    search_fields = ['name', 'domain']
+    readonly_fields = ['id']
 
 
 class UserAddressInline(nested_admin.NestedTabularInline):
@@ -241,6 +261,21 @@ class UserAdmin(BaseUserAdmin, nested_admin.NestedModelAdmin):
     ]
 
 
+class MetaItemAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for MetaItem model"""
+
+    # Imagekit contain a class 'AdminThumbnail' for displaying specs
+    # (or even regular ImageFields) in the Django admin change list.
+    # Note: AdminThumbnail is used as a property on Django admin classes.
+    admin_thumbnail = AdminThumbnail(image_field=cached_admin_thumb)
+
+    # Specify the name of column in admin display page for the related model
+    # field.
+    admin_thumbnail.short_description = 'Thumbnail'
+
+    readonly_fields = ['admin_thumbnail', 'slug']
+
+
 class MetaItemInline(admin.TabularInline):
     """Class to show tabular of model info inside another model in admin page
     """
@@ -255,13 +290,13 @@ class MetaItemInline(admin.TabularInline):
     extra = 0
     # Controls the maximum number of forms to show in the inline
     # max_num = 4
+    readonly_fields = ['slug']
 
 
 class MetaAdmin(BaseModelAdmin):
     """Customize variables of your django admin web page for Meta model"""
 
     inlines = [MetaItemInline]
-    # readonly_fields = ['total_amount']
 
 
 class CountryAdmin(BaseModelAdmin):
@@ -290,7 +325,7 @@ class PromotionAdmin(BaseModelAdmin):
         'promotion_type',
         'discount_percentage',
         'max_use_times',
-        'used_times',
+        'purchase_orders_count',
         'unlimited_use',
         'start_date',
         'end_date',
@@ -298,10 +333,10 @@ class PromotionAdmin(BaseModelAdmin):
         'promotion_status',
         'created_at',
         'updated_at',
-        'is_active'
+        'is_available'
     ]
     list_display_links = ['title']
-    readonly_fields = ['used_times', 'created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at']
 
 
 class CategoryAdmin(MPTTModelAdmin):
@@ -385,6 +420,23 @@ class BannerAdmin(BaseModelAdmin):
     # Important: you need to set 'search_fields' in the model class that
     #            related to relation field in django admin.
     autocomplete_fields = []
+
+
+class TopBannerAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for TopBanner model"""
+
+    # Customize the list display order of cards in descending.
+    ordering = ['-created_at']
+    list_display = [
+        'title',
+        'display_order',
+        'created_at',
+        'updated_at',
+        'is_active'
+    ]
+    list_display_links = ['title']
+    list_editable = ['display_order']
+    readonly_fields = ['created_at', 'updated_at']
 
 
 class CardAdmin(BaseModelAdmin):
@@ -666,7 +718,7 @@ class PurchaseOrderAdmin(BaseModelAdmin):
         'po_tax',
         'shipping_cost',
         'grand_total',
-        'po_status_title',
+        'status',
         'created_at'
     ]
     list_display_links = ['po_code']
@@ -689,8 +741,16 @@ class PurchaseOrderAdmin(BaseModelAdmin):
         ),
     )
 
-    readonly_fields = ['po_code', 'created_at', 'updated_at']
-    autocomplete_fields = ['supplier']
+    # Info: We can add any model's property to be shown in Add/Change page.
+    readonly_fields = [
+        'subtotal',
+        'savings',
+        'grand_total',
+        'po_code',
+        'created_at',
+        'updated_at'
+    ]
+    # autocomplete_fields = []
 
 
 class ProductGroupAdmin(BaseModelAdmin):
@@ -878,16 +938,33 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
     #         return obj.<foreign_key_field>.<field_name>
 
 
+class ReviewAdmin(BaseModelAdmin):
+    """Customize variables of your django admin web page for Review model"""
+
+    ordering = ['-created_at']
+    list_display = [
+        '__str__',
+        'is_accepted',
+        'created_at',
+        'updated_at'
+    ]
+    list_display_links = ['__str__']
+    readonly_fields = ['created_at', 'updated_at']
+    search_fields = ['__str__', 'is_accepted']
+
+
+# Note: django.contrib.admin.sites.AlreadyRegistered: The model Site is already
+#       registered with 'sites.SiteAdmin', if you want to register custom class
+#       first unregister the current one.
+admin.site.unregister(Site)
+admin.site.register(Site, SiteAdmin)
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Meta, MetaAdmin)
 admin.site.register(models.Country, CountryAdmin)
-admin.site.register(models.Address)
-admin.site.register(models.Icon)
 admin.site.register(models.Promotion, PromotionAdmin)
-admin.site.register(models.PromotionCategory)
-admin.site.register(models.PromotionItem)
 admin.site.register(models.Category, CategoryAdmin)
 admin.site.register(models.Banner, BannerAdmin)
+admin.site.register(models.TopBanner, TopBannerAdmin)
 admin.site.register(models.Card, CardAdmin)
 admin.site.register(models.Section, SectionAdmin)
 admin.site.register(models.Supplier, SupplierAdmin)
@@ -895,15 +972,20 @@ admin.site.register(models.POItem, POItemAdmin)
 admin.site.register(models.ShippingMethod, ShippingMethodAdmin)
 admin.site.register(models.POShipping, POShippingAdmin)
 admin.site.register(models.POProfile, POProfileAdmin)
-admin.site.register(models.PaymentMethod)
 admin.site.register(models.POPayment, POPaymentAdmin)
 admin.site.register(models.Tax, TaxAdmin)
 # admin.site.register(models.CountryTax)
-admin.site.register(models.POStatus)
 admin.site.register(models.PurchaseOrder, PurchaseOrderAdmin)
 admin.site.register(models.ProductGroup, ProductGroupAdmin)
 admin.site.register(models.Attribute, AttributeAdmin)
-admin.site.register(models.ProductAttribute)
-admin.site.register(models.ProductItemAttribute)
 admin.site.register(models.ProductItem, ProductItemAdmin)
 admin.site.register(models.Product, ProductAdmin)
+admin.site.register(models.Review, ReviewAdmin)
+admin.site.register(models.MetaItem)
+admin.site.register(models.Icon)
+admin.site.register(models.PaymentMethod)
+admin.site.register(models.ProductAttribute)
+admin.site.register(models.ProductItemAttribute)
+admin.site.register(models.PromotionCategory)
+admin.site.register(models.PromotionItem)
+admin.site.register(models.Address)

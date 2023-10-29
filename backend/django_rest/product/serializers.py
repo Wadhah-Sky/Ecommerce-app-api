@@ -9,8 +9,7 @@ from itertools import chain
 # from operator import attrgetter
 
 from home.serializers import ProductSerializer
-from core.models import (Product, ProductItem, ProductAttribute, Supplier,
-                         ProductItemAttribute)
+from core.models import (Product, ProductItem, Supplier, ProductItemAttribute)
 
 
 class SupplierSerializer(serializers.ModelSerializer):
@@ -57,28 +56,17 @@ class ProductItemSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
 
     def get_thumbnail(self, instance):
-        """Return the thumbnail of instance if it's not exists return the
-        product parent thumbnail"""
+        """Return the available thumbnail of the instance"""
+
+        # Note: here we return the available thumbnail, either the one that
+        #       related to the instance itself or the product parent instance,
+        #       in this case Django can't serialize the thumbnail directly as
+        #       absolute url we need to do manually.
 
         # Get request object from 'context'.
         request = self.context.get("request")
 
-        # You can't use hasattr(instance, 'thumbnail') because instance has
-        # thumbnail field, but it could be blank.
-        if not instance.thumbnail:
-            # This happens in situation where the selected product item had
-            # no thumbnail.
-            thumbnail = request.build_absolute_uri(
-                instance.product.thumbnail.url
-            )
-
-        else:
-            # Set the selected product item thumbnail to thumbnail variable
-            thumbnail = request.build_absolute_uri(
-                instance.thumbnail.url
-            )
-
-        return thumbnail
+        return request.build_absolute_uri(instance.available_thumbnail.url)
 
     def get_list_price_amount(self, instance):
         """Return the amount value of list_price"""
@@ -91,35 +79,10 @@ class ProductItemSerializer(serializers.ModelSerializer):
         if instance.deal_price:
             return instance.deal_price.amount
 
-    # def get_attributes(self, instance):
-    #     """Return the instance related attributes"""
-    #
-    #     attributes = instance.attributes
-    #
-    #     # Initialize empty dictionary.
-    #     attributes_dict = {}
-    #
-    #     # Loop over queryset.
-    #     for item in attributes:
-    #         # print("Title:", item.title)
-    #         # Get the root node title of the item instance.
-    #         root_title = item.get_root().title
-    #
-    #         # Check if root title is exists as key in the dictionary.
-    #         if attributes_dict.get(root_title) is not None:
-    #             # Append current title to root title list value.
-    #             attributes_dict[root_title].append(item.title)
-    #
-    #         else:
-    #             # Add current attribute title as list to root title as key.
-    #             attributes_dict[root_title] = [item.title]
-    #
-    #     return attributes_dict
-
     def get_attributes(self, instance):
-        """Return current instance attributes title"""
+        """Return current instance attributes title as key: value (list)"""
 
-        # Get the attributes of current instance.
+        # Get the attribute instances of current product item instance.
         attributes = instance.attributes
 
         if attributes:
@@ -179,7 +142,8 @@ class ProductItemSerializer(serializers.ModelSerializer):
             return images_url
 
         else:
-            # if instance has no images, return the default thumbnail.
+            # if instance has no images, return the product item available
+            # thumbnail.
             images_url = [self.get_thumbnail(instance=instance)]
 
             return images_url

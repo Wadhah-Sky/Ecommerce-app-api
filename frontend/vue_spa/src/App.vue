@@ -14,9 +14,9 @@
 
     <div v-else>
 
-      <transition name="nested" mode="out-in">
+      <transition name="nested" mode="in-out">
 
-        <div id="nav-sidebar">
+        <div v-show="storeNavSidebar.show" id="nav-sidebar">
 
             <nav-sidebar-component :store-nav-sidebar="storeNavSidebar"/>
 
@@ -27,12 +27,15 @@
 
       <div class="padding-x">
 
-        <transition name="nested" mode="out-in">
+        <transition>
 
           <div id="nav">
 
-              <navbar-component :store-checkout="storeCheckout"
+              <navbar-component :store-home="storeHome"
+                                :store-checkout="storeCheckout"
                                 :show-cart-drop-down-menu="storeCheckout.showCartDropDownMenu"
+                                :show-nav-sidebar="storeNavSidebar.show"
+                                :toggle-nav-sidebar-view="storeNavSidebar.toggleNavSidebarView"
               />
 
           </div>
@@ -112,27 +115,41 @@
  */
 
 /*
-* Note: If you want to use both of Vue 3 'Option' and 'Composition' API, then make sure to
-*       imports your libraries in <script> tag not in <script setup> since this could
-*       lead to an error:
-*       Crbug/1173575, non-JS module files deprecated.
-*
-*       Also be notice if you don't set export value of your component, then you will
-*       face an issue with routing from one component to another especially when using
-*       Back or Forward buttons on the browser.
-*/
+  What is the difference between 'window', 'screen', and 'document' in JavaScript?
+
+  1- window is the main JavaScript object root, aka the global object in a browser, and it can also be treated
+     as the root of the document object model. You can access it as window.
+
+  2- window.screen or just screen is a small information object about physical screen dimensions.
+
+  3- window.document or just document is the main object of the potentially visible (or better yet: rendered)
+     document object model/DOM.
+
+Since window is the global object, you can reference any properties of it with just the property name - so you do not have to write down window. - it will be figured out by the runtime.
+ */
+
+/*
+ Note: If you want to use both of Vue 3 'Option' and 'Composition' API, then make sure to
+       imports your libraries in <script> tag not in <script setup> since this could
+       lead to an error:
+       Crbug/1173575, non-JS module files deprecated.
+
+       Also be notice if you don't set export value of your component, then you will
+       face an issue with routing from one component to another especially when using
+       Back or Forward buttons on the browser.
+ */
 
 /*
 * Note: 'defineProps' and 'defineEmits' are compiler macros only usable inside <script setup>.
-*       They do not need to be imported, and are compiled away when <script setup> is processed.
-*       But, since we don't import them, the '@babel/eslint-parser' that install by default by Vue/Cli
-*       and defined as your project parser in '.eslintrc.js' file will raise an error:
-*
-*       ESLint: 'defineProps' is not defined.(no-undef)
-*
-*       So to solve it, just import the 'defineProps', even if Vue/Cli show a warning at compile time.
-*       INFO: DON'T try to change your parser to another one because will lead to another issues.
-*/
+       They do not need to be imported, and are compiled away when <script setup> is processed.
+       But, since we don't import them, the '@babel/eslint-parser' that install by default by Vue/Cli
+       and defined as your project parser in '.eslintrc.js' file will raise an error:
+
+       ESLint: 'defineProps' is not defined.(no-undef)
+
+       So to solve it, just import the 'defineProps', even if Vue/Cli show a warning at compile time.
+       INFO: DON'T try to change your parser to another one because will lead to another issues.
+ */
 
 /*
    Note: props that type Object or Array with default values should be:
@@ -165,17 +182,17 @@
 */
 
 /* Note: if you faced a warning in your browser console:
-*
-*        <Transition> renders non-element root node that cannot be animated
-*
-*        probably forget to put the child components of <Transition> inside a <div>,
-*        Transitions require single children nodes. Therefore you can wrap the <component>
-*        tag inside a <div>, however, a plain <div> inside a <transition> won't trigger the
-*        transition, but changing the :key directive does.
-*        This will effectively transition between routes with a different name, but if you
-*        also want to transition between routes of the same name with different parameters,
-*        you can use route.fullPath instead of route.name as the key.
-*/
+
+        <Transition> renders non-element root node that cannot be animated
+
+        probably forget to put the child components of <Transition> inside a <div>,
+        Transitions require single children nodes. Therefore you can wrap the <component>
+        tag inside a <div>, however, a plain <div> inside a <transition> won't trigger the
+        transition, but changing the :key directive does.
+        This will effectively transition between routes with a different name, but if you
+        also want to transition between routes of the same name with different parameters,
+        you can use route.fullPath instead of route.name as the key.
+ */
 
 /* Note: if you faced a warning in your browser console:
 *
@@ -679,7 +696,7 @@ const triggerGetDataResult = async () => {
                 has completed the initial navigation,
 
      Note: if you didn't do this step will face issue when navigate between views
-           and vue router will throw an exception.
+           and vue router will throw an exception (usually).
  */
 router.isReady().then(()=>{
   // Here we wrap method calls without await in then wrap that will make sure to run these
@@ -702,7 +719,7 @@ onErrorCaptured(() => {
 
 </script>
 
-<style lang="sass">
+<style lang="scss">
 
 /*
   Note: The focusout event fires when an element has lost focus, after the blur event.
@@ -720,52 +737,52 @@ onErrorCaptured(() => {
        import it in main.js file.
  */
 
-$color-1: #0F1111
-$color-2: #fff
-$color-3: #464646
-$color-4: #e9ecef
+$color-1: #0F1111;
+$color-2: #fff;
+$color-3: #464646;
+$color-4: #e9ecef;
 
 /* BootStrap */
-$pagination-color: $color-3
-$pagination-focus-bg: $color-4
-$pagination-hover-color: $color-3
-$pagination-hover-bg: $color-4
-$pagination-active-color: $color-2
-$component-active-bg: $color-1
-$pagination-focus-color: $color-3
-$pagination-disabled-color: $color-3
-$pagination-disabled-bg: $color-4
+$pagination-color: $color-3;
+$pagination-focus-bg: $color-4;
+$pagination-hover-color: $color-3;
+$pagination-hover-bg: $color-4;
+$pagination-active-color: $color-2;
+$component-active-bg: $color-1;
+$pagination-focus-color: $color-3;
+$pagination-disabled-color: $color-3;
+$pagination-disabled-bg: $color-4;
 
-$form-check-label-color: $color-3
-$form-check-label-cursor: pointer
+$form-check-label-color: $color-3;
+$form-check-label-cursor: pointer;
 
-$tooltip-color: $color-2
-$tooltip-bg: $color-1
+$tooltip-color: $color-2;
+$tooltip-bg: $color-1;
 
-$input-color: $color-3
-$input-bg: $color-2
+$input-color: $color-3;
+$input-bg: $color-2;
 
-$input-border-radius: 0
-$input-border-color: $color-1
-@import "bootstrap"
+$input-border-radius: 0;
+$input-border-color: $color-1;
+@import "bootstrap";
 
 /* vue-sidebar-menu */
-$primary-color: $color-1
-$base-bg: $color-2
-$base-color: $color-3
-$base-hover-bg-color: $color-4
+$primary-color: $color-1;
+$base-bg: $color-2;
+$base-color: $color-3;
+$base-hover-bg-color: $color-4;
 
-$item-color: $base-color
-$item-active-color: $base-color
-$item-hover-color: $base-color
-$item-hover-bg: $base-hover-bg-color
-$item-open-color: $base-bg
-$item-open-bg: $primary-color
-$icon-bg: $base-hover-bg-color
-$icon-active-color: $base-bg
-$icon-active-bg: $primary-color
-$toggle-btn-color: $primary-color
-@import "vue-sidebar-menu/src/scss/vue-sidebar-menu.scss"
+$item-color: $base-color;
+$item-active-color: $base-color;
+$item-hover-color: $base-color;
+$item-hover-bg: $base-hover-bg-color;
+$item-open-color: $base-bg;
+$item-open-bg: $primary-color;
+$icon-bg: $base-hover-bg-color;
+$icon-active-color: $base-bg;
+$icon-active-bg: $primary-color;
+$toggle-btn-color: $primary-color;
+@import "vue-sidebar-menu/src/scss/vue-sidebar-menu.scss";
 
 </style>
 
@@ -809,6 +826,26 @@ body {
   transition: 0.3s opacity ease;
 }
 
+input[type="search"]::-webkit-search-cancel-button {
+
+  /* Remove default */
+  -webkit-appearance: none;
+  appearance: none;
+
+  /* Now your own custom styles */
+  height: 24px;
+  width: 24px;
+  margin-left: .4em;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23777'><path d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>");
+
+}
+
+input[type="search"]::-webkit-search-cancel-button:hover{
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='rgb(204, 12, 57)'><path d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>")!important;
+  transition: 200ms all ease-in-out;
+}
+
 /* Override the black color of Maz input */
 :root {
   --maz-color-black: hsl(180, 6%, 6%)!important;
@@ -847,6 +884,7 @@ body {
   color: #0f1111;
   font-size: 14px;
 }
+
 /* for phones and tablets */
 @media(max-width:767px){
   .m-phone-number-input{
@@ -882,12 +920,6 @@ body {
 }
 .nested-leave-to{
   opacity: 0;
-}
-
-/*When element is active*/
-.nested-enter-active,
-.nested-leave-active{
-  transition: all 0.3s ease-in-out;
 }
 
 </style>

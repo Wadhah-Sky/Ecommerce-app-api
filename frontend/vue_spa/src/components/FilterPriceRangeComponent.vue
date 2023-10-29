@@ -307,6 +307,11 @@ storeFilter.value.$subscribe((mutation, state) => {
 
 <style scoped>
 
+form{
+  padding-right: 0;
+  margin-right: 0;
+  width: 100%;
+}
 .col{
   padding-left: 0;
 }
@@ -330,7 +335,7 @@ storeFilter.value.$subscribe((mutation, state) => {
   height: 31px;
   padding: 3px 7px;
   line-height: normal;
-  width: 55px;
+  width: 50px;
   margin-top: 6px !important;
   margin-right: 1px;
 }

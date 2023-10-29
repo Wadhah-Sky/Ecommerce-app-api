@@ -16,88 +16,154 @@ on:
 jobs:
 
   test:
-    name: Run Tests
-    # So far if you use the next line, will cause an issue of queued jobs, so instead use the line after.
-    # runs-on: ${{matrix.os}}
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
-    strategy:
-      matrix:
-        os: [ Ubuntu 20.04 ]
+    name: Test
+    # if you faced issue of queued jobs, it's related to matrix option and its strategy option (we deleted it).
+    # runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    runs-on: Ubuntu 20.04
     environment: development
     steps:
-      - uses: actions/checkout@v2
-      - run: |
-          cat << EOF > .env
-          SECRET_KEY=${{secrets.SECRET_KEY}}
-          DEBUG=${{secrets.DEBUG}}
-          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
-          CELERY_BROKER=${{secrets.CELERY_BROKER}}
-          CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
-          SQL_IMAGE=${{secrets.SQL_IMAGE}}
-          SQL_ENGINE=${{secrets.SQL_ENGINE}}
-          SQL_HOST=${{secrets.SQL_HOST}}
-          SQL_NAME=${{secrets.SQL_NAME}}
-          SQL_USER=${{secrets.SQL_USER}}
-          SQL_PASS=${{secrets.SQL_PASS}}
-          SQL_PORT=${{secrets.SQL_PORT}}
-          CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
-          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
-          EOF
-      - run: docker-compose build
-      - run: docker-compose up db
-      - run: docker-compose run --rm app bash -c "/usr/src/compose/start-django.sh && python manage.py tests"
+      - uses: actions/checkout@v4
 
-  lint:
-    name: Lint
-    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
-    strategy:
-      matrix:
-        os: [ Ubuntu 20.04 ]
-    environment: development
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          cat << EOF > .env
-          SECRET_KEY=${{secrets.SECRET_KEY}}
-          DEBUG=${{secrets.DEBUG}}
-          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
-          CELERY_BROKER=${{secrets.CELERY_BROKER}}
-          CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
-          SQL_IMAGE=${{secrets.SQL_IMAGE}}
-          SQL_ENGINE=${{secrets.SQL_ENGINE}}
-          SQL_HOST=${{secrets.SQL_HOST}}
-          SQL_NAME=${{secrets.SQL_NAME}}
-          SQL_USER=${{secrets.SQL_USER}}
-          SQL_PASS=${{secrets.SQL_PASS}}
-          SQL_PORT=${{secrets.SQL_PORT}}
-          CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
-          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
-          EOF
-      - run: docker-compose build
-      - run: docker-compose run --rm app bash -c "flake8"
+      #####################################################
+      #                                                   #
+      # Set all secrets required by test suites, will set #
+      # as environment variables inside currently test    #
+      # image.                                            #
+      #                                                   #
+      #####################################################
+      # - name: Set secrete environment variables
+      # - run: |
+      #    cat << EOF > .env
+      #    SECRET_KEY=${{secrets.SECRET_KEY}}
+      #    DEBUG=${{secrets.DEBUG}}
+      #    ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+      #    CELERY_BROKER=${{secrets.CELERY_BROKER}}
+      #    CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
+      #    SQL_IMAGE=${{secrets.SQL_IMAGE}}
+      #    SQL_ENGINE=${{secrets.SQL_ENGINE}}
+      #    SQL_HOST=${{secrets.SQL_HOST}}
+      #    SQL_NAME=${{secrets.SQL_NAME}}
+      #    SQL_USER=${{secrets.SQL_USER}}
+      #    SQL_PASS=${{secrets.SQL_PASS}}
+      #    SQL_PORT=${{secrets.SQL_PORT}}
+      #    CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
+      #    CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+      #    EOF
+
+      ########################################################
+      #                                                      #
+      # Create .env file with passwords and other required   #
+      # values for test as environment variables instead of  #
+      # using secrets.                                       #
+      #                                                      #
+      ########################################################
+
+      - name: Set passwords and other required environment variables
+        run: |
+
+          sed -i -e 's/\(SECRET_KEY=\)'\'\''/\${{secrets.SECRET_KEY}}/g' \
+                 -e 's/\(DEBUG=\)'\'\''/\1/g' \
+                 -e 's/\(ALLOWED_HOSTS=\)'\'\''/\localhost,127.0.0.1/g' \
+                 -e 's/\(CELERY_BROKER=\)'\'\''/\redis://cache:6379/0/g' \
+                 -e 's/\(CELERY_BACKEND=\)'\'\''/\redis://cache:6379/0/g' \
+                 -e 's/\(SQL_ENGINE=\)'\'\''/\django.db.backends.postgresql/g' \
+                 -e 's/\(SQL_HOST=\)'\'\''/\db/g' \
+                 -e 's/\(SQL_NAME=\)'\'\''/\devdb/g' \
+                 -e 's/\(SQL_USER=\)'\'\''/\username/g' \
+                 -e 's/\(SQL_PASS=\)'\'\''/\password/g' \
+                 -e 's/\(SQL_PORT=\)'\'\''/\5432/g' \
+                 -e 's/\(PGADMIN_DEFAULT_EMAIL=\)'\'\''/\admin@admin.com/g' \
+                 -e 's/\(PGADMIN_DEFAULT_PASSWORD=\)'\'\''/\@admin1234/g' \
+                 -e 's/\(AWS_ACCESS_KEY_ID=\)'\'\''/\${{secrets.AWS_ACCESS_KEY_ID}}/g' \
+                 -e 's/\(AWS_SECRET_ACCESS_KEY=\)'\'\''/\${{secrets.AWS_SECRET_ACCESS_KEY}}/g' \
+                 -e 's/\(AWS_DEFAULT_REGION=\)'\'\''/\${{secrets.AWS_DEFAULT_REGION}}/g' \
+                 -e 's/\(CLUSTER_NAME=\)'\'\''/\docker-cluster/g' \
+                 -e 's/\(NETWORK_HOST=\)'\'\''/\0.0.0.0/g' \
+                 -e 's/\(ELASTIC_VERSION=\)'\'\''/\8.10.2/g' \
+                 -e 's/\(ELASTICSEARCH_NODE_NAME=\)'\'\''/\elasticsearch/g' \
+                 -e 's/\(DISCOVERY_TYPE=\)'\'\''/\single-node/g' \
+                 -e 's/\(ES_JAVA_OPTS=\)'\'\''/\-Xms512m -Xmx512m/g' \
+                 -e 's/\(LS_JAVA_OPTS=\)'\'\''/\-Xms256m -Xmx256m/g' \
+                 -e 's/\(KIBANA_NODE_NAME=\)'\'\''/\kibana/g' \
+                 -e 's/\(ELASTICSEARCH_HOSTS=\)'\'\''/\http://elasticsearch:9200/g' \
+                 -e 's/\(ELASTIC_USERNAME=\)'\'\''/\elastic/g' \
+                 -e 's/\(ELASTIC_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
+                 -e 's/\(LOGSTASH_INTERNAL_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
+                 -e 's/\(KIBANA_SYSTEM_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
+                 -e 's/\(METRICBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
+                 -e 's/\(FILEBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
+                 -e 's/\(HEARTBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
+                 -e 's/\(MONITORING_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
+                 -e 's/\(BEATS_SYSTEM_PASSWORD=\)'\'\''/\1testpasswd/g' .env
+
+      #####################################################
+      #                                                   #
+      # Install all dependencies required by test suites. #
+      #                                                   #
+      #####################################################
+      - name: Build container images
+        run: >-
+          docker compose
+          -f docker-compose.yml
+          build
+
+      ##########################################################
+      #                                                        #
+      # Run setup container if exist                           #
+      #                                                        #
+      ##########################################################
+
+      - name: Run elk setup
+        run: |
+          docker compose -f docker-compose.yml up elk-setup
+          docker compose -f docker-compose.yml up -d
+
+      ##########################################################
+      #                                                        #
+      # Run unit testing                                       #
+      #                                                        #
+      ##########################################################
+      - name: Run tests
+      - run: ->
+          docker-compose -f docker-compose.yml run --rm app 
+          bash -c "/usr/src/compose/start-django.sh && python manage.py test"
+
+      ##########################################################
+      #                                                        #
+      # Run linting tool                                       #
+      #                                                        #
+      ##########################################################
+      - name: Run flake8
+      - run: docker-compose -f docker-compose.yml run --rm app bash -c "flake8"
+
+      ##############
+      #            #
+      # Tear down. #
+      #            #
+      ##############
+      - name: Terminate all components
+        if: always()
+        run: >-
+          docker compose
+          -f docker-compose.yml
+          down -v
 
   deploy_staging:
     name: Deploy to Staging
-    runs-on: ${{matrix.os}}
-    strategy:
-      matrix:
-        os: [ ubuntu-20.04 ]
+    runs-on: Ubuntu 20.04
     needs: [tests, lint]
     if: github.ref == 'refs/heads/staging'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: echo "Deploy to STAGING code here"
 
   deploy_production:
     name: Deploy to Production
-    runs-on: ${{matrix.os}}
-    strategy:
-      matrix:
-        os: [ ubuntu-20.04 ]
+    runs-on: Ubuntu 20.04
     needs: [tests, lint]
     if: github.ref == 'refs/heads/production'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: echo "Deploy to PRODUCTION code here"

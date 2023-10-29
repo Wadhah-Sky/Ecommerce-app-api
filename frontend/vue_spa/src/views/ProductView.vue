@@ -195,7 +195,7 @@ onBeforeRouteLeave(()=> {
 /*
   Define functions
 */
-const setPageTitle = (title) => {
+const setPageTitle = async (title) => {
   /**
    * set a given title string as the webpage title.
    */
@@ -266,7 +266,6 @@ const cleanUrl = (registeredArray, queryObj) =>{
 /*
   call functions
 */
-setPageTitle(`Jamie & Cassie | ${storeProduct.dataResult.title}`);
 cleanUrl(['itemS'], route.query);
 
 /*
@@ -281,6 +280,7 @@ await triggerGetDataResult(
     null,
     false
 );
+await setPageTitle(`Jamie & Cassie | ${storeProduct.dataResult.title || 'Product'}`);
 
 </script>
 

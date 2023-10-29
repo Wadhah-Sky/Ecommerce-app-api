@@ -4,9 +4,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 # from rest_framework.generics import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
-
-from django.db import models
-from django.utils import timezone
+# from django.utils import timezone
 from django.conf import settings
 
 from core.models import (calculate_discount_amount, round_money, ProductItem,
@@ -74,13 +72,14 @@ class CartCheckApiView(views.APIView):
         # Data attribute value for this view POST method should be:
         # {
         #   "coupon": <value>,
-        #   "items": [
-        #              {
-        #                "sku": <value>,
-        #                "quantity": <value>
-        #              } ...
-        #            ]
-        # }
+        #   "cart": {
+        #       "items": [
+        #            {
+        #              "sku": <value>,
+        #              "quantity": <value>
+        #             } ...
+        #        ]
+        #   }
 
         # Note: Don't use single quotes keys or value for json object, will
         #       show the following error in backend server:
@@ -101,12 +100,12 @@ class CartCheckApiView(views.APIView):
         # Get the 'coupon' and 'items' property value from data of HTTP POST
         # request.
         coupon = request.data.get('coupon', None)
-        items = request.data.get('items', None)
+        cart = request.data.get('cart', None)
 
         # Initialize some variables.
         promotion_instance = ''
         product_item_instances = []
-        discount_percentage = 0
+
         # Note: since total_price will deal with Money type, don't initialize
         #       it as string or integer, will cause to raise the following
         #       error when trying to do math operations on it:
@@ -115,9 +114,9 @@ class CartCheckApiView(views.APIView):
         total_price = round_money(amount=0)
         total_discount_amount = 0
 
-        # In case both of 'coupon' and 'items' parameters in HTTP post request
-        # is None.
-        if coupon is None and items is None:
+        # In case both of 'coupon' and 'cart' parameters in HTTP post
+        # request is None.
+        if coupon is None and cart is None:
             return Response(
                 {
                     'message': exceptions.InvalidCartCheckData.default_detail,
@@ -129,29 +128,18 @@ class CartCheckApiView(views.APIView):
 
         # In case coupon is not None.
         if coupon:
-
             try:
                 promotion_instance = Promotion.objects.get(
-                    models.Q(
-                        title=coupon,
-                        promotion_type='coupon',
-                        is_active=True,
-                        unlimited_use=True,
-                        start_date__lte=timezone.now(),
-                        end_date__gt=timezone.now()
-                    ) |
-                    models.Q(
-                        title=coupon,
-                        promotion_type='Coupon',
-                        is_active=True,
-                        unlimited_use=False,
-                        used_times__lt=models.F(
-                            'max_use_times'
-                        ),
-                        start_date__lte=timezone.now(),
-                        end_date__gt=timezone.now()
-                    )
+                    title=coupon,
+                    promotion_type='Coupon',
+                    is_available=True
                 )
+
+                # Check that the retrieved promotion instance is_active
+                # property return True, otherwise raise the following exception
+                if not promotion_instance.is_active:
+                    raise ObjectDoesNotExist
+
             except ObjectDoesNotExist:
                 return Response(
                     {
@@ -164,79 +152,86 @@ class CartCheckApiView(views.APIView):
                     status=exceptions.InvalidCouponCode.status_code,
                 )
 
-        # In case cart has items.
-        if items:
-            # Loop over items.
-            for item in items:
+        # In case cart has 'cart'.
+        if cart:
 
-                # Check if quantity of each item is set otherwise it's 1 by
-                # default
-                if item.get('quantity', None):
-                    # Note: quantity value is string in json object we convert
-                    # to integer in order to use with math operations.
-                    quantity = int(item['quantity'])
-                else:
-                    # Default value is 1.
-                    quantity = 1
+            items = cart.get('items', None)
 
-                try:
-                    # Get the ProductItem instance of given 'sku' and make sure
-                    # that its available (in stock) and
-                    # the 'is_available' field = true of 'product' and
-                    # 'supplier' foreign keys.
-                    instance = ProductItem.objects.get(
-                        sku=item['sku'],
-                        stock__gt=0,
-                        supplier__is_available=True,
-                        product__is_available=True
-                    )
+            # Check if items is not None.
+            if items:
 
-                    # Get the limit per order value for current ProductItem
-                    # instance.
-                    limit = instance.limit_per_order
+                # Loop over items.
+                for item in items:
 
-                    # Check that the given or default quantity value is not
-                    # exceed the limit or current ProductItem stock value.
-                    if quantity > limit or quantity > instance.stock:
+                    # Check if quantity of each item is set otherwise it's 1 by
+                    # default
+                    if item.get('quantity', None):
+                        # Note: quantity value is string in json object we
+                        # convert to integer in order to use with math
+                        # operations.
+                        quantity = int(item['quantity'])
+                    else:
+                        # Default value is 1.
+                        quantity = 1
 
+                    try:
+                        # Get the ProductItem instance of given 'sku' and make
+                        # sure that its available (in stock) and the
+                        # 'is_available' field = true of 'product' and
+                        # 'supplier' foreign keys.
+                        instance = ProductItem.objects.get(
+                            sku=item['sku'],
+                            stock__gt=0,
+                            supplier__is_available=True,
+                            product__is_available=True
+                        )
+
+                        # Get the limit per order value for current ProductItem
+                        # instance.
+                        limit = instance.limit_per_order
+
+                        # Check that the given or default quantity value is not
+                        # exceed the limit or current ProductItem stock value.
+                        if quantity > limit or quantity > instance.stock:
+
+                            return Response(
+                                {
+                                    'message':
+                                        exceptions.InvalidProductItemQuantity.
+                                        default_detail,
+                                    'default_code':
+                                        exceptions.InvalidProductItemQuantity.
+                                        default_code,
+                                    'sku': item['sku'],
+                                    'quantity': item['quantity']
+                                },
+                                status=exceptions.InvalidProductItemQuantity.
+                                status_code
+                            )
+
+                    except ObjectDoesNotExist:
                         return Response(
                             {
                                 'message':
-                                    exceptions.InvalidProductItemQuantity.
+                                    exceptions.InvalidProductItemSku.
                                     default_detail,
                                 'default_code':
-                                    exceptions.InvalidProductItemQuantity.
+                                    exceptions.InvalidProductItemSku.
                                     default_code,
-                                'sku': item['sku'],
-                                'quantity': item['quantity']
+                                'sku': item['sku']
                             },
-                            status=exceptions.InvalidProductItemQuantity.
-                            status_code
+                            status=exceptions.InvalidProductItemSku.status_code
                         )
 
-                except ObjectDoesNotExist:
-                    return Response(
+                    # If everything went right for current ProductItem instance
+                    # add it product_item_instances list with the requested
+                    # quantity.
+                    product_item_instances.append(
                         {
-                            'message':
-                                exceptions.InvalidProductItemSku.
-                                default_detail,
-                            'default_code':
-                                exceptions.InvalidProductItemSku.
-                                default_code,
-                            'sku': item['sku']
-                        },
-                        status=exceptions.InvalidProductItemSku.status_code
+                            'instance': instance,
+                            'quantity': quantity
+                        }
                     )
-
-                # If everything went right for current ProductItem instance,
-                # add it product_item_instances list with the requested
-                # quantity.
-                product_item_instances.append(
-                    {
-                        'instance': instance,
-                        'quantity': quantity
-                    }
-                )
 
         else:
             # In case given coupon code is valid and cart is empty.
@@ -246,7 +241,7 @@ class CartCheckApiView(views.APIView):
                     "coupon_summary": promotion_instance.summary,
                     "coupon_discount":
                         f'{promotion_instance.discount_percentage}%',
-                    'items': None
+                    'cart': None
                 },
                 status=status.HTTP_200_OK
             )
@@ -275,11 +270,13 @@ class CartCheckApiView(views.APIView):
                 # If promotion item instance is not None.
                 if promotion_item:
 
+                    # Get instance discount percentage.
+                    inst_discount_per = promotion_instance.discount_percentage
+
                     # Get amount after discount for the price.
                     amount_after_discount = calculate_discount_amount(
                         amount=price.amount,
-                        discount_percentage=
-                        promotion_instance.discount_percentage
+                        discount_percentage=inst_discount_per
                     )
 
                     # Find the discount amount:
@@ -318,6 +315,7 @@ class CartCheckApiView(views.APIView):
                         "coupon_summary": promotion_instance.summary,
                         "coupon_discount":
                             f'{promotion_instance.discount_percentage}%',
+                        'price_currency': total_price.currency.code,
                         'price_currency_symbol': settings.CURRENCY_SYMBOLS[
                             total_price.currency.code
                         ],
@@ -328,7 +326,8 @@ class CartCheckApiView(views.APIView):
                         'total_discount_amount': "{:.2f}".format(
                             round(total_discount_amount,
                                   self.money_decimal_digits)
-                        )
+                        ),
+                        'items': items
                     },
                     status=status.HTTP_200_OK
                 )
@@ -364,18 +363,20 @@ class CartCheckApiView(views.APIView):
             # Return the JSON response.
             return Response(
                 {
-                    "coupon_title": None,
-                    "coupon_summary": None,
-                    "coupon_discount": 0,
+                    'coupon_title': None,
+                    'coupon_summary': None,
+                    'price_currency': total_price.currency.code,
                     'price_currency_symbol': settings.CURRENCY_SYMBOLS[
                         total_price.currency.code
                     ],
+                    'coupon_discount': "{:.2f}".format(0),
                     'total_price_amount': "{:.2f}".format(
                         round(total_price.amount, self.money_decimal_digits)
                     ),
                     'total_discount_amount': "{:.2f}".format(
                         round(total_discount_amount, self.money_decimal_digits)
-                    )
+                    ),
+                    'items': items
                 },
                 status=status.HTTP_200_OK
             )

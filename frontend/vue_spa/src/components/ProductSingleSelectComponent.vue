@@ -323,8 +323,7 @@ $option-rise-pickers-background-img: url("../assets/images/swatches/rise-pickers
   color: transparent !important;
 }
 
-/////////////////////////////////////////////////////////////////////
-
+//
 // Rise-pickers classes
 
 .low{

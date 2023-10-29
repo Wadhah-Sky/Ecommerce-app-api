@@ -25,6 +25,8 @@ export default {
 img{
   width: 42vmin;
   height: 54vmin;
+  object-fit: contain;
+  -o-object-fit: contain;
 }
 
 </style>

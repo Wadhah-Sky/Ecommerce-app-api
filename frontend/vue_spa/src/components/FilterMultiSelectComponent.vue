@@ -100,19 +100,21 @@ watch(() => selectedOption.value, (currentValue, oldValue) =>{
 
 </script>
 
-<style >
+<style lang="scss" scoped>
 
-/* multi select style will not work if it set inside <style scoped>  */
+/* multi select style will not work if it set inside <style scoped> with exception to class .multiselect  */
 
 .multiselect{
   cursor: default;
-  width: 160px;
+  width: 180px;
   font-size: 12px;
   color: #464646;
   transition: all 200ms ease;
   min-height: 43px;
 }
+</style>
 
+<style>
 .multiselect__single{
   font-size: 12px;
   font-weight: 700;

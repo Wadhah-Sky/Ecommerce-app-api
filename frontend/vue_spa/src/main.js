@@ -25,11 +25,13 @@ import {
     faSliders, faUser, faHouse, faStore, faHeadset, faEnvelope, faChevronRight,
     faChevronLeft, faShoppingCart, faCircleXmark, faCircleCheck, faXmark,
     faCircleExclamation, faStar, faCartShopping, faSpinner, faArrowRight,
-    faHandHoldingDollar, faCreditCard, faEye, faEyeSlash
+    faHandHoldingDollar, faCreditCard, faEye, faEyeSlash, faMagnifyingGlass,
+    faPhone, faLocationDot
 } from '@fortawesome/free-solid-svg-icons';
 import {
     faAmazonPay, faCcAmazonPay, faCcMastercard, faCcVisa, faAlipay, faApplePay,
-    faCcApplePay, faPaypal, faCcPaypal, faGooglePay, faStripe, faCcStripe
+    faCcApplePay, faPaypal, faCcPaypal, faGooglePay, faStripe, faCcStripe,
+    faFacebookF, faInstagram, faYoutube
 } from '@fortawesome/free-brands-svg-icons';
 
 // Register CSS/scss/sass and other files of your project as global.
@@ -81,7 +83,9 @@ library.add(
     faCircleExclamation, faStar, faCartShopping, faSpinner, faArrowRight,
     faHandHoldingDollar, faCreditCard, faEye, faEyeSlash,
     faAmazonPay, faCcAmazonPay, faCcMastercard, faCcVisa, faAlipay, faApplePay,
-    faCcApplePay, faPaypal, faCcPaypal, faGooglePay, faStripe, faCcStripe
+    faCcApplePay, faPaypal, faCcPaypal, faGooglePay, faStripe, faCcStripe,
+    faMagnifyingGlass, faPhone, faLocationDot, faFacebookF, faInstagram,
+    faYoutube
 );
 
 // Vue lazy loader options.

@@ -33,6 +33,11 @@ urlpatterns = [
         'store/attributes/category/<slug:category_slug>/',
         views.AttributeListAPIView.as_view(),
         name='store-specific-attribute-list'
+    ),
+    path(
+        'store/search/<str:query>/',
+        views.SearchAPIView.as_view(),
+        name='store-search'
     )
 
 ]

@@ -1,0 +1,13 @@
+Hey {{first_name}} {{last_name}},
+
+We've got your order! We appreciate your trust by shopping with us. We'll drop you another email when your order ships.
+
+To view order details, please click on the following link:
+{{order_details_url}}
+
+Please don't reply to this email and if you need help with anything then don't hesitate to drop us an email:
+care@jamieandcassie.store
+
+Sincerely,
+
+The Jamie & Cassie Sales Team.

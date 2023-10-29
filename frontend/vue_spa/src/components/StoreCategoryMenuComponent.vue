@@ -33,7 +33,7 @@
                        :disabled="isActive"
                        value="All"/>
 
-                <span class="btn btn-white-dark"> All </span>
+                <span class="btn btn-white-dark">All</span>
 
               </label>
             </a>
@@ -74,7 +74,7 @@
                          :value="item.title"
                   />
 
-                  <span class="btn btn-white-dark"> {{ item.title }} </span>
+                  <span class="btn btn-white-dark">{{ item.title }}</span>
 
                 </label>
               </a>

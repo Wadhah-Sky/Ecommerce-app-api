@@ -2,10 +2,23 @@
 
 # Specify the configuration for your application docker compose.
 
+# Note: if you have multiple docker compose .yml file in the directory the system currently in,
+#       then you can use -f flag (file path):
+#
+#       >> docker-compose -f docker-compose.yml up
+#
+#       also:
+#
+#       >> docker-compose -f docker-compose.yml up <specific_service_name>
+
 # Note: if you specify only the image variable for the service, then make sure it's the source for the image.
 #       And if you set both of image and build variables, so it's mean the image variable will represent the
 #       name for image that will be build in the registry.
-#       Important: it's very crucial to set both of variables if working with Docker swarm environment if using Dockerfile.
+#       it's very crucial to set both of variables if working with Docker swarm environment if using Dockerfile.
+
+# Remember: the health check test and the deploy option is use in swarm mode, and the health test is run by
+#           service itself not by daemon which mean you should use localhost ip in the commands NOT the service
+#           name.
 
 # Define the version of docker compose.
 version: "3.9"
@@ -30,10 +43,12 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.20'
-          memory: 50M
+          # 0.30 means 30% of overall available single core of cpu (if you have cpu with two cores then
+          # its overall is 2)
+          cpus: '0.30'
+          memory: 200M
         reservations:
-          cpus: '0.5'
+          cpus: '0.05'
           memory: 20M
 
     # Specify restart flag to unless-stopped, so when the container is stopped (manually or otherwise),
@@ -135,7 +150,9 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     healthcheck:
-      test: ["CMD", "ping localhost:80 || exit 1"]
+      # the following ping test (comment) not working in swarm mode.
+      # test: ["CMD", "ping localhost:80 || exit 1"]
+      test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
       interval: 10s
       timeout: 10s
       # Note: in pgAdmin container, the 'start_period' variable should be at least
@@ -150,10 +167,10 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.20'
-          memory: 200M
+          cpus: '0.50'
+          memory: 700M
         reservations:
-          cpus: '0.5'
+          cpus: '0.05'
           memory: 20M
     ports:
       - "5050:80"
@@ -162,6 +179,196 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
       - db
+    networks:
+      - webnet
+
+  elasticsearch:
+    # In Docker swarm environment, it's very important to name image that build using dockerfile as:
+    # registry_URL:target_port/name_for_image
+    image: 127.0.0.1:5000/elasticsearch
+    build:
+      context: .
+      dockerfile: compose/local/elk/elasticsearch/Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    healthcheck:
+      # Here our test is not about starting the service, it's about the Elasticsearch engine is ready and run
+      # in another means http response of engine health is containing "status" : "green".
+      # Note: if you want to use this command within this service container directly, then use 'localhost:9200' or
+      # 'http://localhost:9200' but if your trying to connect from another service then use '<name_of_service:port>'
+      # because 'elasticsearch' is related to docker daemon that use names of containers to manage connection.
+      # Important: 'grep' tool use single quotes for string that contains double quotes NOT using double quotes.
+      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "green"', " || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      start_period: 240s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          # Note: be careful when specify the values due it's possible to cause to exit the container with 0
+          #       at initializing time because health check test run before service is ready.
+          cpus: '0.40'
+          memory: 700M
+        reservations:
+          cpus: '0.05'
+          memory: 50M
+    volumes:
+      - ./compose/local/elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - elasticsearch:/usr/share/elasticsearch/data:Z
+    environment:
+      - node.name=${ELASTICSEARCH_NODE_NAME}
+      - ES_JAVA_OPTS=${ES_JAVA_OPTS}
+      # Bootstrap password, used to initialize the keystore during the initial startup of Elasticsearch.
+      # Ignored on subsequent runs.
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-}
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      - discovery.type=${DISCOVERY_TYPE}
+    networks:
+      - webnet
+
+  elk_setup:
+    # The 'setup' service runs a one-off script which initializes users inside
+    # Elasticsearch — such as 'logstash_internal' and 'kibana_system' — with the
+    # values of the passwords defined in the '.env' file. It also creates the
+    # roles required by some of these users.
+    #
+    # This task only needs to be performed once, during the *initial* startup of
+    # the stack (ELK services). Any subsequent run will reset the passwords of existing
+    # users to the values defined inside the '.env' file, and the built-in roles to their
+    # default permissions.
+    #
+    # By default, it is excluded from the services started by 'docker compose up'
+    # due to the non-default profile it belongs to. To run it, either provide the
+    # '--profile elk_setup' CLI flag to Compose commands:
+    #
+    # >> docker-compose --profile elk_setup up
+    #
+    # or "up" the service by name such as:
+    #
+    # >> docker-compose up elk_setup
+    #
+    profiles:
+      #
+      # Note: 'profiles' parameter/property is not allowed in Docker Swarm mode.
+      # Profiles help you adjust the Compose application model for various uses and environments
+      # by selectively starting services. This is achieved by assigning each service to zero or
+      # more profiles. If unassigned, the service is always started but if assigned, it is only
+      # started if the profile is activated. Another way to define profiles parameter:
+      # profiles: ["setup"]
+      #
+      - setup
+    image: 127.0.0.1:5000/elk-setup
+    build:
+      context: .
+      dockerfile: compose/local/elk/setup/Dockerfile
+      args:
+        # Pass arguments values that defined inside the selected Dockerfile.
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    # We can use the –init parameter as an option with the 'docker run --init' command to start
+    # a container as the main process with PID 1. Furthermore, it starts and manages all the other
+    # processes running inside the container. Or you can define a parameter 'init' to be true inside
+    # docker compose file for certain service like below:
+    init: true
+    volumes:
+      - ./compose/local/elk/setup/entrypoint.sh:/entrypoint.sh:ro,Z
+      - ./compose/local/elk/setup/lib.sh:/lib.sh:ro,Z
+      - ./compose/local/elk/setup/roles:/roles:ro,Z
+    environment:
+      # Note: we are here passing default value in case no access to environment variables, and should be at
+      #       least 6 characters.
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - LOGSTASH_INTERNAL_PASSWORD=${LOGSTASH_INTERNAL_PASSWORD}
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
+      - METRICBEAT_INTERNAL_PASSWORD=${METRICBEAT_INTERNAL_PASSWORD}
+      - FILEBEAT_INTERNAL_PASSWORD=${FILEBEAT_INTERNAL_PASSWORD}
+      - HEARTBEAT_INTERNAL_PASSWORD=${HEARTBEAT_INTERNAL_PASSWORD}
+      - MONITORING_INTERNAL_PASSWORD=${MONITORING_INTERNAL_PASSWORD}
+      - BEATS_SYSTEM_PASSWORD=${BEATS_SYSTEM_PASSWORD}
+    depends_on:
+      - elasticsearch
+    networks:
+      - webnet
+
+  logstash:
+    image: 127.0.0.1:5000/logstash
+    build:
+      context: .
+      dockerfile: compose/local/elk/logstash/Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    volumes:
+      - ./compose/local/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+      - ./compose/local/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+    ports:
+      - "5044:5044"
+      - "50000:50000/tcp"
+      - "50000:50000/udp"
+      - "9600:9600"
+    healthcheck:
+      test: [ "CMD-SHELL", "bin/logstash -t" ]
+      interval: 10s
+      timeout: 10s
+      start_period: 180s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: 700M
+        reservations:
+          cpus: '0.02'
+          memory: 20M
+    environment:
+      - LS_JAVA_OPTS=${LS_JAVA_OPTS}
+      - LOGSTASH_INTERNAL_PASSWORD=${LOGSTASH_INTERNAL_PASSWORD:-}
+    depends_on: &logstash_depends
+      - elasticsearch
+    networks:
+      - webnet
+
+  kibana:
+    image: 127.0.0.1:5000/kibana
+    build:
+      context: .
+      dockerfile: compose/local/elk/kibana/Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
+    ports:
+      - "5601:5601"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'" ]
+      interval: 10s
+      timeout: 10s
+      start_period: 180s
+      retries: 3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.40'
+          memory: 700M
+        reservations:
+          cpus: '0.03'
+          memory: 50M
+    volumes:
+      - ./compose/local/elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+    environment:
+      - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD:-}
+      - node.name=${KIBANA_NODE_NAME}
+    depends_on: *logstash_depends
     networks:
       - webnet
 
@@ -218,14 +425,35 @@ services:
       - SQL_USER=${SQL_USER}
       - SQL_PASS=${SQL_PASS}
       - SQL_PORT=5432
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - ELASTIC_USERNAME=${ELASTIC_USERNAME}
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_HOSTS}
     depends_on:
+      # In case you don't need to create customized commands in order to check fot service is ready and run,
+      # Here we depend on health check (service_healthy).
+      # Note: this way of depends_on is not supporting in swarm mode and will show the following error:
+      #       services.app.depends_on must be a list
+      # Important: elasticsearch engine should be running and ready ("status" : "green"), otherwise will
+      #            face issue of connection [error 111]
+      # Info: it's better to use list of depends_on services because it's too complicated to count right
+      #       timer to start each srvice health test, so will lead to issues.
+      # db:
+      # condition: service_healthy
+      # cache:
+        # condition: service_healthy
+      # elasticsearch:
+        # condition: service_healthy
       - db
       - cache
+      - elasticsearch
     networks:
       - webnet
 
   ui:
-    image: 127.0.0.1:5000/vue_ui
+    image: 127.0.0.1:5000/vue
     build:
       context: .
       dockerfile: compose/local/vue/Dockerfile
@@ -274,7 +502,7 @@ services:
       - webnet
 
   worker:
-    image: 127.0.0.1:5000/celery_worker
+    image: 127.0.0.1:5000/worker
     # asterisk mark refer to another service same variable configs to be use in this service.
     build: *app_build
     healthcheck:
@@ -300,7 +528,7 @@ services:
       - webnet
 
   beat:
-    image: 127.0.0.1:5000/celery_beat
+    image: 127.0.0.1:5000/beat
     build: *app_build
     healthcheck:
       test: ["CMD-SHELL", "celery inspect ping || exit 1"]
@@ -321,7 +549,7 @@ services:
       - webnet
 
   flower:
-    image: 127.0.0.1:5000/celery_flower
+    image: 127.0.0.1:5000/flower
     build: *app_build
     ports:
       - "5557:5555"
@@ -349,4 +577,6 @@ networks:
 
 volumes:
   postgres-db:
+    driver: local
+  elasticsearch:
     driver: local

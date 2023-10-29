@@ -48,7 +48,7 @@
 
           <div v-for="( product, index ) in storePagination.dataResult"
                :key="index"
-               class="col-md-3"
+               class="col-12 col-sm-6 col-md-3 col-lg-3 col-xl-3 col-xxl-2"
           >
 
             <product-card-component :product-title="product.title"
@@ -157,6 +157,20 @@ const emits = defineEmits(['toggle-filter-side-panel']);
 // );
 
 </script>
+
+<style lang="scss" scoped>
+// Customize the number of grid tiers of bootstrap
+
+// override the default min-width value (576px) of .col-sm-* column to be 330px
+// also you should set the of max-width to same column as breakpoint to .col-md-* which by default it's 768px
+@media (min-width: 330px) and (max-width: 767px) {
+  .col-sm-6 {
+    flex: 0 0 auto;
+    width: 50%;
+  }
+}
+
+</style>
 
 <style scoped>
 

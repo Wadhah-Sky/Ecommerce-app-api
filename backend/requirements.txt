@@ -80,9 +80,24 @@ django-admin-hstore-widget>=1.2.1,<1.3.0
 
 # Install Django email backends and webhooks for Amazon SES, MailerSend, and many more.
 # Note: You must ensure the 'boto3' package (AWS SDK for Python, and supports sending, tracking,
-#       and inbound receiving capabilities.) is installed to use Anymail’s Amazon SES backend.
-#       Either include the 'amazon-ses' option when you install Anymail OR separately 'boto3'
+#       and inbound receiving capabilities) is installed to use Anymail’s Amazon SES backend.
+#       So, either include the 'amazon-ses' option when you install Anymail OR separately install 'boto3'.
+# Info: After installation is doen, you should add the following line into 'settings.py':
+#
+#       EMAIL_BACKEND = "anymail.backends.amazon_ses.EmailBackend"
 django-anymail[amazon-ses]>=10.0,<11.0
+
+# Install official low-level Python client for Elasticsearch.
+elasticsearch>=8.10.0,<8.11.0
+
+# Install high-level library whose aim is to help with writing and running queries against Elasticsearch.
+# It is built on top of the official low-level client.
+elasticsearch-dsl>=8.9.0,<8.10.0
+
+# Install the package that allows indexing of django models in elasticsearch. It is built as a thin wrapper
+# around 'elasticsearch-dsl-py' package, so you can use all the features developed by the elasticsearch-dsl-py team.
+# Note: this package should be registered in 'setting.py' file as 'django_elasticsearch_dsl'.
+django-elasticsearch-dsl>=8.0,<9.0
 
 # Install python linting tool 'flake8'.
 flake8>=4.0.1,<4.1.0

@@ -1,0 +1,20 @@
+---
+## Default Elasticsearch configuration from Elasticsearch base image.
+## https://github.com/elastic/elasticsearch/blob/main/distribution/docker/src/docker/config/elasticsearch.yml
+#
+cluster.name: docker-cluster
+network.host: 0.0.0.0
+bootstrap.memory_lock: true
+## verbose: OFF, FATAL, ERROR, WARN, INFO, DEBUG, and TRACE.
+logger.org.elasticsearch.discovery: DEBUG
+
+## X-Pack settings
+## see https://www.elastic.co/guide/en/elasticsearch/reference/current/security-settings.html
+#
+xpack.license.self_generated.type: basic
+xpack.security.enabled: true
+xpack.security.audit.enabled: true
+xpack.security.enrollment.enabled: true
+## Optional: X-Pack is not supported and Machine Learning is not available for [linux-x86], so
+##           you can use the other X-Pack features (unsupported) by setting:
+xpack.ml.enabled: false

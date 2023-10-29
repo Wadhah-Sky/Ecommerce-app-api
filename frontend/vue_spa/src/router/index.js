@@ -146,7 +146,7 @@ const setAttributeInQuery = (to) => {
                return { path: to.path, query: to.query, hash: to.hash }
 
                This because will lead to loop of redirection navigation guard, due the condition
-               you write here will be always true for right 'to.query.attr'.
+               you wrote here that will be always true for right 'to.query.attr'.
                Delete line in else{} block, will take the effect.
    */
 
@@ -337,46 +337,55 @@ const routes = [
     */
     // meta: { transition: 'slide-left' }
     children: [
-          // {
-          //   name: 'dealsStore',
-          //   alias: ['/latest-deals'],
-          //   path: 'deals/:categorySlug/:page?',
-          //   /*
-          //      route level code-splitting
-          //      this generates a separate chunk (about.[hash].js) for this route
-          //      which is lazy-loaded when the route is visited.
-          //   */
-          //   component: () => import(/* webpackChunkName: "categoryVariation" */ '../views/DealsView.vue'),
-          //   /*
-          //      Set if this component accepts props.
-          //      When props is set to true, the route.params will be set as the component props.
-          //   */
-          //   props: route => ({
-          //     slug: route.params.categorySlug,
-          //     page: route.query.page
-          //   }),
-          // },
-          {
-            name: 'categoryStore',
-            path: 'category/:slug/:attr?/:minPrice?/:maxPrice?/:page?',
-            /*
-              route level code-splitting
-              this generates a separate chunk (about.[hash].js) for this route
-              which is lazy-loaded when the route is visited.
-            */
-            component: () => import(/* webpackChunkName: "categoryStore" */ '../views/StoreView.vue'),
-            /*
-               Set the parameters to be passed to component props.
-            */
-            props: route => ({
-              slug: route.params.slug,
-              attr: route.query.attr,
-              minPrice: route.query.minPrice,
-              maxPrice: route.query.maxPrice,
-              selectBy: route.query.selectBy,
-              page: route.query.page
-            }),
-          }
+      // {
+      //   name: 'storeDeals',
+      //   alias: ['/latest-deals'],
+      //   path: 'deals/:categorySlug/:page?',
+      //   /*
+      //      route level code-splitting
+      //      this generates a separate chunk (about.[hash].js) for this route
+      //      which is lazy-loaded when the route is visited.
+      //   */
+      //   component: () => import(/* webpackChunkName: "storeDeals" */ '../views/DealsView.vue'),
+      //   /*
+      //      Set if this component accepts props.
+      //      When props is set to true, the route.params will be set as the component props.
+      //   */
+      //   props: route => ({
+      //     slug: route.params.categorySlug,
+      //     page: route.query.page
+      //   }),
+      // },
+      {
+        name: 'storeCategory',
+        path: 'category/:slug/:attr?/:minPrice?/:maxPrice?/:page?',
+        /*
+          route level code-splitting
+          this generates a separate chunk (about.[hash].js) for this route
+          which is lazy-loaded when the route is visited.
+        */
+        component: () => import(/* webpackChunkName: "storeCategory" */ '../views/StoreCategoryView.vue'),
+        /*
+           Set the parameters to be passed to component props.
+        */
+        props: route => ({
+          slug: route.params.slug,
+          attr: route.query.attr,
+          minPrice: route.query.minPrice,
+          maxPrice: route.query.maxPrice,
+          selectBy: route.query.selectBy,
+          page: route.query.page
+        }),
+      },
+      {
+        name: 'storeSearch',
+        path: 'search/:query/:page?',
+        component: () => import(/* webpackChunkName: "storeSearch" */ '../views/StoreSearchView.vue'),
+        props: route => ({
+          query: route.params.query,
+          page: route.query.page
+        }),
+      },
     ]
   },
   {
@@ -400,38 +409,51 @@ const routes = [
     path: '/checkout',
     component: () => import(/* webpackChunkName: "checkout" */ '../views/CheckoutView.vue'),
     meta: { transition: 'slide-left' },
+    beforeEnter: [removeQueryParams, removeHash],
     children: [
         {
-          name: 'cart',
+          name: 'checkoutCart',
           path: 'cart',
           /*
             route level code-splitting
             this generates a separate chunk (about.[hash].js) for this route
             which is lazy-loaded when the route is visited.
           */
-          component: () => import(/* webpackChunkName: "cart" */ '../views/CartView.vue'),
+          component: () => import(/* webpackChunkName: "checkoutCart" */ '../views/CheckoutCartView.vue'),
         },
         {
-          name: 'shippingDetails',
-          path: 'shipping-details',
+          name: 'checkoutShipping',
+          path: 'shipping',
           /*
             route level code-splitting
             this generates a separate chunk (about.[hash].js) for this route
             which is lazy-loaded when the route is visited.
           */
-          component: () => import(/* webpackChunkName: "shippingDetails" */ '../views/ShippingDetailsView.vue'),
+          component: () => import(/* webpackChunkName: "checkoutShipping" */ '../views/CheckoutShippingView.vue'),
         },
         {
-          name: 'paymentDetails',
-          path: 'payment-details',
+          name: 'checkoutPayment',
+          path: 'payment',
           /*
             route level code-splitting
             this generates a separate chunk (about.[hash].js) for this route
             which is lazy-loaded when the route is visited.
           */
-          component: () => import(/* webpackChunkName: "paymentDetails" */ '../views/PaymentDetailsView.vue'),
+          component: () => import(/* webpackChunkName: "checkoutPayment" */ '../views/CheckoutPaymentView.vue'),
         }
     ],
+  },
+  {
+    name: 'contact',
+    path: '/contact',
+    component: () => import(/* webpackChunkName: "contact" */ '../views/ContactView.vue'),
+    beforeEnter: [removeQueryParams, removeHash]
+  },
+  {
+    name: 'about',
+    path: '/about',
+    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+    beforeEnter: [removeQueryParams, removeHash]
   },
   {
     /* Regex to catch all paths are not define previously, this root very important:

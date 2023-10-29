@@ -26,7 +26,7 @@ const momentFormat = 'MM/YY';
   Important: The must important part of InputMask class is 'mask' property, this property responsible
              to allow entering value if valid and trigger @accept/@complete events.
  */
-const cardExpireDateProps = {
+const cardExpiryProps = {
     mask: Date,
     regex: /^(?=.{0,5}$)((0[1-9]|1[0-2])\/?([0-9]{2})$)/,
     // other options are optional
@@ -257,7 +257,7 @@ const cardPaymentMask = (fieldName='') => {
     let imaskObj = null;
 
     // Note: You can't set 'const' or 'let' statement inside (case) of (switch) statement.
-    if (field === 'cardExpireDate') {
+    if (field === 'cardExpiry') {
 
         // imaskObj = useIMask({
         //     mask: 'MM{/}YY',
@@ -287,7 +287,7 @@ const cardPaymentMask = (fieldName='') => {
                          <input v-imask="mask" />
                          <imask-component :mask="mask" />
           */
-        imaskObj = useIMask(cardExpireDateProps);
+        imaskObj = useIMask(cardExpiryProps);
     }
     else {
         switch (field) {
@@ -317,7 +317,7 @@ const cardPaymentMask = (fieldName='') => {
 
 export {
     cardNameProps,
-    cardExpireDateProps,
+    cardExpiryProps,
     cardNumberProps,
     cardSecurityCodeProps,
     cardSecurityNoSecretCodeProps,

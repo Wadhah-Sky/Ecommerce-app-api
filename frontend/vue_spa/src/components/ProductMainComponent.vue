@@ -6,8 +6,8 @@
       <h2 class="title">{{props.title}}</h2>
 
       <div v-if="props.promotionTitle || props.promotionSummary" class="content h5">
-          <span v-if="props.promotionTitle" class="badge bg-danger">{{ props.promotionTitle }}</span>
-          <span v-if="props.promotionSummary" class="badge bg-white">{{ props.promotionSummary }}</span>
+          <span v-if="props.promotionTitle" class="badge bg-danger promotion-title">{{ props.promotionTitle }}</span>
+          <span v-if="props.promotionSummary" class="badge bg-white promotion-summary">{{ props.promotionSummary }}</span>
       </div>
 
       <div class="mt-2 mb-3">
@@ -254,6 +254,7 @@ const addToCart = () =>{
 }
 
 .badge{
+  font-size: 14px!important;
   border-radius: 0!important;
 }
 
@@ -319,6 +320,24 @@ const addToCart = () =>{
 .btn-add-cart:active{
   transform: translateY(3%);
   transition: transform 0.2s;
+}
+
+.promotion-title{
+  margin-right: 6px;
+}
+
+.promotion-summary{
+  padding-left: 0;
+  margin-left: 0;
+}
+
+@media only screen and (max-width: 700px) {
+  .title{
+    font-size: 17px;
+  }
+  .badge{
+    font-size: 13px!important;
+  }
 }
 
 </style>

@@ -1,10 +1,18 @@
 <template>
 
   <div ref="sidePanel" class="sidepanel">
+
     <span ref="span" class="header">
-      Filters
+      <span>
+        Filters
+      </span>
+      <span id="filter-x">
+        <font-awesome-icon icon="fa-solid fa-xmark" @click="triggerToggleSidePanel"/>
+      </span>
     </span>
+
     <div class="line"></div>
+
     <div ref="circle" class="circle" @click="triggerToggleSidePanel">
       <i :class=" isHide ? 'hide' : '' " aria-hidden="true">
         <font-awesome-icon :icon="['fa-solid', 'fa-chevron-left']"/>
@@ -43,7 +51,7 @@
 
       <div v-if="!storeFilter.dataLoading" class="row scroll-menu">
 
-        <div class="row">
+        <div class="row mb-2">
 
           <filter-multi-select-component :store-filter="storeFilter"
                                          :available-select-by-options="storeFilter.availableSelectByOptions"
@@ -52,13 +60,13 @@
 
         </div>
 
-        <div class="row mt-4">
+<!--        <div class="row mt-2">-->
 
-          <span class="attribute">Avg. Customer Review</span>
+<!--          <span class="attribute">Avg. Customer Review</span>-->
 
-          <filter-rating-stars-component/>
+<!--          <filter-rating-stars-component/>-->
 
-        </div>
+<!--        </div>-->
 
         <div class="row mt-1">
 
@@ -97,7 +105,7 @@
 import ContentLoaderComponent from "@/components/ContentLoaderComponent";
 import FilterAttributeComponent from "@/components/FilterAttributeComponent";
 import FilterMultiSelectComponent from "@/components/FilterMultiSelectComponent";
-import FilterRatingStarsComponent from "@/components/FilterRatingStarsComponent";
+// import FilterRatingStarsComponent from "@/components/FilterRatingStarsComponent";
 import FilterPriceRangeComponent from "@/components/FilterPriceRangeComponent";
 import {useRoute, useRouter} from "vue-router";
 import {ref, toRef, onMounted, defineExpose, defineProps} from "vue";
@@ -108,7 +116,6 @@ export default {
     ContentLoaderComponent,
     FilterAttributeComponent,
     FilterMultiSelectComponent,
-    FilterRatingStarsComponent,
     FilterPriceRangeComponent
   }
 }
@@ -301,7 +308,7 @@ defineExpose({triggerToggleSidePanel, triggerGetDataResult});
   font-weight: bold;
   position:relative;
   display:block;
-  width:calc(100% - 2em);
+  width:100%;
   max-width:290px;
   padding:1em;
   background-color:#fff;
@@ -326,8 +333,9 @@ defineExpose({triggerToggleSidePanel, triggerGetDataResult});
   display:flex;
   justify-content:center;
   align-items:center;
-  top:calc(12% - 22px);
-  right:calc(100% - 0px);
+  top:75px; //calc(12% - 22px)
+  right:calc(100% - 0px); // in case want to show circle while side panel is close,
+                         // set value of right to be (100% - 0px), otherwise set (100% - 46px)
   z-index:3;
   cursor:pointer;
   opacity: 0.6;
@@ -345,6 +353,23 @@ defineExpose({triggerToggleSidePanel, triggerGetDataResult});
 }
 .hide {
   display:none;
+}
+
+#filter-x{
+  position: absolute;
+  margin-left: 60px;
+  cursor: pointer;
+  display: none;
+}
+
+#filter-x > .fa-xmark:hover{
+  color: rgb(204, 12, 57);
+  transition: color 200ms ease-in-out;
+}
+
+#filter-x > .fa-xmark:active{
+  transform: translateY(3%);
+  transition: transform 0.2s ease-in-out;
 }
 
 .scroll-menu{
@@ -404,10 +429,21 @@ defineExpose({triggerToggleSidePanel, triggerGetDataResult});
   transition: transform 0.2s ease-in-out;
 }
 
+@media only screen and (max-width: 700px) {
+  .sidepanel {
+    max-width: 265px;
+    margin-right: -265px;
+  }
+  .circle{
+    display: none;
+  }
+  #filter-x{
+    display: inline;
+  }
+}
+
 </style>
 
-
-<!--<div class="arrow"></div>-->
 
 <!--<style lang="sass">-->
 

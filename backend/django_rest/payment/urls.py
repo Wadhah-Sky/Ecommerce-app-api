@@ -10,5 +10,10 @@ urlpatterns = [
         'payment/methods/',
         views.PaymentMethodListAPIView.as_view(),
         name='payment-method-list'
+    ),
+    path(
+        'payment/check/',
+        views.PaymentCheckApiView.as_view(),
+        name='payment-check'
     )
 ]

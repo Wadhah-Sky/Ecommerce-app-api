@@ -3,7 +3,7 @@
 from rest_framework import generics
 from rest_framework.generics import get_object_or_404
 
-from core.models import Product, ProductItem, Attribute, ProductAttribute
+from core.models import Product, ProductItem, Attribute
 
 from product import serializers
 from product import exceptions

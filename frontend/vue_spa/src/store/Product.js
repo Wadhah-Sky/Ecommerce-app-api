@@ -1,4 +1,5 @@
 import { defineStore, acceptHMRUpdate } from 'pinia';
+import {scrollTopSmooth} from "@/assets/javascript/smothScroll";
 import {axios} from "@/common/api.axios";
 import router from "@/router";
 
@@ -79,6 +80,8 @@ export const useProductStore = defineStore('Product', {
       finally {
         // Whether an error occurred or not, set the state of dataLoading to be false.
         this.dataLoading = false;
+        // Scroll the browser's window up.
+        scrollTopSmooth(window.scrollY, 300, "ease-in-out");
       }
     },
     async getProductItemDataResult(endpoint) {
@@ -119,6 +122,8 @@ export const useProductStore = defineStore('Product', {
       finally {
         // Whether an error occurred or not, set the state of dataLoading to be false.
         this.dataLoading = false;
+        // Scroll the browser's window up.
+        scrollTopSmooth(window.scrollY, 300, "ease-in-out");
       }
     },
     async serializeProductOptions(arrayOfObj) {

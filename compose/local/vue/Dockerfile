@@ -55,7 +55,7 @@ RUN npm install --location=global npm@latest && \
 FROM builder AS dev
 
 # Install Vue CLI globally, a full system for rapid Vue.js development, that provide 'vue create' command.
-RUN npm install --location=global @vue/cli@5.0.4
+RUN npm install --location=global @vue/cli@5.0.8
 
 # Copy the service start shell.
 COPY /compose/local/vue/start-vue.sh /usr/src/compose/start-vue.sh
@@ -91,10 +91,7 @@ RUN sed -i 's/\r$//g' /usr/src/compose/start-vue.sh && \
     # in the directory are detected.
     # NOTE: this is a workaround since the hot-reload so far don't work on vue/cli@4.5 or later versions
     # when run on Docker.
-    npm install --location=global nodemon && \
-    # Scan your project for vulnerabilities and automatically install any compatible updates to
-    # vulnerable dependencies.
-    npm audit fix --force
+    npm install --location=global nodemon
 
 # Create path for npm dependencies of vue project in docker image system path.
 # Note: bin file is hidden( set dot mark before it ).

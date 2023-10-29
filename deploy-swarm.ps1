@@ -1,8 +1,8 @@
 # This script can be execute by windows powershell.
 
 <#
-Define Comment-Based Help for Script, which can print out by using Get-Help(insensitive-case) cmdlet (that is a special type
-of command provided in the Windows PowerShell command line environment), example:
+Define Comment-Based Help for Script, which can print out by using Get-Help(insensitive-case) cmdlet (that is
+a special type of command provided in the Windows PowerShell command line environment), example:
 
 PS> Get-Help .\docker-swarm.ps1 -Full
 
@@ -66,9 +66,9 @@ Note: if specify the parameter as specific data type like:
 
 [string][Parameter(Mandatory)] $ComposeFile="docker-compose.yml"
 
-you gonna face an issue when execute the command without specifying the arguments which the shell will ask you to set a value
-for each required argument, if you specify an empty value this will count as value and no default value can be use because
-and an that time an error will raise:
+you gonna face an issue when execute the command without specifying the arguments which the shell will ask you to set
+a value for each required argument, if you specify an empty value this will count as value and no default value can
+be use because and an that time an error will raise:
 
 ParameterBindingValidationException
 
@@ -84,7 +84,8 @@ param (
     [Parameter(Mandatory)] $StackName="ecommerce"
 )
 
-# Check whether the arguments that required are specified as empty string or not, if so, then specify a default value for parameter.
+# Check whether the arguments that required are specified as empty string or not, if so, then specify a default value
+# for parameter.
 if($ComposeFile -eq ""){
     $ComposeFile = "docker-compose.yml"
     Write-Output "Set default value for -ComposeFile argument: $ComposeFile"
@@ -110,7 +111,8 @@ ForEach ($line in $envFileContent){
           # Check if list have two items which means there is a variable and value for it.
           if($varNameValSplit.Length -eq 2){
             $varName = $varNameValSplit[0]
-            $varVal = $varNameValSplit[1]
+            # Trim double quotes from both sides of the string in case it's exist.
+            $varVal = $varNameValSplit[1].Trim('"')
             # Using $varName and $varValSet, set environment variable in system memory that
             # can be use later by 'docker stack deploy' command.
             [Environment]::SetEnvironmentVariable($varName, $varVal)

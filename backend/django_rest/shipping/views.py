@@ -8,6 +8,7 @@ from django.conf import settings
 
 from shipping import serializers, exceptions
 from core.models import round_money, Country, ShippingMethod
+from core.views import AddressCheckAPIView, PersonalInfoCheckAPIView
 
 
 class ShippingCountryListAPIView(generics.ListAPIView):
@@ -35,93 +36,150 @@ class ShippingCostAPIView(views.APIView):
     # Get the default value for money decimal digits from 'api' settings.
     money_decimal_digits = settings.MONEY_DECIMAL_PLACES
 
-    def post(self, request):
+    def post(self, request, data=None):
         """HTTP POST method"""
 
         # Data attribute value for this view POST method should be:
         # {
-        #   "shipping_method": <value>,
-        #   "shipping_address":
-        #                {
-        #                   "country_iso_code": <value>,
-        #                   "region": <value>,
-        #                   "city": <value>,
-        #                   "postal_code": <value>
-        #                 }
-        # }
+        #   "method": <value>,
+        #   "country": { # possible, one of them
+        #         "iso_code": <value>,
+        #         "title": <value>
+        #    },
+        #   "address_details": {
+        #                 "address1": <value>, # Not required for check
+        #                                      # due we set default value
+        #                 "address2": <value>, # Not required
+        #                 "region": <value>,
+        #                 "city": <value>,
+        #                 "postal_code": <value> # not required
+        #   }
+        #  }
         #
         # Note: you can access this HTTP request body by calling 'request.body'
+        #       But it's not recommended in DRF.
 
-        # Get the 'shipping_method' and 'shipping_address' property value from
-        # data of HTTP POST request.
-        shipping_method = request.data.get('shipping_method', None)
-        shipping_address = request.data.get('shipping_address', None)
+        to_use = data if data else request.data
 
-        # Initialize some variables.
-        country = None
-        country_iso_code = None
-        region = None
-        city = None
-        postal_code = None
+        # Get the 'method' and 'shipping' property value.
+        method = to_use.get('method', None)
+        country = to_use.get('country', None)
+        address_details = to_use.get('address_details', None)
 
-        # Check if shipping address is not empty/zero/None
-        if shipping_address:
+        address_check_res = {}
 
-            # Get certain keys value from the provided shipping address.
-            country_iso_code = shipping_address.get('country_iso_code', None)
-            region = shipping_address.get('region', None)
-            city = shipping_address.get('city', None)
-            postal_code = shipping_address.get('postal_code', None)
+        # Check if shipping method is not empty/zero/None
+        if method:
 
-            # Check the country iso code if provided.
-            if country_iso_code:
+            if country and address_details:
 
-                try:
-                    # Get the country instance using ignore case for string of
-                    # provided country iso code.
-                    country = Country.objects.get(
-                        iso_code__icontains=country_iso_code,
-                        is_available=True
-                    )
+                # Get certain keys value from the provided address details.
+                address1 = address_details.get('address1', 'default')
+                address2 = address_details.get('address2', 'default')
+                region = address_details.get('region', None)
+                city = address_details.get('city', None)
+                postal_code = address_details.get('postal_code', "default")
 
-                except ObjectDoesNotExist:
-                    return Response(
-                        {
-                            'message':
-                                exceptions.InvalidCountryIsoCode.
-                                default_detail,
-                            'default_code':
-                                exceptions.InvalidCountryIsoCode.default_code,
-                            'country_iso_code': country_iso_code
-                        },
-                        status=exceptions.InvalidCountryIsoCode.status_code,
-                    )
+                # Get certain keys value from the provided country.
+                iso_code = country.get('iso_code', None)
+                title = country.get('title', None)
 
-            else:
-                # In case the country iso code is None.
-                return Response(
-                    {
-                        'message': "No country iso code has provided"
+                # Since post() method of 'CountryCheckAPIView' is access
+                # directly to 'country_iso_code', so you need to pass it
+                # through 'request' object But keep in mind the below line will
+                # not copy the request object:
+                #
+                # address_check_req = request
+                #
+                # But you can copy the 'data' dictionary object:
+                #
+                # post = request.POST.copy()
+                #
+                # OR use deepcopy() method:
+                #
+                # post = copy.deepcopy(request.data)
+                #
+                # Note: by default GET/POST data is immutable
+
+                # Since 'data' attribute has no setter, so we can't do:
+                # country_check_req.data = {'iso_code': iso_code}
+                #
+                # we do the below to set required property value:
+
+                # request.data.update(
+                #     {
+                #         "country": {
+                #             "iso_code": country_iso_code
+                #         },
+                #         "address_details": {
+                #             "address1": address1,
+                #             "city": city,
+                #             "region": region,
+                #             "postal_code": postal_code
+                #         }
+                #     }
+                # )
+
+                address_check_data = {
+                    "country": {
+                        "iso_code": iso_code,
+                        "title": title
                     },
-                    status=status.HTTP_400_BAD_REQUEST,
+                    "address_details": {
+                        "address1": address1,
+                        "address2": address2,
+                        "city": city,
+                        "region": region,
+                        "postal_code": postal_code
+                    }
+                }
+
+                # Call for address check view.
+                address_check_res = AddressCheckAPIView().post(
+                    request=request,
+                    data=address_check_data
                 )
 
+                if address_check_res.status_code != status.HTTP_200_OK:
+                    return Response(
+                        address_check_res.data,
+                        status=address_check_res.status_code
+                    )
+            else:
+                if address_details is None:
+                    # In case no address details have provided
+                    return Response(
+                        {
+                            'message': "No address details have provided"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                if country is None:
+                    # In case no country details have provided
+                    return Response(
+                        {
+                            'message': "No country title or iso code has "
+                                       "provided"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
         else:
             # In case no shipping address has provided
             return Response(
                 {
-                    'message': "No shipping address has provided"
+                    'message': "No shipping details have provided"
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Check if shipping method is provided and not None/empty/zero.
-        if shipping_method:
+        if method:
 
             try:
                 # Get the shipping method instance.
                 shipping_m = ShippingMethod.objects.get(
-                    title__icontains=shipping_method
+                    title=method,
+                    is_available=True
                 )
 
             except ObjectDoesNotExist:
@@ -131,7 +189,7 @@ class ShippingCostAPIView(views.APIView):
                             exceptions.InvalidShippingMethod.default_detail,
                         'default_code':
                             exceptions.InvalidShippingMethod.default_code,
-                        'shipping_method': shipping_method
+                        'shipping_method': method
                     },
                     status=exceptions.InvalidShippingMethod.status_code,
                 )
@@ -145,27 +203,123 @@ class ShippingCostAPIView(views.APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        ######################################################################
         # In this part of the code should make REST api call to shipping method
-        # carrier with required details and get the cost value in the HTTP
+        # carrier api with required details and get the cost value in the HTTP
         # response, But since our project is Demo, we will set default value
         # for shipping cost.
+        ######################################################################
 
-        shipping_cost_price = round_money(amount=0)
-
+        cost_price = round_money(amount=0)
+        # Note: since 'data' of 'country_check_res' is JSON object, then don't
+        #       call its parameters like you do with dictionary object in
+        #       python.
         return Response(
             {
-                'country': country.title,
-                'country_iso_code': country_iso_code,
-                'shipping_method': shipping_m.title,
-                'price_currency_symbol': settings.CURRENCY_SYMBOLS[
-                    shipping_cost_price.currency.code
-                ],
-                'shipping_cost_amount': "{:.2f}".format(
-                    round(
-                        shipping_cost_price.amount,
-                        self.money_decimal_digits
+                'method': shipping_m.title,
+                'shipping': {
+                    'country': address_check_res.data.get('country', None),
+                    'address_details': {
+                        'address1': address_details.get('address1', ''),
+                        'address2': address_details.get('address2', ''),
+                        'city': address_check_res.data['address_details'].get(
+                            'city', ''
+                        ),
+                        'region':
+                            address_check_res.data['address_details'].get(
+                                'region', ''
+                            ),
+                        'postal_code': address_details.get('postal_code', '')
+                    },
+                },
+                'price_currency': cost_price.currency.code,
+                'price_currency_symbol':
+                    settings.CURRENCY_SYMBOLS[cost_price.currency.code],
+                'shipping_cost_amount':
+                    "{:.2f}".format(
+                        round(cost_price.amount, self.money_decimal_digits)
                     )
-                )
             },
             status=status.HTTP_200_OK,
+        )
+
+
+class ShippingCheckAPIView(views.APIView):
+    """APIView for shipping check"""
+
+    def post(self, request, data=None):
+        """HTTP POST method"""
+
+        # Data attribute value for this view POST method should be:
+        #
+        # {
+        #  "method": <value>,
+        #  "personal_info": {
+        #               "first_name": <value>,
+        #               "last_name": <value>,
+        #               "email": <value>,
+        #               "phone_number": <value>
+        #   },
+        #  "country": { # possible, one of them
+        #         "iso_code": <value>,
+        #         "title": <value>
+        #   },
+        #  "address_details": {
+        #                "address1": <value>, # Not required for check
+        #                "address2": <value>, # Not required
+        #                "region": <value>,
+        #                "city": <value>,
+        #                "postal_code": <value> # not required
+        #  }
+        # }
+
+        to_use = data if data else request.data
+        personal_info = to_use.get('personal_info', None)
+        method = to_use.get('method', None)
+        country = to_use.get('country', None)
+        address_details = to_use.get('address_details', None)
+
+        if personal_info:
+            personal_info_check_res = PersonalInfoCheckAPIView().post(
+                request=request,
+                data=personal_info
+            )
+
+            if personal_info_check_res.status_code != status.HTTP_200_OK:
+                return Response(
+                    personal_info_check_res.data,
+                    status=personal_info_check_res.status_code
+                )
+
+            # In case personal info check went with no issue.
+            # Set data for shipping cost view.
+            shipping_cost_data = {
+                "method": method,
+                "country": country,
+                "address_details": address_details
+            }
+
+            shipping_cost_res = ShippingCostAPIView().post(
+                request=request,
+                data=shipping_cost_data
+            )
+
+            if shipping_cost_res.status_code != status.HTTP_200_OK:
+                return Response(
+                    shipping_cost_res.data,
+                    status=shipping_cost_res.status_code
+                )
+
+            data_to_return = {}
+            data_to_return.update(personal_info_check_res.data)
+            data_to_return.update(shipping_cost_res.data)
+            # In case everything went ok
+            return Response(data_to_return, status=status.HTTP_200_OK)
+
+        # In case personal info is None
+        return Response(
+            {
+                "message": "No personal info have provided"
+            },
+            status=status.HTTP_400_BAD_REQUEST
         )

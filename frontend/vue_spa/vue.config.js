@@ -21,7 +21,7 @@ Hot Reload is always enabled except following situations:
 3- process.env.NODE_ENV === 'production'
 */
 
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require('@vue/cli-service');
 const path = require(`path`);
 
 module.exports = defineConfig({
@@ -133,11 +133,11 @@ module.exports = defineConfig({
         /*
         WebSocket is a computer communications protocol, providing full-duplex communication channels
         over a single TCP connection.
+
         Note: You need to config this option, otherwise the below error will occur in your browser
-        console when trying to connect to Webpack from another Docker container:
+              console when trying to connect to Webpack from another Docker container:
 
-        Error: WebSocket connection to 'ws://127.0.0.1:<port-number>/ws' failed
-
+              Error: WebSocket connection to 'ws://127.0.0.1:<port-number>/ws' failed
         */
         hostname: "0.0.0.0",
         pathname: "/ws",

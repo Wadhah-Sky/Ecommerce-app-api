@@ -28,8 +28,20 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
         navSidebarTheme: 'white-theme',
         dynamicNavArray:[],
         menu: [],
+        show: false,
+        collapsed: true
     }),
     actions: {
+        toggleNavSidebarView() {
+            /**
+             * Toggle the Nav sidebar view state
+             */
+
+            // Important: first you should toggle value of 'collapsed' in the nav sidebar store, then
+            //            toggle value of hide in the same store.
+            this.collapsed = !this.collapsed;
+            this.show = !this.show;
+        },
         addHeaderNavigation(text){
             /**
              * Function to add details for header object into the 'menu' array.
@@ -182,9 +194,10 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
             this.addHeaderNavigation('Shop by Department');
             this.addDynamicImageNavigation();
             // this.addDynamicIconNavigation();
-            this.addSeperator();
-            this.addHeaderNavigation('Asking for help?');
-            this.addNavigation([
+
+            // this.addSeperator();
+            // this.addHeaderNavigation('Asking for help?');
+            // this.addNavigation([
                 // {
                 //     href: '/contact-us/talk-to-agent',
                 //     title: 'Talk to agent',
@@ -195,17 +208,18 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
                 //         },
                 //     },
                 // },
-                {
-                    href: '/contact-us/email',
-                    title: 'Email us',
-                    icon: {
-                        element: 'font-awesome-icon',
-                        attributes: {
-                            icon: 'fa-solid fa-envelope',
-                        },
-                    },
-                }
-            ]);
+                // {
+                //     href: '/contact-us',
+                //     title: 'Email us',
+                //     icon: {
+                //         element: 'font-awesome-icon',
+                //         attributes: {
+                //             icon: 'fa-solid fa-envelope',
+                //         },
+                //     },
+                //     // external: true
+                // }
+            // ]);
         },
         async getDataResult(endpoint) {
             /**
@@ -233,7 +247,7 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
                 const storeContentLoading = useContentLoadingStore();
                 // Set state of homeViewDataLoading to be false so the user can view the content of home page.
                 // Note: We need to delay this step so that the 'LogoLoadingComponent' still active for longer time.
-                setTimeout(() => {storeContentLoading.$patch({navSidebarDataLoading: false})},3000);
+                setTimeout(() => {storeContentLoading.$patch({navSidebarDataLoading: false})},1000);
             }
         },
     }

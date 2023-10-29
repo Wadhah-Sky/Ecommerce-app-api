@@ -54,6 +54,10 @@
 
         <!--Card Payment Form-->
         <card-payment-form :generate-random-card-number="true"
+                           @card-name="cardName = $event"
+                           @card-number="cardNumber = $event"
+                           @card-expiry="cardExpiry = $event"
+                           @card-security-code="cardSecurityCode = $event"
                            @is-valid="isValidPaymentForm = $event"
                            @is-required-set="isPaymentFormSet = $event"
         />
@@ -85,7 +89,7 @@
                          v-model="info['useShippingAddress']"
                          :value="info['useShippingAddress']"
                          @change="($event) => {
-                           setPaymentValue('useShippingAddress', $event.target.checked, false);
+                           setPaymentValue('useShippingAddress', $event.target.checked);
                            $event.target.checked ? '' : getCountries();
                            checkValidation();
                          }"
@@ -139,7 +143,7 @@ import {axios} from "@/common/api.axios";
 import { ref, defineProps, defineEmits, watch, onMounted, onBeforeMount } from "vue";
 
 export default {
-  name: "mazPaymentInfoForm",
+  name: "MazPaymentInfoForm",
   components: {
     CardPaymentForm,
     MazDetailsInfoForm,
@@ -188,8 +192,21 @@ const isValidPaymentForm = ref(false);
 const isPaymentFormSet = ref(false);
 const isValidBillingAddressForm = ref(false);
 const isBillingAddressFormSet = ref(false);
+const cardName = ref(null);
+const cardNumber =  ref(null);
+const cardExpiry = ref(null);
+const cardSecurityCode = ref(null);
 // Define the list of events that you want to emit.
-const emits = defineEmits(['isValid', 'isRequiredSet']);
+const emits = defineEmits(
+    [
+      'isValid',
+      'isRequiredSet',
+      'cardName',
+      'cardNumber',
+      'cardExpiry',
+      'cardSecurityCode'
+    ]
+);
 
 // Define functions
 const setPaymentValue = async (key, val) =>{
@@ -319,6 +336,13 @@ const checkValidation = () => {
         emits('isValid', true);
       }
     }
+
+    // Emit payment card details.
+    emits('cardName', cardName.value);
+    emits('cardNumber', cardNumber.value);
+    emits('cardExpiry', cardExpiry.value);
+    emits('cardSecurityCode', cardSecurityCode.value);
+
   }
   else{
     // in case selected payment method is not card.

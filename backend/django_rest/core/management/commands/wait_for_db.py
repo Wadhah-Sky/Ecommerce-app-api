@@ -4,10 +4,10 @@
 # database if it's not fully initialized or not available which could throw
 # 'OperationalError' for django.db or psycopg2 in case using Postgres.
 
-import time
 from psycopg2 import OperationalError as Psycopg2OpError
 from django.db.utils import OperationalError
 from django.core.management.base import BaseCommand
+import time
 
 
 class Command(BaseCommand):

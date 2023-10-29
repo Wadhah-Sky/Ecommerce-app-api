@@ -13,12 +13,16 @@
               :slides-per-view=1
               :space-between=10
               :breakpoints="{
-              '640': {
-                slidesPerView: 1,
+              '330': {
+                slidesPerView: 2,
                 spaceBetween: 15,
               },
+              // '640': {
+              //   slidesPerView: 2,
+              //   spaceBetween: 15,
+              // },
               '768': {
-                slidesPerView: 2,
+                slidesPerView: 3,
                 spaceBetween: 20,
               },
               '1024': {
@@ -66,12 +70,12 @@
 */
 import ProductCardComponent from "@/components/ProductCardComponent";
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Navigation, Mousewheel, Keyboard, FreeMode } from "swiper";
+import { Navigation, Mousewheel, Keyboard, FreeMode } from "swiper/modules";
 import { defineProps} from "vue";
 
 export default {
   name: "ProductSwiperComponent",
-  components:{
+  components: {
     ProductCardComponent,
     Swiper,
     SwiperSlide

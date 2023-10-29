@@ -19,14 +19,18 @@ class CountrySerializers(serializers.ModelSerializer):
     value = serializers.SerializerMethodField()
 
     def get_label(self, instance):
-        """Method to return instance title as first letter capitalized"""
+        """Method to return instance title"""
 
-        return str(instance.title).capitalize()
+        # Return instance title as first letter capitalized
+        # return str(instance.title).capitalize()
+        return instance.title
 
     def get_value(self, instance):
-        """Method to return instance iso code as lower case"""
+        """Method to return instance iso code"""
 
-        return str(instance.iso_code).lower()
+        # Return instance iso code as lower case
+        # return str(instance.iso_code).lower()
+        return instance.iso_code
 
 
 class ShippingMethodSerializers(serializers.ModelSerializer):
@@ -48,6 +52,6 @@ class ShippingMethodSerializers(serializers.ModelSerializer):
         return instance.title
 
     def get_value(self, instance):
-        """Method to return instance title as lower case"""
+        """Method to return instance"""
 
-        return str(instance.title).lower()
+        return instance.title

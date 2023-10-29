@@ -59,7 +59,7 @@
 
           <template v-else>
 
-            <div class="row justify-content-between" style="width: 200px">
+            <div id="select-label" class="row justify-content-between" style="width: 160px">
 
               <div class="col-10">
 
@@ -97,7 +97,7 @@
                             updateProductOptionsStatus(index, $event, selectedSameOptionStatus[index]) : ''"
                           @remove="Object.keys(productOptions).length > 1 ?
                             updateProductOptionsStatus(index, $event, selectedSameOptionStatus[index], true) : ''"
-                          :placeholder="selectedSameOptionStatus[index] ? 'Pick multiple values' : 'Pick a value'"
+                          :placeholder="selectedSameOptionStatus[index] ? 'Pick the values' : 'Pick a value'"
                           :disabled="props.dataLoading"
             />
           </template>
@@ -615,6 +615,20 @@ watch(() => selectedOptions.value, (currentValue, oldValue) =>
 
 <style scoped lang="scss">
 
+/* multi select style will not work if it set inside <style scoped> with exception to class .multiselect */
+
+.multiselect{
+  margin: 0;
+  padding: 0;
+  cursor: default;
+  min-width: 165px;
+  max-width: 165px;
+  font-size: 13px;
+  color: #464646;
+  transition: all 200ms ease;
+  min-height: 45px;
+}
+
 .fa-xmark{
   cursor: pointer;
   display: inline-block;
@@ -630,20 +644,6 @@ watch(() => selectedOptions.value, (currentValue, oldValue) =>
 </style>
 
 <style>
-
-/* multi select style will not work if it set inside <style scoped>  */
-
-.multiselect{
-  margin: 0;
-  padding: 0;
-  cursor: default;
-  min-width: 206px;
-  max-width: 206px;
-  font-size: 13px;
-  color: #464646;
-  transition: all 200ms ease;
-  min-height: 45px;
-}
 
 .multiselect__single{
   font-size: 13px;

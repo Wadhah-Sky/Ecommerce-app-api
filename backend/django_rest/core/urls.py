@@ -19,6 +19,21 @@ urlpatterns = [
         views.AttributeAutocompleteView.as_view(),
         name='attribute-autocomplete',
     ),
+    path(
+        'country/check/',
+        views.CountryCheckAPIView.as_view(),
+        name='country_check'
+    ),
+    path(
+        'address/check/',
+        views.AddressCheckAPIView.as_view(),
+        name='address_check'
+    ),
+    path(
+        'personal-info/check/',
+        views.PersonalInfoCheckAPIView.as_view(),
+        name='personal_info_check'
+    )
 
     # path(
     #     'size-autocomplete/',

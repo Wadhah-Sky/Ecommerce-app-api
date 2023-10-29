@@ -39,6 +39,7 @@ ENV PYTHONUNBUFFERED 1
 
 # Copy the diffrent service start shell.
 COPY /compose/local/django/start-django.sh /usr/src/compose/start-django.sh
+COPY /compose/local/django/es-index-rebuild.sh /usr/src/compose/es-index-rebuild.sh
 COPY /compose/local/django/celery/worker/start-celeryworker.sh /usr/src/compose/start-celeryworker.sh
 COPY /compose/local/django/celery/beat/start-celerybeat.sh /usr/src/compose/start-celerybeat.sh
 COPY /compose/local/django/celery/flower/start-celeryflower.sh /usr/src/compose/start-celeryflower.sh
@@ -85,6 +86,8 @@ RUN python3 -m venv /opt/venv && \
     # Add the x permission which is the symbol for the execution permission. The execution
     # permission will give the execution ability to the owner user or group of the file.
     chmod +x /usr/src/compose/start-django.sh && \
+    sed -i 's/\r$//g' /usr/src/compose/es-index-rebuild.sh && \
+    chmod +x /usr/src/compose/es-index-rebuild.sh && \
     sed -i 's/\r$//g' /usr/src/compose/start-celeryworker.sh && \
     chmod +x /usr/src/compose/start-celeryworker.sh && \
     sed -i 's/\r$//g' /usr/src/compose/start-celerybeat.sh && \

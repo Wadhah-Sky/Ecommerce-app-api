@@ -69,7 +69,7 @@ setPageTitle("Jamie & Cassie | Loading");
   height: 100%;
   background: #fff;
   z-index: 9999;
-  font-size:8vw;
+  font-size:7.6vw;
 }
 
 .loading-text {
@@ -86,7 +86,8 @@ setPageTitle("Jamie & Cassie | Loading");
     @for $i from 0 through 11 {
       &:nth-child(#{$i + 1}) {
         filter: blur(0px);
-        animation: blur-text 1.5s (#{$i/5})+s infinite linear alternate;
+        // use calc($i/5) instead of (#{$i/5})
+        animation: blur-text 1.5s calc($i/5)+s infinite linear alternate;
       }
     }
   }

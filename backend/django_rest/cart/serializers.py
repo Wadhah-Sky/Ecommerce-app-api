@@ -3,11 +3,10 @@
 # from rest_framework import serializers
 
 from product.serializers import ProductItemSerializer
-from core.models import ProductItem
 
 
 class CartCheckSerializer(ProductItemSerializer):
-    """Customized serializer class of ProductItem model"""
+    """Customized serializer class of Cart model"""
 
     # Important: since this serializer class is using by APIView that
     #            implement post() method, then you should make sure which

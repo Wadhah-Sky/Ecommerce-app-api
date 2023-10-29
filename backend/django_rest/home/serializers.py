@@ -5,8 +5,8 @@ from rest_framework import serializers
 
 # from django.conf import settings
 
-from core.models import (Card, Section, Banner, Product, ProductGroup,
-                         ProductItem)
+from core.models import (Card, Section, Banner, TopBanner, Product,
+                         ProductGroup, ProductItem)
 
 
 # Note: serializer class receive the queryset after filter class have done its
@@ -35,6 +35,14 @@ from core.models import (Card, Section, Banner, Product, ProductGroup,
 class BannerSerializer(serializers.ModelSerializer):
     """Serialize class for Banner model"""
 
+    # Note: any ProcessedImageField will return a serialized url of the field
+    #       value depending on request object of view, but in case you are
+    #       trying to retrieve the value through the SerializerMethod, then you
+    #       need to serialize the field value using request.build_absolute_uri
+    #       for 'url' property of the field like:
+    #
+    #       request.build_absolute_uri(thumbnail.url)
+
     class Meta:
         """Serialize all model fields expect the excluded"""
 
@@ -43,6 +51,22 @@ class BannerSerializer(serializers.ModelSerializer):
         # fields = '__all__'
         # exclude = []
         # read_only_fields = []
+
+
+class TopBannerSerializer(serializers.ModelSerializer):
+    """Serialize class for TopBanner model"""
+
+    class Meta:
+        """Serialize all model fields expect the excluded"""
+
+        model = TopBanner
+        fields = [
+            'title',
+            'summary',
+            'url',
+            'url_target',
+            'frontend_link_text'
+        ]
 
 
 class CardSerializer(serializers.ModelSerializer):
@@ -213,7 +237,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'selected_items_dict',
             None
         )
-        # print("product:", instance.pk)
+
         # Initialize instance variable.
         instance_var = None
 
@@ -231,6 +255,41 @@ class ProductSerializer(serializers.ModelSerializer):
         # dictionary of data.
         return ProductItemSerializer(
             instance=item_instance,
+            read_only=True,
+            many=False,
+            context=self.context
+        ).data
+
+
+class ProductSearchSerializer(ProductSerializer):
+    """Serializer class of Product model that use for search purpose"""
+
+    def get_product_item(self, instance):
+        """Return the related product item depending on 'items_sku' list in
+        context"""
+
+        # Get the items_sku list from context.
+        items_sku = self.context.get('items_sku', None)
+
+        # Initialize instance variable.
+        instance_var = None
+
+        if items_sku:
+            # Get product item instance for current product that related to the
+            # given list of sku, retrieve the first.
+            instance_var = ProductItem.objects.filter(
+                product=instance,
+                sku__in=items_sku
+            ).distinct().first()
+        else:
+            # By using item_instance property of 'Product' model get the
+            # related product item instance.
+            instance_var = instance.item_instance(item=instance_var)
+
+        # You can use Response class to return data or directly return
+        # dictionary of data.
+        return ProductItemSerializer(
+            instance=instance_var,
             read_only=True,
             many=False,
             context=self.context

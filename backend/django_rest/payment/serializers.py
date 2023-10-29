@@ -33,7 +33,7 @@ class PaymentMethodSerializers(serializers.ModelSerializer):
     def get_value(self, instance):
         """Method to return instance title as lower case"""
 
-        return str(instance.title).lower()
+        return instance.title
 
     def get_icon(self, instance):
         """Method to return instance icon 'class_attribute_value' """

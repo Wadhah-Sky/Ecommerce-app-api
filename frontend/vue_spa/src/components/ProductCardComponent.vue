@@ -33,7 +33,8 @@
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
                     title="This product has multi variations"
-              >Multi variations
+              >
+                Multi variations
               </span>
 
             </h6>
@@ -74,7 +75,9 @@
                 data-bs-toggle="tooltip"
                 data-bs-placement="top"
                 :title="props.productTitle.length > 87 ? props.productTitle : ''"
-          >{{ props.productTitle }}</span>
+          >
+            {{ props.productTitle }}
+          </span>
         </router-link>
 
         <div class="price-wrap mt-2">

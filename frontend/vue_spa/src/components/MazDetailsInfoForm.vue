@@ -297,6 +297,7 @@ const emits = defineEmits(['isValid', 'isRequiredSet']);
 const namesFormat = /(?=^.{0,50}$)(^[A-Za-z]*$)/;
 const emailFormat = /(?=^.{0,255}$)(^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$)/;
 const addressFormat = /(?=^.{0,100}$)(^[#/.0-9a-zA-Z\s,-]+$)/;
+const postalCodeFormat = /(^[a-z0-9][a-z0-9\- ]{0,10}[a-z0-9]$)/;
 /* Regex for postal code should cover:
    1- Every postal code system uses only A-Z and/or 0-9 and sometimes space/dash
    2- Not every country uses postal codes (ex. Ireland outside of Dublin), but we'll ignore that here.
@@ -305,7 +306,6 @@ const addressFormat = /(?=^.{0,100}$)(^[#/.0-9a-zA-Z\s,-]+$)/;
    5- You should allow one space or dash.
    6- Should not begin or end with space or dash
  */
-const postalCodeFormat = /(^[a-z0-9][a-z0-9\- ]{0,10}[a-z0-9]$)/;
 
 // Reference to access DOM element by using it with ref attribute.
 // const firstName = ref(null);
@@ -461,7 +461,7 @@ onBeforeMount(() => {
     },
     postalCode: {
       isValid: isValidInput('postalCode', info.value['postalCode']),
-      isRequired: true,
+      isRequired: false,
       hint: 'Wrong, Postal or zip code'
     }
   };

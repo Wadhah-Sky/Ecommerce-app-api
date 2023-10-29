@@ -159,7 +159,7 @@ a:hover {
 /* ============== spacing ============== */
 .padding-x{
   padding-right: 40px;
-  padding-left: 80px;
+  padding-left: 40px;
 }
 
 .padding-y {
@@ -832,6 +832,7 @@ a[class*=card]:hover .title {
 
 /* BASE STYLE FOR PRODUCT ITEM */
 [class*=card-product] a.title {
+  font-size: 14px;
   color: #212529;
   text-overflow:ellipsis;
   overflow:hidden;
@@ -866,13 +867,15 @@ a[class*=card]:hover .title {
   max-width: 100%;
   width: auto;
   display: inline-block;
-  -o-object-fit: cover;
-     object-fit: cover;
+  -o-object-fit: contain; /*cover fit will cover all wrap space*/
+     object-fit: contain;
 }
 
 /* GRID STYLE PRODUCT ITEM */
 .card-product-grid {
   margin-bottom: 20px;
+  /*min-height: 583px;*/
+  /*height: 583px;*/
 }
 .card-product-grid .img-wrap {
   border-radius: 0.2rem 0.2rem 0 0;
@@ -881,7 +884,7 @@ a[class*=card]:hover .title {
 .card-product-grid .info-wrap {
   overflow: hidden;
   height: 180px;
-  padding: 18px 20px;
+  padding: 6px 8px;
 }
 .card-product-grid .bottom-wrap {
   padding: 18px;
@@ -903,7 +906,7 @@ a[class*=card]:hover .title {
   color: #3167eb;
 }
 .card-product-grid .fix-height {
-  height: 120px;
+  height: 130px;
   overflow: hidden;
 }
 .card-product-grid .btn-overlay {
@@ -1379,17 +1382,20 @@ a[class*=card]:hover .title {
 
 /* ================== PAGE DETAILS ==================  */
 .gallery-wrap .img-big-wrap {
+  vertical-align: middle;
   margin-bottom: 10px;
   border-radius: 0.37rem;
   overflow: hidden;
   background-color: #fff;
+  height: 450px;
 }
 .gallery-wrap .img-big-wrap a {
   text-align: center;
   display: block;
 }
 .gallery-wrap .img-big-wrap img {
-  height: 450px;
+  vertical-align: middle;
+  max-height: 100%;
   max-width: 100%;
   display: inline-block;
 }
@@ -1411,6 +1417,7 @@ a[class*=card]:hover .title {
   overflow: hidden;
 }
 .gallery-wrap .thumbs-wrap img {
+  vertical-align: middle;
   max-width: 100%;
   max-height: 100%;
   -o-object-fit: cover;
@@ -1461,7 +1468,7 @@ a[class*=card]:hover .title {
   text-transform: uppercase;
   color: #464646;
   letter-spacing: 1px;
-  padding: 1.5em;
+  padding: 1.2em;
   display: flex;
   justify-content: center;
 }
@@ -1484,18 +1491,18 @@ a[class*=card]:hover .title {
 }
 
 .btn-white-dark {
-  color: #464646 !important;
-  letter-spacing: 1px;
-  border-width: 1px;
-  border-style: solid;
+  font-size: 14px!important;
+  letter-spacing: 1px!important;
+  border-width: 1px!important;
+  border-style: solid!important;
   border-color: #D5D9D9 !important;
-  border-radius: 8px;
+  border-radius: 8px!important;
   box-shadow: 0 2px 5px 0 rgb(213 217 217 / 50 ) !important;
 }
 
 .btn-white-dark:hover {
-  cursor: pointer;
-  transition: color 200ms ease-in-out;
+  cursor: pointer!important;
+  transition: color 200ms ease-in-out!important;
   background-color: #e9ecef !important;
   color: #0F1111 !important;
 }
@@ -1510,8 +1517,8 @@ a[class*=card]:hover .title {
 }
 .check-label input:checked ~ .btn {
   transition: color 200ms ease-in-out;
-  background-color: #0F1111 !important;
-  color: #fff !important;
+  background-color: #0F1111;
+  color: #fff;
 }
 .check-label input:disabled ~ .btn {
   pointer-events: none;
@@ -1553,3 +1560,41 @@ a[class*=card]:hover .title {
   opacity: 0!important;
 }
 /*# sourceMappingURL=ui.css.map */
+
+/* Custom Media Queries */
+@media only screen and (max-width: 480px) {
+  .padding-x{
+    padding-left: 10px!important;
+    padding-right: 10px!important;
+  }
+}
+
+@media only screen and (max-width: 700px) {
+  .gallery-wrap .img-big-wrap {
+    height: 280px;
+  }
+  [class*=card-product] .img-wrap img{
+    max-height: 90%!important;
+    max-width: 90%!important;
+  }
+  [class*=card-product] a.title{
+    font-size: 12px;
+  }
+  [class*=card-product] .badge {
+  font-size: 10px!important;
+}
+}
+
+@media only screen and (min-width: 770px) and (max-width: 828px) {
+  .padding-x{
+    padding-left: 60px!important;
+    padding-right: 60px!important;
+  }
+}
+
+@media only screen and (min-width: 994px) and (max-width: 1174px) {
+  .padding-x{
+    padding-left: 60px!important;
+    padding-right: 60px!important;
+  }
+}

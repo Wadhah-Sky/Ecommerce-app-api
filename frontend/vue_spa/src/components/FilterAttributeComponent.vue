@@ -350,7 +350,7 @@ div.scrollmenu{
   cursor: pointer;
   transition: color 200ms ease-in-out;
   background-color: #e9ecef !important;
-  color: rgb(204, 12, 57) !important;
+  color: rgb(204, 12, 57) !important; // #CC0C39
 }
 
 .option-btn-check-label {
@@ -446,9 +446,6 @@ div.scrollmenu{
   pointer-events: none;
 }
 
-
-/////////////////////////////////////////////////////////////////
-
 // Color classes
 .blacks {
   background-image: $option-colors-background-img;
@@ -534,10 +531,9 @@ div.scrollmenu{
   background-image: $option-colors-background-img;
   background-position: -1600px 0px;
 }
-//////////////////////////////////////////////////////////////
 
+//
 // customized colors
-
 .light-wash, .medium-wash, .dark-wash{
   margin: 0 10px 5px 0.1px!important;
   width: 26px!important;
@@ -556,8 +552,7 @@ div.scrollmenu{
   background: #3E5A7A;
 }
 
-///////////////////////////////////////////////////////////////
-
+//
 // Color classes: Color classes.active
 .blacks.active,
 .option-color-check-label input:checked ~ .blacks{
@@ -661,10 +656,8 @@ div.scrollmenu{
   background-position: -1600px -100px;
 }
 
-/////////////////////////////////////////////////////////////////////
-
+//
 // Rise-pickers classes
-
 .low{
   background-image: $option-rise-pickers-background-img;
   background-position: 0px 0px;
@@ -678,9 +671,8 @@ div.scrollmenu{
   background-position: -200px 0px;
 }
 
-///////////////////////////////////////////////////////////////
 
-//// Rise-pickers classes hover
+// Rise-pickers classes hover
 //.low:hover{
 //  background-image: $option-rise-pickers-background-img;
 //  background-position: 0px -100px;
@@ -693,8 +685,6 @@ div.scrollmenu{
 //  background-image: $option-rise-pickers-background-img;
 //  background-position: -200px -100px;
 //}
-
-///////////////////////////////////////////////////////////////
 
 // Rise-pickers classes.active
 //.low.active,

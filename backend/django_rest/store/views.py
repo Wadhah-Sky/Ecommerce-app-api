@@ -8,10 +8,15 @@ from rest_framework.generics import get_object_or_404
 
 from django.db.models import Subquery
 
-from core.models import (Category, Product, Attribute)
+from elasticsearch_dsl import Q
 
-from home.serializers import ProductSerializer
+from core.models import (Category, Product, Attribute)
+from core.documents import ProductItemDocument
+from core.views import PaginatedElasticSearchListAPIView
+from home.serializers import ProductSerializer, ProductSearchSerializer
 from store import serializers, pagination, filters
+
+import re
 
 
 # Info: If you're using the Django REST framework BrowsableAPI, it'll call the
@@ -61,6 +66,170 @@ from store import serializers, pagination, filters
 #       want to get the details that shown in the form box, you can do so by
 #       calling 'django-filter.views' and retrieve the details from
 #       object_filter(request, filter-class) function.
+
+
+##########################################################################
+
+# Search
+
+
+class SearchAPIView(PaginatedElasticSearchListAPIView):
+    """APIView to list all store's products depending on search query"""
+
+    # Set required attributes value of inherit class.
+    kwargs_query = 'query'
+    model_class = Product
+    filter_lookup = 'product_items_product__sku'
+    filter_keyword = 'sku'
+    filter_exclude_arg = 'is_available'
+    filter_exclude_val = 'False'
+    filter_order_by = '-created_at'
+    serializer_class = ProductSearchSerializer
+    document_class = ProductItemDocument
+    pagination_class = pagination.PageNumberPaginationWithCount
+
+    def get_serializer_context(self):
+        """Override the serializer context"""
+
+        # Get current class instance serializer context
+        context = super().get_serializer_context()
+
+        # Get value of search response.
+        search_response = self.get_search_response()
+
+        # Create list of filter_keyword string from search response.
+        items_sku = [ele[self.filter_keyword] for ele in search_response]
+
+        # Update the serializer context.
+        context.update(
+            {
+                'items_sku': items_sku
+            }
+        )
+
+        return context
+
+    def generate_q_expression(self, query):
+        """Override the abstract method of inherit class"""
+
+        # Normalize the query string by removing every special character with
+        # space.
+        # Note: you can use r"\W+" regex for every special character.
+        normalized_query = re.sub(r"\W+", " ", query)
+
+        # Get normalized query string value and convert it into lower case and
+        # split it into list depending on space.
+        query_list = str(normalized_query).lower().split(" ")
+
+        # Return Q() expression for elasticsearch.
+        # return Q(
+        #     # Set way of search.
+        #     # Note: multi_match means whenever there is a match in the
+        #     #       defined 'fields', return the document (row).
+        #     'multi_match',
+        #     # Set query string that the elasticsearch analyzer will work on
+        #     # against the defined 'fields'.
+        #     query=query,
+        #     # Set fields of document (row) of Type (table) that can analyzer
+        #     # look at.
+        #     fields=['product_info'],
+        #     # Set the 'Levenshtein distance' algorithm way of search to be
+        #     # use.
+        #     # Note: The fuzziness argument specifies that the results match
+        #     #       with a maximum edit distance of 2. It should be noted
+        #     #       that fuzziness should only be used with values of 1 and
+        #     #       2, meaning a maximum of 2 edits between the query and
+        #     #       a term in a document is allowed. Larger differences are
+        #     #       far more expensive to compute efficiently and are not
+        #     #       processed by Lucene (Levenshtein distance).
+        #     fuzziness='auto'
+        # )
+
+        # return Q(
+        #     # Set way of search.
+        #     # Note: 'bool' used as boolean of provided [should, must,
+        #     #       must_not, filter]
+        #     'bool',
+        #     # Note: 'must' means: The clause (query) must appear in matching
+        #     #       documents. These clauses must match, like logical AND.
+        #     #       While 'should' means: At least one of these clauses must
+        #     #       match, like logical OR.
+        #     must=[
+        #         Q('match', product_info=query),
+        #     ],
+        #     # You can specify how many times at least should match (in case
+        #     # use should)
+        #     # minimum_should_match=1
+        # )
+
+        # Here we are using another way which write query as dictionary object.
+        # Note: Q object accept only single query object and cannot accept
+        #       parameters when passing in a dict.
+        # return Q(
+        #     {
+        #         "bool": {
+        #             "must": [
+        #                 {
+        #                     # match_phrase means search the given query
+        #                     # string in specified field (all query string
+        #                     # words should
+        #                     # be found)
+        #                     "match_phrase":
+        #                         {
+        #                             "product_item_info": {
+        #                                 "query": query,
+        #                             }
+        #                         }
+        #                 }
+        #             ]
+        #         }
+        #     }
+        # )
+
+        # Note: since 'match_phrase' doesn't support 'fuzziness', instead we
+        #       use 'span_near' with 'span_multi' which is allows you to wrap
+        #       a multi term query (one of wildcard, fuzzy, prefix, range or
+        #       regexp query) as a span query, so it can be nested.
+        # Info: 'prefix_length' (Optional, integer) Number of beginning
+        #       characters left unchanged when creating expansions. Defaults
+        #       to 0.
+        return Q(
+            {
+                "bool": {
+                    "must": [
+                        {
+                            # span_near matches spans which are near one
+                            # another. One can specify slop, the maximum number
+                            # of intervening unmatched positions, as well as
+                            # whether matches are required to be in-order. The
+                            # span near query maps to Lucene SpanNearQuery
+                            "span_near": {
+                                "clauses": [
+                                    {
+                                        "span_multi": {
+                                            "match": {
+                                                "fuzzy": {
+                                                    "product_item_info": {
+                                                        "value": item,
+                                                        "fuzziness": 2,
+                                                        "prefix_length": 1
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } for item in query_list
+                                ],
+                                "slop": 100,
+                                "in_order": False
+                            }
+                        }
+                    ]
+                }
+            }
+        )
+
+
+#########################################################################
 
 
 class CategoryListAPIView(generics.ListAPIView):
