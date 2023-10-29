@@ -67,6 +67,11 @@ jobs:
           KIBANA_NODE_NAME=kibana
           KIBANA_SYSTEM_PASSWORD=testpassword
           LOGSTASH_INTERNAL_PASSWORD=testpassword
+          METRICBEAT_INTERNAL_PASSWORD=testpassword
+          FILEBEAT_INTERNAL_PASSWORD=testpassword
+          HEARTBEAT_INTERNAL_PASSWORD=testpassword
+          MONITORING_INTERNAL_PASSWORD=testpassword
+          BEATS_SYSTEM_PASSWORD=testpassword
           EOF
 
         #####################################################
