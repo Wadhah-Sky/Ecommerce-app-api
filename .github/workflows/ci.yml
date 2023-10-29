@@ -93,9 +93,7 @@ jobs:
         ##########################################################
 
       - name: Run elk_setup
-        run: |
-          docker compose -f docker-compose.yml up elk_setup
-          docker compose -f docker-compose.yml up -d
+        run: docker compose -f docker-compose.yml up elk_setup
 
         ##########################################################
         #                                                        #
@@ -105,7 +103,7 @@ jobs:
 
       - name: Run tests
         run: |
-          docker compose -f docker-compose.yml up app
+          docker compose -f docker-compose.yml up app -d &&
           docker-compose -f docker-compose.yml run app sh -c "python manage.py test"
 
         ##########################################################
