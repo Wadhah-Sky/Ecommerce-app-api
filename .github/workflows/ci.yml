@@ -104,7 +104,9 @@ jobs:
         ##########################################################
 
       - name: Run tests
-        run: docker-compose -f docker-compose.yml run app sh -c "python manage.py test"
+        run: |
+          docker compose -f docker-compose.yml up app
+          docker-compose -f docker-compose.yml run app sh -c "python manage.py test"
 
         ##########################################################
         #                                                        #
