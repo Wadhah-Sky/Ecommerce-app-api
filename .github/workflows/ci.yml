@@ -92,9 +92,9 @@ jobs:
         #                                                        #
         ##########################################################
 
-      - name: Run elk setup
+      - name: Run elk_setup
         run: |
-          docker compose -f docker-compose.yml up elk-setup
+          docker compose -f docker-compose.yml up elk_setup
           docker compose -f docker-compose.yml up -d
 
         ##########################################################
