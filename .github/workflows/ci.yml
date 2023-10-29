@@ -26,74 +26,48 @@ jobs:
 
         #####################################################
         #                                                   #
-        # Set all secrets required by test suites, will set #
-        # as environment variables inside currently test    #
-        # image.                                            #
+        # Create .env file and set all secrets required by  #
+        # test suites, will set as environment variables    #
+        # inside currently test image.                      #
         #                                                   #
         #####################################################
-        # - name: Set secrete environment variables
-        # - run: |
-        #    cat << EOF > .env
-        #    SECRET_KEY=${{secrets.SECRET_KEY}}
-        #    DEBUG=${{secrets.DEBUG}}
-        #    ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
-        #    CELERY_BROKER=${{secrets.CELERY_BROKER}}
-        #    CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
-        #    SQL_IMAGE=${{secrets.SQL_IMAGE}}
-        #    SQL_ENGINE=${{secrets.SQL_ENGINE}}
-        #    SQL_HOST=${{secrets.SQL_HOST}}
-        #    SQL_NAME=${{secrets.SQL_NAME}}
-        #    SQL_USER=${{secrets.SQL_USER}}
-        #    SQL_PASS=${{secrets.SQL_PASS}}
-        #    SQL_PORT=${{secrets.SQL_PORT}}
-        #    CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
-        #    CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
-        #    EOF
-
-        ########################################################
-        #                                                      #
-        # Create .env file with passwords and other required   #
-        # values for test as environment variables instead of  #
-        # using secrets.                                       #
-        #                                                      #
-        ########################################################
-
       - name: Set passwords and other required environment variables
         run: |
-          sed -i -e 's/\(SECRET_KEY=\)'\'\''/\${{secrets.SECRET_KEY}}/g' \
-                 -e 's/\(DEBUG=\)'\'\''/\1/g' \
-                 -e 's/\(ALLOWED_HOSTS=\)'\'\''/\localhost,127.0.0.1/g' \
-                 -e 's/\(CELERY_BROKER=\)'\'\''/\redis://cache:6379/0/g' \
-                 -e 's/\(CELERY_BACKEND=\)'\'\''/\redis://cache:6379/0/g' \
-                 -e 's/\(SQL_ENGINE=\)'\'\''/\django.db.backends.postgresql/g' \
-                 -e 's/\(SQL_HOST=\)'\'\''/\db/g' \
-                 -e 's/\(SQL_NAME=\)'\'\''/\devdb/g' \
-                 -e 's/\(SQL_USER=\)'\'\''/\username/g' \
-                 -e 's/\(SQL_PASS=\)'\'\''/\password/g' \
-                 -e 's/\(SQL_PORT=\)'\'\''/\5432/g' \
-                 -e 's/\(PGADMIN_DEFAULT_EMAIL=\)'\'\''/\admin@admin.com/g' \
-                 -e 's/\(PGADMIN_DEFAULT_PASSWORD=\)'\'\''/\@admin1234/g' \
-                 -e 's/\(AWS_ACCESS_KEY_ID=\)'\'\''/\${{secrets.AWS_ACCESS_KEY_ID}}/g' \
-                 -e 's/\(AWS_SECRET_ACCESS_KEY=\)'\'\''/\${{secrets.AWS_SECRET_ACCESS_KEY}}/g' \
-                 -e 's/\(AWS_DEFAULT_REGION=\)'\'\''/\${{secrets.AWS_DEFAULT_REGION}}/g' \
-                 -e 's/\(CLUSTER_NAME=\)'\'\''/\docker-cluster/g' \
-                 -e 's/\(NETWORK_HOST=\)'\'\''/\0.0.0.0/g' \
-                 -e 's/\(ELASTIC_VERSION=\)'\'\''/\8.10.2/g' \
-                 -e 's/\(ELASTICSEARCH_NODE_NAME=\)'\'\''/\elasticsearch/g' \
-                 -e 's/\(DISCOVERY_TYPE=\)'\'\''/\single-node/g' \
-                 -e 's/\(ES_JAVA_OPTS=\)'\'\''/\-Xms512m -Xmx512m/g' \
-                 -e 's/\(LS_JAVA_OPTS=\)'\'\''/\-Xms256m -Xmx256m/g' \
-                 -e 's/\(KIBANA_NODE_NAME=\)'\'\''/\kibana/g' \
-                 -e 's/\(ELASTICSEARCH_HOSTS=\)'\'\''/\http://elasticsearch:9200/g' \
-                 -e 's/\(ELASTIC_USERNAME=\)'\'\''/\elastic/g' \
-                 -e 's/\(ELASTIC_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
-                 -e 's/\(LOGSTASH_INTERNAL_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
-                 -e 's/\(KIBANA_SYSTEM_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
-                 -e 's/\(METRICBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(FILEBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(HEARTBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(MONITORING_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(BEATS_SYSTEM_PASSWORD=\)'\'\''/\1testpasswd/g' .env
+          cat << EOF > .env
+          SECRET_KEY=${{secrets.SECRET_KEY}}
+          DEBUG=${{secrets.DEBUG}}
+          ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+          CELERY_BROKER=${{secrets.CELERY_BROKER}}
+          CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
+          SQL_IMAGE=${{secrets.SQL_IMAGE}}
+          SQL_ENGINE=${{secrets.SQL_ENGINE}}
+          SQL_HOST=${{secrets.SQL_HOST}}
+          SQL_NAME=${{secrets.SQL_NAME}}
+          SQL_USER=${{secrets.SQL_USER}}
+          SQL_PASS=${{secrets.SQL_PASS}}
+          SQL_PORT=${{secrets.SQL_PORT}}
+          CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
+          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+          AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}
+          AWS_DEFAULT_REGION=${{secrets.AWS_DEFAULT_REGION}}
+          PGADMIN_DEFAULT_EMAIL=admin@admin.com
+          PGADMIN_DEFAULT_PASSWORD=admin1234
+          CLUSTER_NAME=docker-cluster
+          NETWORK_HOST=0.0.0.0
+          ELASTIC_VERSION=8.10.2
+          ELASTICSEARCH_NODE_NAME=elasticsearch
+          ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+          ELASTIC_USERNAME=elastic
+          ELASTIC_PASSWORD=testpassword
+          DISCOVERY_TYPE=single-node
+          ES_JAVA_OPTS=-Xms512m -Xmx512m
+          LS_JAVA_OPTS=-Xms256m -Xmx256m
+          KIBANA_NODE_NAME=kibana
+          KIBANA_SYSTEM_PASSWORD=testpassword
+          LOGSTASH_INTERNAL_PASSWORD=testpassword
+          EOF
 
         #####################################################
         #                                                   #
