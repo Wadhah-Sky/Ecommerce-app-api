@@ -24,39 +24,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      #####################################################
-      #                                                   #
-      # Set all secrets required by test suites, will set #
-      # as environment variables inside currently test    #
-      # image.                                            #
-      #                                                   #
-      #####################################################
-      # - name: Set secrete environment variables
-      # - run: |
-      #    cat << EOF > .env
-      #    SECRET_KEY=${{secrets.SECRET_KEY}}
-      #    DEBUG=${{secrets.DEBUG}}
-      #    ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
-      #    CELERY_BROKER=${{secrets.CELERY_BROKER}}
-      #    CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
-      #    SQL_IMAGE=${{secrets.SQL_IMAGE}}
-      #    SQL_ENGINE=${{secrets.SQL_ENGINE}}
-      #    SQL_HOST=${{secrets.SQL_HOST}}
-      #    SQL_NAME=${{secrets.SQL_NAME}}
-      #    SQL_USER=${{secrets.SQL_USER}}
-      #    SQL_PASS=${{secrets.SQL_PASS}}
-      #    SQL_PORT=${{secrets.SQL_PORT}}
-      #    CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
-      #    CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
-      #    EOF
+        #####################################################
+        #                                                   #
+        # Set all secrets required by test suites, will set #
+        # as environment variables inside currently test    #
+        # image.                                            #
+        #                                                   #
+        #####################################################
+        # - name: Set secrete environment variables
+        # - run: |
+        #    cat << EOF > .env
+        #    SECRET_KEY=${{secrets.SECRET_KEY}}
+        #    DEBUG=${{secrets.DEBUG}}
+        #    ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+        #    CELERY_BROKER=${{secrets.CELERY_BROKER}}
+        #    CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
+        #    SQL_IMAGE=${{secrets.SQL_IMAGE}}
+        #    SQL_ENGINE=${{secrets.SQL_ENGINE}}
+        #    SQL_HOST=${{secrets.SQL_HOST}}
+        #    SQL_NAME=${{secrets.SQL_NAME}}
+        #    SQL_USER=${{secrets.SQL_USER}}
+        #    SQL_PASS=${{secrets.SQL_PASS}}
+        #    SQL_PORT=${{secrets.SQL_PORT}}
+        #    CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
+        #    CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+        #    EOF
 
-      ########################################################
-      #                                                      #
-      # Create .env file with passwords and other required   #
-      # values for test as environment variables instead of  #
-      # using secrets.                                       #
-      #                                                      #
-      ########################################################
+        ########################################################
+        #                                                      #
+        # Create .env file with passwords and other required   #
+        # values for test as environment variables instead of  #
+        # using secrets.                                       #
+        #                                                      #
+        ########################################################
 
       - name: Set passwords and other required environment variables
         run: |
@@ -96,51 +96,54 @@ jobs:
                  -e 's/\(MONITORING_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
                  -e 's/\(BEATS_SYSTEM_PASSWORD=\)'\'\''/\1testpasswd/g' .env
 
-      #####################################################
-      #                                                   #
-      # Install all dependencies required by test suites. #
-      #                                                   #
-      #####################################################
+        #####################################################
+        #                                                   #
+        # Install all dependencies required by test suites. #
+        #                                                   #
+        #####################################################
+
       - name: Build container images
         run: >-
           docker compose
           -f docker-compose.yml
           build
 
-      ##########################################################
-      #                                                        #
-      # Run setup container if exist                           #
-      #                                                        #
-      ##########################################################
+        ##########################################################
+        #                                                        #
+        # Run setup container if exist                           #
+        #                                                        #
+        ##########################################################
 
       - name: Run elk setup
         run: |
           docker compose -f docker-compose.yml up elk-setup
           docker compose -f docker-compose.yml up -d
 
-      ##########################################################
-      #                                                        #
-      # Run unit testing                                       #
-      #                                                        #
-      ##########################################################
+        ##########################################################
+        #                                                        #
+        # Run unit testing                                       #
+        #                                                        #
+        ##########################################################
+
       - name: Run tests
       - run: ->
           docker-compose -f docker-compose.yml run --rm app 
           bash -c "/usr/src/compose/start-django.sh && python manage.py test"
 
-      ##########################################################
-      #                                                        #
-      # Run linting tool                                       #
-      #                                                        #
-      ##########################################################
-      - name: Run flake8
-      - run: docker-compose -f docker-compose.yml run --rm app bash -c "flake8"
+        ##########################################################
+        #                                                        #
+        # Run linting tool                                       #
+        #                                                        #
+        ##########################################################
 
-      ##############
-      #            #
-      # Tear down. #
-      #            #
-      ##############
+      - name: Run flake8
+        run: docker-compose -f docker-compose.yml run --rm app bash -c "flake8"
+
+        ##############
+        #            #
+        # Tear down. #
+        #            #
+        ##############
       - name: Terminate all components
         if: always()
         run: >-
