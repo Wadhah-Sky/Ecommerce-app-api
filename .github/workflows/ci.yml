@@ -60,7 +60,6 @@ jobs:
 
       - name: Set passwords and other required environment variables
         run: |
-
           sed -i -e 's/\(SECRET_KEY=\)'\'\''/\${{secrets.SECRET_KEY}}/g' \
                  -e 's/\(DEBUG=\)'\'\''/\1/g' \
                  -e 's/\(ALLOWED_HOSTS=\)'\'\''/\localhost,127.0.0.1/g' \
@@ -126,7 +125,7 @@ jobs:
         ##########################################################
 
       - name: Run tests
-      - run: ->
+        run: ->
           docker-compose -f docker-compose.yml run --rm app 
           bash -c "/usr/src/compose/start-django.sh && python manage.py test"
 
