@@ -280,10 +280,12 @@ jobs:
             
             git init
             
+            git config --global init.defaultBranch production
+            
             git remote add origin $PROJECT_GIT_URL
             
             git pull origin production
             
             sudo chmod +x ./deploy/deploy-docker-compose.sh
             
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml
+            sudo ./deploy/deploy-docker-compose.sh --compose-file 'docker-compose.prod.yml'
