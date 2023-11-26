@@ -175,8 +175,10 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_IP }}
-          username: ubuntu
+          username: ${{ secrets.HOST_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script_stop: true
           # The following script will run in the connected AWS EC2 instance and will:
           # 1- Create and move into directory 'ecommerce-app-api'
           # 2- Create '.env' file with all required environment variables.
