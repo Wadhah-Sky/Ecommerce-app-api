@@ -72,13 +72,30 @@ RUN chown -R user:usergroup /var/ && \
 
 WORKDIR /var/lib/postgresql/data
 
-EXPOSE 5432
+# EXPOSE 5432
 
 # log in as the (unprivileged) user that will own the server process, otherwise will face issue
 # to run 'initdb' command.
 USER user
 
+# Note: no need to the following command because postgres automatically execute 'initdb.sh' when
+#       docker container is started.
 #CMD ["sh", "/docker-entrypoint-initdb.d/initdb.sh"]
 
+# production stage.
+FROM builder AS prod
+
+RUN chown -R user:usergroup /var/ && \
+    chmod -R 755 /var/
+
+WORKDIR /var/lib/postgresql/data
+
+# EXPOSE 5432
+
+# log in as the (unprivileged) user that will own the server process, otherwise will face issue
+# to run 'initdb' command.
+USER user
+
 # for production, start an existing server.
-# pg_ctl -D /var/lib/postgresql/data -l logfile start
+# Note: 'pg_ctl start' command lead to start the server and then exit with 0.
+# CMD pg_ctl -D /var/lib/postgresql/data -l logfile start

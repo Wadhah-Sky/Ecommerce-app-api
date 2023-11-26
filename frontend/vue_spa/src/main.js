@@ -45,16 +45,21 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 
 // import 'vue-sidebar-menu/dist/vue-sidebar-menu.css';
-import './assets/css/ui.css';
-import 'vue-multiselect/dist/vue3-multiselect.css';
 
-// Import Maz-ui css files
-import 'maz-ui/css/main.css';
+// Import vue multiselect css files.
+// import 'vue-multiselect/dist/vue3-multiselect.css'; // not working after update.
+import 'vue-multiselect/dist/vue-multiselect.css';
+
+// Import Maz-ui css files, we prefer to import it in App.vue style.
+// import 'maz-ui/css/main.css';
+
+// Import you css file as last style file.
+import './assets/css/ui.css';
 
 // Note: before everything else except the style files, import methods and components.
 
 // Import methods and component.
-import { createApp} from 'vue';
+import { createApp } from 'vue';
 import App from './App.vue';
 import { createPinia } from 'pinia';
 import './registerServiceWorker';
@@ -63,7 +68,7 @@ import VueSidebarMenu from 'vue-sidebar-menu';
 import VueAgile from 'vue-agile';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {Multiselect} from 'vue-multiselect';
-import {tooltip} from "@/common/tooltip";
+import { tooltip } from "@/common/tooltip";
 import VueLazyload from 'vue-lazyload';
 import MazPhoneNumberInput from 'maz-ui/components/MazPhoneNumberInput';
 import MazInput from 'maz-ui/components/MazInput';

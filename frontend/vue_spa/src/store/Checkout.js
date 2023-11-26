@@ -166,7 +166,7 @@ export const useCheckoutStore = defineStore('Checkout', {
         "country_iso_code": state.shippingDetails['country'] || '',
         "region": state.shippingDetails['region'] || '',
         "city": state.shippingDetails['city'] || '',
-        "postal_code": state.shippingDetails['postalCode'] || ''
+        // "postal_code": state.shippingDetails['postalCode'] || ''
       }
     },
     isShippingInfoSet(state) {
@@ -181,8 +181,7 @@ export const useCheckoutStore = defineStore('Checkout', {
 
       // Check that if shipping method is set.
       if (![undefined, '', null].includes(shippingMethod)) {
-
-        // Return false of first array is contain at least one item from selected array items,
+        // Return false if first array is contain at least one item from selected array items,
         // otherwise return true.
         return ![undefined, '', null].some(e => shippingAddress.includes(e));
       }
@@ -399,7 +398,7 @@ export const useCheckoutStore = defineStore('Checkout', {
 
         }
         catch (error) {
-          console.log("Error while trying to retrieve the requested data from backend server!");
+          // console.log("Error while trying to retrieve the requested data from backend server!");
         }
         finally {
           this.dataLoading = false;
@@ -440,7 +439,7 @@ export const useCheckoutStore = defineStore('Checkout', {
         return response.data
       }
       catch (error) {
-        console.log("Error while trying to retrieve the requested data from backend server!");
+        // console.log("Error while trying to retrieve the requested data from backend server!");
       }
       finally {
         this.dataLoading = false;

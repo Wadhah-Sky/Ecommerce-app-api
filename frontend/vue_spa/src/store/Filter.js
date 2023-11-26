@@ -54,7 +54,7 @@ export const useFilterStore = defineStore('Filter', {
       }
       catch (error){
         // console.log(error.response.statusText)
-        console.log("Error while trying to retrieve the requested data from backend server!");
+        // console.log("Error while trying to retrieve the requested data from backend server!");
         this.response = {}
         this.dataResult = [];
       }

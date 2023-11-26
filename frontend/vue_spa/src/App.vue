@@ -2,11 +2,14 @@
 
 <!--  <transition name="nested" mode="out-in">-->
 
+    <!-- The element inside `<transition>` is expected to have a `v-if` or `v-show` directive -->
+    <!-- I had a transition which worked with v-if but not with v-show. -->
+
     <div v-if="storeContentLoading.homeViewDataLoading || storeContentLoading.navSidebarDataLoading">
 
       <transition name="nested" mode="out-in">
 
-        <logo-loading-view/>
+        <logo-loading-view v-show="true"/>
 
       </transition>
 
@@ -29,7 +32,7 @@
 
         <transition>
 
-          <div id="nav">
+          <div v-show="true" id="nav">
 
               <navbar-component :store-home="storeHome"
                                 :store-checkout="storeCheckout"
@@ -54,7 +57,7 @@
 
             <transition :name=" route.meta.transition || 'nested' "
                         mode="out-in">
-              <div >
+              <div v-show="true">
                 <suspense :timeout="timeOut">
 
                   <template #default >
@@ -82,7 +85,7 @@
 
         <transition name="nested" mode="out-in">
 
-            <div id="footer" class="pt-5">
+            <div v-show="true" id="footer" class="pt-5">
               <footer-component/>
             </div>
 
@@ -784,6 +787,51 @@ $icon-active-bg: $primary-color;
 $toggle-btn-color: $primary-color;
 @import "vue-sidebar-menu/src/scss/vue-sidebar-menu.scss";
 
+/* Maz ui */
+:root {
+  --maz-color-black: hsl(180, 6%, 6%)!important;
+  --maz-color-black-contrast: hsl(0deg 0% 100%)!important;
+}
+
+.--bottom{
+  max-width: 240px!important;
+  max-height: 250px!important;
+}
+
+.m-phone-number-input__input{
+  width: 100%!important;
+}
+
+/* This will effect all Maz input in parent and children components */
+.m-input-wrapper{
+  border-radius: 0!important;
+}
+
+.m-input-label {
+  font-weight: 400!important;
+  color: #0f1111!important;
+  font-size: 14px!important;
+}
+
+.m-select-list{
+  border-radius: 0!important;
+  width: 100%!important;
+}
+
+.m-select-list .--is-selected{
+  background-color: #0f1111!important;
+  color: #fff!important;
+}
+
+.shipping-method .m-input-wrapper-input,
+.shipping-method .m-input-wrapper-right,
+.shipping-method .m-select-list{
+  background-color: rgb(247, 247, 247)!important;
+  outline: none!important;
+}
+
+@import "maz-ui/css/main.css";
+
 </style>
 
 <style>
@@ -846,44 +894,44 @@ input[type="search"]::-webkit-search-cancel-button:hover{
   transition: 200ms all ease-in-out;
 }
 
-/* Override the black color of Maz input */
-:root {
-  --maz-color-black: hsl(180, 6%, 6%)!important;
-  --maz-color-black-contrast: hsl(0deg 0% 100%)!important;
-}
+/*!* Override the black color of Maz input *!*/
+/*:root {*/
+/*  --maz-color-black: hsl(180, 6%, 6%)!important;*/
+/*  --maz-color-black-contrast: hsl(0deg 0% 100%)!important;*/
+/*}*/
 
-.--bottom{
-  max-width: 240px!important;
-  max-height: 250px!important;
-}
+/*.--bottom{*/
+/*  max-width: 240px!important;*/
+/*  max-height: 250px!important;*/
+/*}*/
 
-.m-phone-number-input__input{
-  width: 100%!important;
-}
+/*.m-phone-number-input__input{*/
+/*  width: 100%!important;*/
+/*}*/
 
-/* This will effect all Maz input in parent and children components */
-.m-input-wrapper{
-  border-radius: 0!important;
-}
+/*!* This will effect all Maz input in parent and children components *!*/
+/*.m-input-wrapper{*/
+/*  border-radius: 0!important;*/
+/*}*/
 
-.shipping-method .m-input-wrapper-input,
-.shipping-method .m-input-wrapper-right,
-.shipping-method .m-select-list{
-  background-color: rgb(247, 247, 247)!important;
-  outline: none;
-}
+/*.shipping-method .m-input-wrapper-input,*/
+/*.shipping-method .m-input-wrapper-right,*/
+/*.shipping-method .m-select-list{*/
+/*  background-color: rgb(247, 247, 247)!important;*/
+/*  outline: none;*/
+/*}*/
 
-.shipping-method .m-select-list{
-  background-color: rgb(247, 247, 247)!important;
-  outline: none;
-  width: 100%!important;
-}
+/*.shipping-method .m-select-list{*/
+/*  width: 100%!important;*/
+/*}*/
 
-.m-input-label {
-  font-weight: 400;
-  color: #0f1111;
-  font-size: 14px;
-}
+/*.m-input-label {*/
+/*  font-weight: 400;*/
+/*  color: #0f1111;*/
+/*  font-size: 14px;*/
+/*}*/
+
+/*End of Maz customization*/
 
 /* for phones and tablets */
 @media(max-width:767px){

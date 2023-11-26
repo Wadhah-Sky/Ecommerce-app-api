@@ -50,7 +50,7 @@
 
     <transition name="nested" mode="out-in">
 
-      <div>
+      <div v-if="true">
 
         <!--Card Payment Form-->
         <card-payment-form :generate-random-card-number="true"
@@ -235,7 +235,7 @@ const getCountries = async () => {
     countries.value = response.data
   }
   catch (error) {
-    console.log("Error while trying to retrieve the requested data from backend server!");
+    // console.log("Error while trying to retrieve the requested data from backend server!");
   }
   finally {
     dataLoading.value = false;

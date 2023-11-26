@@ -419,7 +419,7 @@ const routes = [
             this generates a separate chunk (about.[hash].js) for this route
             which is lazy-loaded when the route is visited.
           */
-          component: () => import(/* webpackChunkName: "checkoutCart" */ '../views/CheckoutCartView.vue'),
+          component: () => import(/* webpackChunkName: "checkoutCart" */ '../views/CheckoutCartView.vue')
         },
         {
           name: 'checkoutShipping',
@@ -429,7 +429,7 @@ const routes = [
             this generates a separate chunk (about.[hash].js) for this route
             which is lazy-loaded when the route is visited.
           */
-          component: () => import(/* webpackChunkName: "checkoutShipping" */ '../views/CheckoutShippingView.vue'),
+          component: () => import(/* webpackChunkName: "checkoutShipping" */ '../views/CheckoutShippingView.vue')
         },
         {
           name: 'checkoutPayment',
@@ -439,9 +439,9 @@ const routes = [
             this generates a separate chunk (about.[hash].js) for this route
             which is lazy-loaded when the route is visited.
           */
-          component: () => import(/* webpackChunkName: "checkoutPayment" */ '../views/CheckoutPaymentView.vue'),
+          component: () => import(/* webpackChunkName: "checkoutPayment" */ '../views/CheckoutPaymentView.vue')
         }
-    ],
+    ]
   },
   {
     name: 'contact',

@@ -79,7 +79,7 @@ export const usePaginationStore = defineStore('Pagination', {
         this.pagesRange();
       }
       catch (error){
-        console.log("Error while trying to retrieve the requested data from backend server!");
+        // console.log("Error while trying to retrieve the requested data from backend server!");
         this.pageNumber = 1;
         this.dataResult = [];
       }

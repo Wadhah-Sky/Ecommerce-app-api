@@ -72,9 +72,8 @@
 
         <div v-else>
 
-          <transition :name=" route.meta.transition || 'nested' "
-                      mode="out-in">
-            <div>
+          <transition :name=" route.meta.transition || 'nested' " mode="out-in">
+            <div v-if="true">
               <suspense :timeout="timeOut">
 
                 <template #default>
@@ -96,6 +95,7 @@
               </suspense>
             </div>
           </transition>
+
         </div>
 
       </router-view>
@@ -224,6 +224,7 @@ const checkViewRequirements = async (matchedName='') => {
       return false
     }
     // Need to check if current route path name is 'checkoutPayment' and the 'shippingDetails' is set or not.
+    // In case matchedName is 'checkoutShipping' and the 'shippingDetails' is not set, will return through.
     else return !(matchedName === 'checkoutPayment' && !storeCheckout.isShippingDetailsSet);
   }
   else {
@@ -249,7 +250,7 @@ const setViews = async (matchedName='') => {
              while the 'value' of the loop will represent the (value) of that (key).
    */
   for (let key in viewsObj){
-    // Set current 'viewsObj' key to be false.
+    // Set current looped 'viewsObj' key to be false.
     viewsObj[key] = false;
   }
 

@@ -1,18 +1,7 @@
----
-
-# Note: if you have multiple docker compose .yml file in the directory the system currently in,
-#       then you can use -f flag (file path):
-#
-#       >> docker-compose -f docker-swarm.yml up
-
-# Remember: the health check test and the deploy option is use in swarm mode, and the health test is run by
-#           service itself not by daemon which mean you should use localhost ip in the commands NOT the service
-#           name.
-
+# Define the version of docker compose.
 version: "3.9"
 
 services:
-
   cache:
     image: redis:7-alpine
     deploy:
@@ -21,8 +10,8 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.20'
-          memory: 100M
+          cpus: '0.30'
+          memory: 300M
         reservations:
           cpus: '0.05'
           memory: 20M
@@ -34,12 +23,15 @@ services:
       timeout: 10s
       start_period: 20s
       retries: 3
-
     networks:
       - webnet
 
   db:
     image: 127.0.0.1:5000/postgres
+    build:
+      context: .
+      dockerfile: compose/local/postgres/Dockerfile
+      target: prod
     ports:
       - '5432:5432'
     healthcheck:
@@ -64,12 +56,10 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     healthcheck:
-      # the following ping test (comment) not working in swarm mode.
-      # test: ["CMD", "ping localhost:80 || exit 1"]
       test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
       interval: 10s
       timeout: 10s
-      start_period: 180s
+      start_period: 160s
       retries: 3
     deploy:
       replicas: 1
@@ -77,10 +67,10 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.10'
-          memory: 100M
+          cpus: '0.50'
+          memory: 700M
         reservations:
-          cpus: '0.02'
+          cpus: '0.05'
           memory: 20M
     ports:
       - "5050:80"
@@ -88,22 +78,25 @@ services:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
     depends_on:
-      # in swarm mode the depends on list will depend on 'service_healthy' of listed
-      # services by default not like compose that depend on 'started_service'.
       - db
     networks:
       - webnet
 
   elasticsearch:
     image: 127.0.0.1:5000/elasticsearch
+    build:
+      context: .
+      dockerfile: compose/local/elk/elasticsearch/Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
     ports:
       - "9200:9200"
       - "9300:9300"
     healthcheck:
-      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", "| grep -E ", '"status" : "yellow"', " || exit 1" ]
-      interval: 10s
+      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "yellow"', " || exit 1" ]
+      interval: 30s
       timeout: 10s
-      start_period: 180s
+      start_period: 240s
       retries: 3
     deploy:
       replicas: 1
@@ -111,10 +104,8 @@ services:
         condition: on-failure
       resources:
         limits:
-          # Note: be careful when specify the values due it's possible to cause to exit the container with 0
-          #       at initializing time because health check test run before service is ready.
           cpus: '0.40'
-          memory: 500M
+          memory: 700M
         reservations:
           cpus: '0.05'
           memory: 50M
@@ -130,22 +121,20 @@ services:
       - webnet
 
   elk_setup:
+    profiles:
+      - setup
     image: 127.0.0.1:5000/elk-setup
-    # To start a container as the main process with PID 1, it starts and manages all the
-    # other processes running inside the container, don't worry about it's will start before
-    # elasticsearch service which depends on because we use script to keep waiting to elasticsearch
-    # to be up, when the users/roles created, this service will exit.
+    build:
+      context: .
+      dockerfile: compose/local/elk/setup/Dockerfile
+      args:
+        ELASTIC_VERSION: ${ELASTIC_VERSION}
     init: true
-    deploy:
-      restart_policy:
-        # When it exits, no need to restart it.
-        condition: none
     volumes:
       - ./compose/local/elk/setup/entrypoint.sh:/entrypoint.sh:ro,Z
       - ./compose/local/elk/setup/lib.sh:/lib.sh:ro,Z
       - ./compose/local/elk/setup/roles:/roles:ro,Z
     environment:
-      # Note: passwords should be at least 6 characters
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - LOGSTASH_INTERNAL_PASSWORD=${LOGSTASH_INTERNAL_PASSWORD}
       - KIBANA_SYSTEM_PASSWORD=${KIBANA_SYSTEM_PASSWORD}
@@ -161,8 +150,17 @@ services:
 
   app:
     image: 127.0.0.1:5000/django
-    ports:
-      - '8000:8000'
+    build: &app_build
+      context: .
+      dockerfile: compose/local/django/Dockerfile
+      target: prod
+    # Expose ports without publishing them to the host machine - they’ll only be accessible
+    # to linked services. Only the internal port can be specified.
+    # Note: expose means the ports are not exposed to external, only exposed to other docker services.
+    #       we change to expose in django service because this service will be accessible by Nginx
+    #       service.
+    expose:
+      - '8000'
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent --output /dev/null http://localhost:8000/ping || exit 1"]
       interval: 10s
@@ -173,14 +171,21 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    # Note: The static files are not being loaded anymore. This is expected since Debug mode is off, so
+    #       django browsable api will not show in style, can be fixed it with Nginx that loading static files
+    #       by share common volume between django service and nginx.
     volumes:
-      - ./backend/django_rest:/usr/src/backend/django_rest
-      - ./backend/django_rest/data:/usr/src/vol/web
+      # - ./backend/django_rest:/usr/src/backend/django_rest
+      # - ./backend/django_rest/data:/usr/src/vol/web
+      - static_volume:/usr/src/vol/web/static
+      - media_volume:/usr/src/vol/web/media
     command: bash -c "/usr/src/compose/start-django.sh"
     environment: &app_env
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - USE_X_FORWARDED_HOST=${USE_X_FORWARDED_HOST}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS}
       - CELERY_BROKER=${CELERY_BROKER}
       - CELERY_BACKEND=${CELERY_BACKEND}
       - SQL_ENGINE=${SQL_ENGINE}
@@ -210,8 +215,9 @@ services:
 
   worker:
     image: 127.0.0.1:5000/worker
+    build: *app_build
     healthcheck:
-      test: [ "CMD-SHELL", "celery inspect ping || exit 1" ]
+      test: [ "CMD-SHELL", "celery inspect ping || exit 1"]
       interval: 10s
       timeout: 10s
       start_period: 100s
@@ -229,26 +235,37 @@ services:
     networks:
       - webnet
 
-  ui:
+  nginx:
+    # This service will use deploy stage in Vue docker file where copy contain of 'dist' directory
+    # from build process and paste it into 'html' directory of Nginx image.
     image: 127.0.0.1:5000/vue
+    build:
+      context: .
+      dockerfile: compose/local/vue/Dockerfile
+      target: deploy
     ports:
-      - "8080:8080"
+      # The ports have been listed (on left side) means you can reach the container using 80, 433
+      # while the ports on right side will listen to them by host (Nginx) server which in turn redirect
+      # HTTP request to upstream server.
+      # Info: in frontend browser, the domain:80 is different from domain:433 and each one has own local
+      #       storage.
+      - "80:80"
+      - "443:443"
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      # Test will return 0 if localhost:80 is responded.
+      test: [ "CMD-SHELL", "nc -vz -w1 localhost:80"]
       interval: 10s
       timeout: 10s
-      start_period: 80s
+      start_period: 60s
       retries: 3
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
     volumes:
-      - ./frontend/vue_spa:/usr/src/frontend/vue_spa
-      - /usr/src/frontend/vue_spa/node_modules
-    command: sh -c "npm run serve"
-    environment:
-      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING}
+      # Nginx shares the same volume that connected to static files which being served in django service (app)
+      - static_volume:/usr/src/vol/web/static
+      - media_volume:/usr/src/vol/web/media
     depends_on:
       - app
     networks:
@@ -262,4 +279,8 @@ volumes:
   postgres-db:
     driver: local
   elasticsearch:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
     driver: local

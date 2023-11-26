@@ -4,8 +4,7 @@
     <div class="container">
 
       <div class="intro-banner-wrap">
-        <agile :options="storeAgileSlider.options"
-        >
+        <agile v-if="storeHome.dataResult.Banner.length" :options="storeAgileSlider.options">
           <div v-for="( banner, index ) in storeHome.dataResult.Banner" :key="index" class="slide">
 
             <router-link v-if="banner.frontend_path"

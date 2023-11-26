@@ -298,7 +298,7 @@ $option-rise-pickers-background-img: url("../assets/images/swatches/rise-pickers
   max-width: 100%;
 }
 .option-img:hover{
-  box-shadow: 0 2px 0 0 rgb(204, 12, 57 / 50 ) inset;
+  box-shadow: 0 2px 0 0 rgb(204, 12, 57) inset;
   transition: all 0.2s ease;
 }
 

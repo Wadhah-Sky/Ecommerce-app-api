@@ -261,7 +261,7 @@ const getCategoryChildren = async (slug) => {
     categoryChildrenArray.value = response.data;
   } catch (error) {
     categoryChildrenArray.value = [];
-    console.log("Error while trying to retrieve the requested data from backend server!");
+    // console.log("Error while trying to retrieve the requested data from backend server!");
   }
 };
 const triggerGetProductsDataResult = async (slug, attr, minPrice, maxPrice, selectByObjValue, page) => {

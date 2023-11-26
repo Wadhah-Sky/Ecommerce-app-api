@@ -432,24 +432,6 @@ a.disabled{
   pointer-events: none;
 }
 
-// This will effect all Maz input in parent and children components
-.m-input-wrapper{
-  border-radius: 0!important;
-}
-
-.shipping-method .m-input-wrapper-input,
-.shipping-method .m-input-wrapper-right,
-.shipping-method .m-select-list{
-  background-color: rgb(247, 247, 247)!important;
-  outline: none;
-}
-
-.shipping-method .m-select-list{
-  background-color: rgb(247, 247, 247)!important;
-  outline: none;
-  width: 100%!important;
-}
-
 .alert-secondary{
   opacity: 80%;
   background-color: #e9ecef;

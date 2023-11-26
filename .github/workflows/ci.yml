@@ -48,30 +48,29 @@ jobs:
           SQL_PORT=${{secrets.SQL_PORT}}
           CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
           CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
-          CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
           AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_DEFAULT_REGION=${{secrets.AWS_DEFAULT_REGION}}
-          PGADMIN_DEFAULT_EMAIL=admin@admin.com
-          PGADMIN_DEFAULT_PASSWORD=admin1234
-          CLUSTER_NAME=docker-cluster
-          NETWORK_HOST=0.0.0.0
-          ELASTIC_VERSION=8.10.2
-          ELASTICSEARCH_NODE_NAME=elasticsearch
-          ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-          ELASTIC_USERNAME=elastic
-          ELASTIC_PASSWORD=testpassword
-          DISCOVERY_TYPE=single-node
-          ES_JAVA_OPTS=-Xms512m -Xmx512m
-          LS_JAVA_OPTS=-Xms256m -Xmx256m
-          KIBANA_NODE_NAME=kibana
-          KIBANA_SYSTEM_PASSWORD=testpassword
-          LOGSTASH_INTERNAL_PASSWORD=testpassword
-          METRICBEAT_INTERNAL_PASSWORD=testpassword
-          FILEBEAT_INTERNAL_PASSWORD=testpassword
-          HEARTBEAT_INTERNAL_PASSWORD=testpassword
-          MONITORING_INTERNAL_PASSWORD=testpassword
-          BEATS_SYSTEM_PASSWORD=testpassword
+          PGADMIN_DEFAULT_EMAIL=${{secrets.TEST_USERNAME}}
+          PGADMIN_DEFAULT_PASSWORD=${{secrets.TEST_PASSWORD}}
+          CLUSTER_NAME=${{secrets.CLUSTER_NAME}}
+          NETWORK_HOST=${{secrets.NETWORK_HOST}}
+          ELASTIC_VERSION=${{secrets.ELASTIC_VERSION}}
+          ELASTICSEARCH_NODE_NAME=${{secrets.ELASTICSEARCH_NODE_NAME}}
+          ELASTICSEARCH_HOSTS=${{secrets.ELASTICSEARCH_HOSTS}}
+          ELASTIC_USERNAME=${{secrets.ELASTIC_USERNAME}}
+          ELASTIC_PASSWORD=${{secrets.TEST_PASSWORD}}
+          DISCOVERY_TYPE=${{secrets.DISCOVERY_TYPE}}
+          ES_JAVA_OPTS=${{secrets.ES_JAVA_OPTS}}
+          LS_JAVA_OPTS=${{secrets.LS_JAVA_OPTS}}
+          KIBANA_NODE_NAME=${{secrets.KIBANA_NODE_NAME}}
+          KIBANA_SYSTEM_PASSWORD=${{secrets.TEST_PASSWORD}}
+          LOGSTASH_INTERNAL_PASSWORD=${{secrets.TEST_PASSWORD}}
+          METRICBEAT_INTERNAL_PASSWORD=${{secrets.TEST_PASSWORD}}
+          FILEBEAT_INTERNAL_PASSWORD=${{secrets.TEST_PASSWORD}}
+          HEARTBEAT_INTERNAL_PASSWORD=${{secrets.TEST_PASSWORD}}
+          MONITORING_INTERNAL_PASSWORD=${{secrets.TEST_PASSWORD}}
+          BEATS_SYSTEM_PASSWORD=${{secrets.TEST_PASSWORD}}
           EOF
 
         #####################################################
@@ -138,11 +137,115 @@ jobs:
       - run: echo "Deploy to STAGING code here"
 
   deploy_production:
+    # Important: first of all you need to make sure that AWS EC2 that will connect to, have installed Docker.
+    # Note: AWS EC2 is already have 'git' version control installed.
+    # info: git clone: Get a working copy of the remote repository.
+    #       git pull (or git fetch + git merge): I am working on this, please get me the new changes that may
+    #                                            be updated by others.
     name: Deploy to Production
     runs-on: Ubuntu 20.04
     needs: [test]
     if: github.ref == 'refs/heads/production'
-
+    environment: production
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "Deploy to PRODUCTION code here"
+      - name: Get Github action IP
+        id: ip
+        uses: haythem/public-ip@v1.2
+
+        ##########################################################
+        #                                                        #
+        # Connect to your AWS EC2 instance and add current GitHub#
+        # node public ip address to security group of that       #
+        # instance, depending on the provided AWS credentials.   #
+        #                                                        #
+        ##########################################################
+      - name: Add Github Actions IP to AWS EC2 Security group
+        run: >-
+          aws ec2 authorize-security-group-ingress 
+          --group-name ${{ secrets.AWS_SECURITYGROUP_NAME }} --protocol tcp --port 22 
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      - name: Deploy to production server
+        # Install specific version of 'appleboy/ssh-action' and deploy required values like, host, username, key and script.
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          # The following script will run in the connected AWS EC2 instance and will:
+          # 1- Create and move into directory 'ecommerce-app-api'
+          # 2- Create '.env' file with all required environment variables.
+          # 3- Run 'git stash', saves the uncommitted changes locally, allowing you to make changes,
+          #    switch branches, and perform other Git operations. You can then reapply the stashed changes
+          #    when you need them. A stash is locally scoped and is not pushed to the remote.
+          # 4- Connect to remote repository.
+          # 5- Pull the project files from GitHub repository. note that we pull the 'production' branch.
+          # 6- Give the 'deploy-docker-compose.sh' file an execute permission.
+          # 7- Run 'deploy-docker-compose.sh' file script with --compose-file argument that represent docker
+          #    compose file to use.
+          script: |
+            cd /home/ubuntu/ecommerce-app-api
+            
+            cat << EOF > .env
+            SECRET_KEY=${{secrets.SECRET_KEY}}
+            DEBUG=${{secrets.DEBUG}}
+            ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
+            CSRF_TRUSTED_ORIGINS=${{secrets.CSRF_TRUSTED_ORIGINS}}
+            USE_X_FORWARDED_HOST=${{secrets.USE_X_FORWARDED_HOST}}
+            CELERY_BROKER=${{secrets.CELERY_BROKER}}
+            CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
+            SQL_IMAGE=${{secrets.SQL_IMAGE}}
+            SQL_ENGINE=${{secrets.SQL_ENGINE}}
+            SQL_HOST=${{secrets.SQL_HOST}}
+            SQL_NAME=${{secrets.SQL_NAME}}
+            SQL_USER=${{secrets.SQL_USER}}
+            SQL_PASS=${{secrets.SQL_PASS}}
+            SQL_PORT=${{secrets.SQL_PORT}}
+            CACHE_IMAGE=${{secrets.CACHE_IMAGE}}
+            CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
+            AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}
+            AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}
+            AWS_DEFAULT_REGION=${{secrets.AWS_DEFAULT_REGION}}
+            PGADMIN_DEFAULT_EMAIL=${{secrets.PGADMIN_DEFAULT_EMAIL}}
+            PGADMIN_DEFAULT_PASSWORD=${{secrets.PGADMIN_DEFAULT_PASSWORD}}
+            CLUSTER_NAME=${{secrets.CLUSTER_NAME}}
+            NETWORK_HOST=${{secrets.NETWORK_HOST}}
+            ELASTIC_VERSION=${{secrets.ELASTIC_VERSION}}
+            ELASTICSEARCH_NODE_NAME=${{secrets.ELASTICSEARCH_NODE_NAME}}
+            ELASTICSEARCH_HOSTS=${{secrets.ELASTICSEARCH_HOSTS}}
+            ELASTIC_USERNAME=${{secrets.ELASTIC_USERNAME}}
+            ELASTIC_PASSWORD=${{secrets.ELASTIC_PASSWORD}}
+            DISCOVERY_TYPE=${{secrets.DISCOVERY_TYPE}}
+            ES_JAVA_OPTS=${{secrets.ES_JAVA_OPTS}}
+            LS_JAVA_OPTS=${{secrets.LS_JAVA_OPTS}}
+            KIBANA_NODE_NAME=${{secrets.KIBANA_NODE_NAME}}
+            KIBANA_SYSTEM_PASSWORD=${{secrets.KIBANA_SYSTEM_PASSWORD}}
+            LOGSTASH_INTERNAL_PASSWORD=${{secrets.LOGSTASH_INTERNAL_PASSWORD}}
+            METRICBEAT_INTERNAL_PASSWORD=${{secrets.METRICBEAT_INTERNAL_PASSWORD}}
+            FILEBEAT_INTERNAL_PASSWORD=${{secrets.FILEBEAT_INTERNAL_PASSWORD}}
+            HEARTBEAT_INTERNAL_PASSWORD=${{secrets.HEARTBEAT_INTERNAL_PASSWORD}}
+            MONITORING_INTERNAL_PASSWORD=${{secrets.MONITORING_INTERNAL_PASSWORD}}
+            BEATS_SYSTEM_PASSWORD=${{secrets.BEATS_SYSTEM_PASSWORD}}
+            DJANGO_SUPERUSER_EMAIL=${{secrets.DJANGO_SUPERUSER_EMAIL}}
+            DJANGO_SUPERUSER_USERNAME=${{secrets.DJANGO_SUPERUSER_USERNAME}}
+            DJANGO_SUPERUSER_PHONE_NUMBER=${{secrets.DJANGO_SUPERUSER_PHONE_NUMBER}}
+            DJANGO_SUPERUSER_FIRST_NAME=${{secrets.DJANGO_SUPERUSER_FIRST_NAME}}
+            DJANGO_SUPERUSER_LAST_NAME=${{secrets.DJANGO_SUPERUSER_LAST_NAME}}
+            DJANGO_SUPERUSER_PASSWORD=${{secrets.DJANGO_SUPERUSER_PASSWORD}}
+            EOF
+            
+            git stash
+            
+            PROJECT_GIT_URL='https://github.com/Wadhah-Sky/Ecommerce-app-api.git'
+            
+            git remote add origin $PROJECT_GIT_URL
+            
+            git pull origin production
+            
+            sudo chmod +x ./deploy/deploy-docker-compose.sh
+            
+            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml

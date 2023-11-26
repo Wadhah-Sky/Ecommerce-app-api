@@ -35,7 +35,22 @@ module.exports = defineConfig({
   // The base URL your application bundle will be deployed at.
   publicPath:
     // When run 'npm run build' command, will set 'NODE_ENV' variable to 'production' value.
-    process.env.NODE_ENV === "production" ? "/static/dist/" : "http://127.0.0.1:8080",
+    // Note: if you used "./" as public path means all created urls for static files (js, css and images) will
+    //       start with no slash:
+    //       <meta name="msapplication-TileImage" content="img/something.png">
+    //
+    //       if you used "/dist/" as public path:
+    //       <meta name="msapplication-TileImage" content="/dist/img/something.png">
+    //
+    // Important: if you face the following error while trying to load the index.html file:
+    //
+    //            Uncaught SyntaxError: Unexpected token '<'
+    //
+    //            This is because the urls those generated in build process for production of static files
+    //            is not the same path as stored in nginx server where can be served to client. in other words the
+    //            root in nginx should have the url path of static file like:
+    //            /img/something.png
+    process.env.NODE_ENV === "production" ? "/" : "http://127.0.0.1:8080",
 
   // Specify pages of your project frontend.
   // Note: our project is Single Page App.
@@ -55,7 +70,7 @@ module.exports = defineConfig({
       so the 'name' variable value in 'package.json' file that could be used as default value
       for title tag can be overwritten by this option value which we set here.
       */
-      title: 'QuestionTime',
+      title: 'Jamie and Cassie',
       /*
       chunks to include on this page, by default includes extracted common
       chunks and vendor chunks.

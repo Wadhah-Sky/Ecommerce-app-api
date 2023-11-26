@@ -20,6 +20,12 @@
 #           service itself not by daemon which mean you should use localhost ip in the commands NOT the service
 #           name.
 
+# Info: If you have multiple environments, you may want to look at using a
+#       docker-compose.override.yml configuration file. With this approach,
+#       you'd add your base config to a docker-compose.yml file and then use
+#       a docker-compose.override.yml file to override those config settings
+#       based on the environment.
+
 # Define the version of docker compose.
 version: "3.9"
 
@@ -196,12 +202,19 @@ services:
       - "9300:9300"
     healthcheck:
       # Here our test is not about starting the service, it's about the Elasticsearch engine is ready and run
-      # in another means http response of engine health is containing "status" : "green".
+      # in another means http response of engine health is containing "status" : "yellow".
       # Note: if you want to use this command within this service container directly, then use 'localhost:9200' or
-      # 'http://localhost:9200' but if your trying to connect from another service then use '<name_of_service:port>'
-      # because 'elasticsearch' is related to docker daemon that use names of containers to manage connection.
+      #       'http://localhost:9200' but if your trying to connect from another service then use '<name_of_service:port>'
+      #       because 'elasticsearch' is related to docker daemon that use names of containers to manage connection.
       # Important: 'grep' tool use single quotes for string that contains double quotes NOT using double quotes.
-      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "green"', " || exit 1" ]
+      # Info: The status "yellow" indicates that replica shards of that certain index could not get allocated to other nodes.
+      #       This can happen for various reasons. For example:
+      #       1- you have specified more replicas than you have nodes.
+      #       2- It depends on your cluster setup and whether you configured shard allocation by your own or not.
+      #       3- if you are running Elasticsearch with only 1 node, like when running Elasticsearch on local in
+      #          a Docker container, and you only have 1 container. Elasticsearch will not make that node/container
+      #          a replica, so your indices would always be yellow.
+      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "yellow"', " || exit 1" ]
       interval: 30s
       timeout: 10s
       start_period: 240s
@@ -383,6 +396,11 @@ services:
       dockerfile: compose/local/django/Dockerfile
       # Specify the stage of Dockerfile that 'docker-compose build' will stop at.
       target: dev
+    # Expose ports. Either specify both ports (HOST:CONTAINER), or just the container
+    # port (a random host port will be chosen).
+    # Note: 1- Ports mentioned in docker-compose.yml will be shared among different
+    #          services started by the docker-compose.
+    #       2- Ports will be exposed to the host machine to a random port or a given port.
     ports:
       - '8000:8000'
     healthcheck:
@@ -431,6 +449,12 @@ services:
       - ELASTIC_USERNAME=${ELASTIC_USERNAME}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_HOSTS}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL}
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME}
+      - DJANGO_SUPERUSER_PHONE_NUMBER=${DJANGO_SUPERUSER_PHONE_NUMBER}
+      - DJANGO_SUPERUSER_FIRST_NAME=${DJANGO_SUPERUSER_FIRST_NAME}
+      - DJANGO_SUPERUSER_LAST_NAME=${DJANGO_SUPERUSER_LAST_NAME}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD}
     depends_on:
       # In case you don't need to create customized commands in order to check fot service is ready and run,
       # Here we depend on health check (service_healthy).

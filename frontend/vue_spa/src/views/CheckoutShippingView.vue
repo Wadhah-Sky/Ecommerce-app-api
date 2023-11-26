@@ -172,6 +172,7 @@ const isValidInfoForm = ref(false);
 const isInfoFormSet = ref(false);
 // keys in to watch if changed in 'storeCheckout'.
 const keys = ['shippingMethod', 'country', 'region', 'city', 'postalCode'];
+let timer;
 
 // Define functions
 const calculateShippingCost = async () => {
@@ -226,13 +227,15 @@ await loadShippingDetails();
 storeCheckout.$subscribe((mutation, state) => {
   // You can specify type of mutation.
   if ( [MutationType.direct].includes(mutation.type) ) {
-
     // Check if current mutation events key is included within the defined 'keys' list to watch.
     // Note: we want that to Trigger calculate shipping cost method only if (shipping method,
     //       country, region, city and postal code) inputs value is changed in the store, also if
     //       all required shipping info have set.
     if (keys.includes(mutation.events.key) && storeCheckout.isShippingInfoSet){
-      calculateShippingCost();
+      // Clear timer, in case its set.
+      clearTimeout(timer);
+      // Set timer.
+      timer = setTimeout(() => {calculateShippingCost();},2000);
     }
   }
 });

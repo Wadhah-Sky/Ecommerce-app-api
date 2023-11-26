@@ -654,7 +654,8 @@ def create_file_path(instance, filename):
 
     # An important SEO (Google search) step that your website brand its
     # uploaded images.
-    website_brand_title = settings.WEBSITE_BRAND_TITLE
+    # Note: we replace any space in the string with dash.
+    website_brand_title = str(settings.WEBSITE_BRAND_TITLE).replace(" ", "-")
 
     return os.path.join(f'uploads/{website_brand_title}', filename)
 

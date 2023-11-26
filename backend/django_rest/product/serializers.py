@@ -58,15 +58,21 @@ class ProductItemSerializer(serializers.ModelSerializer):
     def get_thumbnail(self, instance):
         """Return the available thumbnail of the instance"""
 
-        # Note: here we return the available thumbnail, either the one that
-        #       related to the instance itself or the product parent instance,
-        #       in this case Django can't serialize the thumbnail directly as
-        #       absolute url we need to do manually.
+        if instance.available_thumbnail:
 
-        # Get request object from 'context'.
-        request = self.context.get("request")
+            # Note: here we return the available thumbnail, either the one that
+            #       related to the instance itself or the product parent
+            #       instance, in this case Django can't serialize the thumbnail
+            #       directly as absolute url we need to do manually.
 
-        return request.build_absolute_uri(instance.available_thumbnail.url)
+            # Get request object from 'context'.
+            # request = self.context.get("request")
+
+            # return request.build_absolute_uri(
+            #     instance.available_thumbnail.url
+            # )
+
+            return instance.available_thumbnail.url
 
     def get_list_price_amount(self, instance):
         """Return the amount value of list_price"""
@@ -128,7 +134,7 @@ class ProductItemSerializer(serializers.ModelSerializer):
         """Return all related images for current instance"""
 
         # Get request object from 'context'.
-        request = self.context.get("request")
+        # request = self.context.get("request")
 
         # Initialize empty list to store images url.
         images_url = []
@@ -137,7 +143,9 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
             for item in instance.images:
                 # Append current image instance url to the list.
-                images_url.append(request.build_absolute_uri(item.image.url))
+                # images_url.append(request.build_absolute_uri(item.image.url))
+
+                images_url.append(item.image.url)
 
             return images_url
 
@@ -191,16 +199,18 @@ class ProductItemsSerializer(serializers.ModelSerializer):
         if product_item_attr:
 
             # Get request object from 'context'.
-            request = self.context.get("request")
+            # request = self.context.get("request")
 
             # You can't use hasattr(instance, 'thumbnail') because instance has
             # thumbnail field, but it could be blank.
             if product_item_attr.thumbnail:
                 # Set the selected product item attribute thumbnail to
                 # thumbnail variable.
-                thumbnail = request.build_absolute_uri(
-                    product_item_attr.thumbnail.url
-                )
+                # thumbnail = request.build_absolute_uri(
+                #     product_item_attr.thumbnail.url
+                # )
+
+                thumbnail = product_item_attr.thumbnail.url
 
                 return thumbnail
 

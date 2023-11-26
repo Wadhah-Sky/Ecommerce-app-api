@@ -33,12 +33,13 @@ MAINTAINER Wadhah Sky
 
 # Set environment variable for ensuring that stdout and stderr are sent
 # straight the container logs so we can see our application logs in real time.
+# Note: Prevents Python from writing pyc files to disc (equivalent to python -B option)
 ENV PYTHONDONTWRITEBYTECODE 1
 # Set environment variable for disabling the generation of bytecode.
+# Note: Prevents Python from buffering stdout and stderr (equivalent to python -u option)
 ENV PYTHONUNBUFFERED 1
 
 # Copy the diffrent service start shell.
-COPY /compose/local/django/start-django.sh /usr/src/compose/start-django.sh
 COPY /compose/local/django/es-index-rebuild.sh /usr/src/compose/es-index-rebuild.sh
 COPY /compose/local/django/celery/worker/start-celeryworker.sh /usr/src/compose/start-celeryworker.sh
 COPY /compose/local/django/celery/beat/start-celerybeat.sh /usr/src/compose/start-celerybeat.sh
@@ -82,11 +83,9 @@ RUN python3 -m venv /opt/venv && \
     mkdir -p /usr/src/vol/web/static && \
     # create 'media' directory.
     mkdir -p /usr/src/vol/web/media && \
-    sed -i 's/\r$//g' /usr/src/compose/start-django.sh && \
+    sed -i 's/\r$//g' /usr/src/compose/es-index-rebuild.sh && \
     # Add the x permission which is the symbol for the execution permission. The execution
     # permission will give the execution ability to the owner user or group of the file.
-    chmod +x /usr/src/compose/start-django.sh && \
-    sed -i 's/\r$//g' /usr/src/compose/es-index-rebuild.sh && \
     chmod +x /usr/src/compose/es-index-rebuild.sh && \
     sed -i 's/\r$//g' /usr/src/compose/start-celeryworker.sh && \
     chmod +x /usr/src/compose/start-celeryworker.sh && \
@@ -106,6 +105,8 @@ FROM builder AS dev
 # images for each stage.
 #COPY --from=builder /opt/venv /opt/venv
 
+# Copy the diffrent service start shell.
+COPY /compose/local/django/start-django.sh /usr/src/compose/start-django.sh
 # Copy dependences names from your project source code to docker image 'requirements.txt' file.
 COPY /backend/requirements.txt /usr/src/backend/requirements.txt
 
@@ -116,7 +117,44 @@ RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.txt && \
     chown -R user:usergroup /usr/src/vol/ && \
     # change permission to allow for each digit:
     # owner: read(4)/write(2)/execute(1) =7, group: read/execute =5, more: read/execute =5
-    chmod -R 755 /usr/src/vol/
+    chmod -R 755 /usr/src/vol/ && \
+    sed -i 's/\r$//g' /usr/src/compose/start-django.sh && \
+    chmod +x /usr/src/compose/start-django.sh
+
+# Copy source code from your project 'django_rest' directory to docker container 'django_rest' directory.
+# Note: since there is no 'django_rest' directory in the image yet, will create it automatically.
+COPY /backend/django_rest /usr/src/backend/django_rest
+
+# Specify the default directory of this image layer (This should be where 'manage.py' file is holding or will be).
+WORKDIR /usr/src/backend/django_rest
+
+# Set environment variable for create Path variable for python virtual environemnt
+# within image to use dependencies.
+# Notw: PATH varaible tells the operating system where to find executables.
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Switch docker container account from 'root' to the new account.
+USER user
+
+# production stage.
+# use the 'builder' layer as base for this layer of the image.
+FROM builder AS prod
+
+# Copy the diffrent service start shell.
+COPY /compose/production/django/start-django.sh /usr/src/compose/start-django.sh
+# Copy dependences names from your project source code to docker image 'requirements.txt' file.
+COPY /backend/requirements.prod.txt /usr/src/backend/requirements.txt
+
+# install the required dependencies in 'requirements' file in python virtual environment.
+RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.txt && \
+    # change ownership of '/usr/src/compose/vol' directory and it's sub-folders using -R flag from 'root' user
+    # to 'user' in 'usergroup' group.
+    chown -R user:usergroup /usr/src/vol/ && \
+    # change permission to allow for each digit:
+    # owner: read(4)/write(2)/execute(1) =7, group: read/execute =5, more: read/execute =5
+    chmod -R 755 /usr/src/vol/ && \
+    sed -i 's/\r$//g' /usr/src/compose/start-django.sh && \
+    chmod +x /usr/src/compose/start-django.sh
 
 # Copy source code from your project 'django_rest' directory to docker container 'django_rest' directory.
 # Note: since there is no 'django_rest' directory in the image yet, will create it automatically.
@@ -131,6 +169,7 @@ WORKDIR /usr/src/backend/django_rest
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Specify ports between the creator of the Docker image and the individual running the Container.
+# Note: In recent versions of Dockerfile, EXPOSE doesn't have any operational impact anymore, it is just informative.
 EXPOSE 8000
 
 # Switch docker container account from 'root' to the new account.

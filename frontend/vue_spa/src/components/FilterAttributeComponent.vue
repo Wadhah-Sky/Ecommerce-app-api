@@ -424,7 +424,7 @@ div.scrollmenu{
   cursor: pointer;
 }
 .option-rise-picker:hover{
-  box-shadow: 0 2px 0 0 rgb(204, 12, 57 / 50 ) inset;
+  box-shadow: 0 2px 0 0 rgb(204, 12, 57) inset;
   transition: all 0.2s ease;
 }
 

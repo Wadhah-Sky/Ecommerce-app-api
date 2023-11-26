@@ -67,7 +67,7 @@ export const useProductStore = defineStore('Product', {
               hash: router.currentRoute.value.hash
             }
         );
-        console.log("Error while trying to retrieve the requested data from backend server!");
+        // console.log("Error while trying to retrieve the requested data from backend server!");
         this.response = {}
         this.dataResult = [];
         this.productItem = {};
@@ -115,7 +115,7 @@ export const useProductStore = defineStore('Product', {
               hash: router.currentRoute.value.hash
             }
         );
-        console.log("Error while trying to retrieve the requested data from backend server!");
+        // console.log("Error while trying to retrieve the requested data from backend server!");
         this.selectedProductItem = {};
         this.productAdditionalDetails = {};
       }

@@ -162,9 +162,9 @@ class Command(BaseCommand):
             'Waiting for elasticsearch cluster to be up and ready...'
         )
 
-        elasticsearch_host = os.getenv('ELASTICSEARCH_HOSTS')
-        host_username = os.getenv('ELASTIC_USERNAME')
-        host_password = os.getenv('ELASTIC_PASSWORD')
+        elasticsearch_host = os.getenv('ELASTICSEARCH_HOSTS', '')
+        host_username = os.getenv('ELASTIC_USERNAME', '')
+        host_password = os.getenv('ELASTIC_PASSWORD', '')
 
         self.stdout.write('Trying to connect to elasticsearch service...')
 
@@ -174,7 +174,7 @@ class Command(BaseCommand):
 
         cmd = f'curl -u {host_username}:{host_password} ' \
               f'{elasticsearch_host}/_cluster/health?pretty | ' \
-              f'grep -E "green" || exit 1'
+              f'grep -E "yellow" || exit 1'
 
         es_ready = False
 

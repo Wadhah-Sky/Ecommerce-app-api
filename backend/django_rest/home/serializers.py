@@ -2,12 +2,9 @@
 
 from rest_framework import serializers
 # from rest_framework.response import Response
-
 # from django.conf import settings
-
 from core.models import (Card, Section, Banner, TopBanner, Product,
                          ProductGroup, ProductItem)
-
 
 # Note: serializer class receive the queryset after filter class have done its
 #       process (in case View using filter class).
@@ -42,6 +39,33 @@ class BannerSerializer(serializers.ModelSerializer):
     #       for 'url' property of the field like:
     #
     #       request.build_absolute_uri(thumbnail.url)
+    #
+    #       But, in case you are using django directly without load balancer
+    #       server like (Nginx) which in same time will maintain/serve your
+    #       Django static and media files, so it's possible to use absolute url
+    #       for static or media object:
+    #
+    #       127.0.0.1:8000/static/media/<path_to_object>
+    #
+    #       Unfortunately this will not work when using load balancer, because
+    #       the frontend server like (Vue) can't reach the django server
+    #       anymore due port 8000 is exposed only internally to Nginx, also
+    #       Nginx is the responsible to serve static and media files.
+    #       So, you need to return only the url only:
+    #
+    #       /static/media/<path_to_object>
+    #
+    #       You should know that, absolute url or just url for static or media
+    #       object can be used when frontend (Vue) is directly connected to
+    #       backend (Django).
+    #
+    #       Also, it's possible to use absolute url but with host:port value of
+    #       proxy server if you have set in settings.py:
+    #
+    #       USE_X_FORWARDED_HOST = True
+    #
+    #       Which in this case will not use the django service host:port value
+    #       when set absolute url.
 
     class Meta:
         """Serialize all model fields expect the excluded"""
@@ -51,6 +75,15 @@ class BannerSerializer(serializers.ModelSerializer):
         # fields = '__all__'
         # exclude = []
         # read_only_fields = []
+
+    # Define related/reverse model fields.
+    thumbnail = serializers.SerializerMethodField()
+
+    def get_thumbnail(self, instance):
+        """Return thumbnail url"""
+
+        if instance.thumbnail:
+            return instance.thumbnail.url
 
 
 class TopBannerSerializer(serializers.ModelSerializer):
@@ -86,11 +119,17 @@ class CardSerializer(serializers.ModelSerializer):
 
     # Define related/reverse model fields.
     category_slug = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
 
     def get_category_slug(self, instance):
         """Return foreign key (category) slug value"""
 
         return instance.category.slug
+
+    def get_thumbnail(self, instance):
+        """Return thumbnail url"""
+
+        return instance.thumbnail.url
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -149,22 +188,24 @@ class ProductItemSerializer(serializers.ModelSerializer):
         product parent thumbnail"""
 
         # Get request object from 'context'.
-        request = self.context.get("request")
+        # request = self.context.get("request")
 
         # You can't use hasattr(instance, 'thumbnail') because instance has
         # thumbnail field, but it could be blank.
         if not instance.thumbnail:
             # This happens in situation where the selected product item had
             # no thumbnail.
-            thumbnail = request.build_absolute_uri(
-                instance.product.thumbnail.url
-            )
+            # thumbnail = request.build_absolute_uri(
+            #     instance.product.thumbnail.url
+            # )
+            thumbnail = instance.product.thumbnail.url
 
         else:
             # Set the selected product item thumbnail to thumbnail variable
-            thumbnail = request.build_absolute_uri(
-                instance.thumbnail.url
-            )
+            # thumbnail = request.build_absolute_uri(
+            #     instance.thumbnail.url
+            # )
+            thumbnail = instance.thumbnail.url
 
         return thumbnail
 

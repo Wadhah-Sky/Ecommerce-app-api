@@ -388,8 +388,11 @@ def set_purchase_order_details(po_code, **extra_fields):
         ###################################################################
         # Create POItem instances that related to current purchase order.
 
-        # initialize bulk list.
+        # initialize po item bulk list.
         po_item_bulk = []
+
+        # initialize product item bulk list.
+        product_item_bulk = []
 
         # Loop over the extra_fields 'po_items' list.
         for item in extra_fields['po_items']:
@@ -405,7 +408,7 @@ def set_purchase_order_details(po_code, **extra_fields):
             # Set Money of either deal_price or list_price to 'price_per_unit'
             price_per_unit = product_item.deal_price or product_item.list_price
 
-            # Append to bulk list a POItem variable.
+            # Append to po item bulk list a POItem variable.
             po_item_bulk.append(
                 POItem(
                     purchase_order=purchase_order,
@@ -414,6 +417,32 @@ def set_purchase_order_details(po_code, **extra_fields):
                     price_per_unit=price_per_unit
                 )
             )
+
+            # Set value for new stock of current product item.
+            new_p_i_stock = int(product_item.stock) - int(item['quantity'])
+
+            # Append to product item bulk list a ProductItem variable
+
+            # Check if new stock is less than the value of limit per order of
+            # product item, if so, then set its value to be same as new stock
+            # value, otherwise don't change it value.
+            if product_item.limit_per_order > new_p_i_stock:
+                # Note: All bulk_update() objects must have a primary key set.
+                product_item_bulk.append(
+                    ProductItem(
+                        id=product_item.id,
+                        stock=new_p_i_stock,
+                        limit_per_order=new_p_i_stock
+                    )
+                )
+            else:
+                product_item_bulk.append(
+                    ProductItem(
+                        id=product_item.id,
+                        stock=new_p_i_stock,
+                        limit_per_order=product_item.limit_per_order
+                    )
+                )
 
         # Trigger bulk_create() method for the bulk list.
         # Note: we don't need to catch the new created records of POItem
@@ -500,11 +529,21 @@ def set_purchase_order_details(po_code, **extra_fields):
     else:
         ###################################################################
         # If no exception is raised, send email of order confirm to the one who
-        # made the purchase.
+        # made the purchase, and update product item table.
 
-        # Send message with Anymail.
         try:
+            # Send message with Anymail.
             msg.send(fail_silently=False)
+
+            ##################################################################
+            # Tigger bulk_update() to product item bulk in order to update
+            # their quantity and limit per order.
+            # Note: bulk_update() method need two arguments, the 'objs' and
+            #       'fields' to update.
+            ProductItem.objects.bulk_update(
+                objs=product_item_bulk,
+                fields=["stock", "limit_per_order"]
+            )
 
         except Exception as e:
             # Here in case Anymail raise an exception while trying to send

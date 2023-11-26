@@ -109,7 +109,9 @@ class ModelTest(TestCase):
         mock_uuid4.return_value = uuid
         # An important SEO (Google search) step that your website brand its
         # uploaded images.
-        website_brand_title = settings.WEBSITE_BRAND_TITLE
+        website_brand_title = str(settings.WEBSITE_BRAND_TITLE).replace(
+            " ", "-"
+        )
 
         file_path = models.create_file_path(category, 'tests.jpg')
 

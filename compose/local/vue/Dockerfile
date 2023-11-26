@@ -38,6 +38,8 @@ MAINTAINER Wadhah Sky
 
 # update to the latest stable version of npm globally in your system.
 RUN npm install --location=global npm@latest && \
+    # Install Vue CLI globally, a full system for rapid Vue.js development, that provide 'vue create' command.
+    npm install --location=global @vue/cli@5.0.8 && \
     # create a user group 'usergroup' with group id. \
     # --system option, make addgroup tool add a system group.
     addgroup -g 1001 -S usergroup && \
@@ -55,7 +57,7 @@ RUN npm install --location=global npm@latest && \
 FROM builder AS dev
 
 # Install Vue CLI globally, a full system for rapid Vue.js development, that provide 'vue create' command.
-RUN npm install --location=global @vue/cli@5.0.8
+# RUN npm install --location=global @vue/cli@5.0.8
 
 # Copy the service start shell.
 COPY /compose/local/vue/start-vue.sh /usr/src/compose/start-vue.sh
@@ -97,15 +99,73 @@ RUN sed -i 's/\r$//g' /usr/src/compose/start-vue.sh && \
 # Note: bin file is hidden( set dot mark before it ).
 ENV PATH="/usr/src/frontend/vue_spa/node_modules/.bin:$PATH"
 
-# Specify ports between the creator of the Docker image and the individual running the Container.
-EXPOSE 8080
+# Switch docker container account from 'root' to the new account.
+USER user
+
+# prodduction stage.
+# Note: in production stage of Vue, you need 'dist' file only which contains all static files to be
+#       served, either by django directly or through Nginx, So, you don't need docker container to serve Vue
+#       files, all what you need is copy 'dist' file into the mentiod servers, or you can simply
+#       A- add 'dist' file to GitHub repository of your project, then make Django or Nginx copy 'dist' within
+#          their 'static' directory.
+#       B- add 'dist' file to your Django application 'static' directory (make sure it's defined in 'STATICFILES_DIRS'
+#          in settings.py file) and then run withing Django container:
+#
+#          python manage.py collectstatic --no-input --clear
+FROM builder AS prod
+
+# Copy all Vue *.json to docker image.
+# COPY /frontend/vue_spa/*.json /usr/src/frontend/vue_spa/
+
+# Copy all your source code to the image.
+COPY /frontend/vue_spa /usr/src/frontend/vue_spa
+
+# Specify the default directory of this image layer (where 'node_modules' file is holding or will be).
+WORKDIR /usr/src/frontend/vue_spa
+
+# install all npm packages on the system depending on package-lock.json file.
+RUN npm ci && \
+    # Build 'dist' optimized file that Compiled and minified for production.
+    npm run build && \
+    # Delete all directories recursively except 'dist' using 'find' command:
+    # Note: you can use -type f to delete files.
+    find . -maxdepth 1 -type d -not -name 'dist' -delete
 
 # Switch docker container account from 'root' to the new account.
 USER user
 
-# Related to production stage:
-# Copy all Vue *.json to docker image.
-# NOTE: put backslash when trying to copy a file inside a directory.
-# COPY /frontend/*.json /usr/src/frontend/
-# install all npm packages on the system depending on package-lock.json file.
-#    npm ci && \
+# deployment stage.
+# Specify the docker image that your service build on.
+FROM nginx:1.25-alpine AS deploy
+
+# Update package manger.
+RUN apk update && \
+    # Remove unnecessary directories and files.
+    rm -rf /var/lib/apk/lists/* && \
+    rm -rf /usr/share/nginx/html/index.html
+
+# Get from 'prod' stage the 'dist' directory containing.
+COPY --from=prod /usr/src/frontend/vue_spa/dist /usr/share/nginx/html/
+# COPY /frontend/vue_spa/dist /usr/share/nginx/html/
+
+# Copy the configuration file and mime.types
+# Note: if you set file 'default.conf' as read_only (:ro) will lead to get 403 forbbiden.
+COPY /compose/production/nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY /compose/production/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY /compose/production/nginx/mime.types /etc/nginx/mime.types
+
+# Specify the default directory of this image layer (where 'node_modules' file is holding or will be).
+WORKDIR /usr/share/nginx/html
+
+# EXPOSE 80
+
+# Run nginx and run it in a non-background (daemon) mode, Nginx image container by default it start nginx server
+# with daemon off.
+# Note: Docker has a default entrypoint which is /bin/<default_terminal> -c but does not have a default command.
+#       The 'ENTRYPOINT' specifies a command that will always be executed when the container starts.
+#       The 'CMD' specifies arguments that will be fed to the ENTRYPOINT.
+#       For example:
+#
+#       ENTRYPOINT ["/bin/ping"]
+#       CMD ["localhost"]
+CMD ["nginx", "-g", "daemon off;"]

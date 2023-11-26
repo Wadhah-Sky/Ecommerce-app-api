@@ -128,28 +128,33 @@ class POItemSerializer(serializers.ModelSerializer):
     def get_thumbnail(self, instance):
         """Return the available thumbnail of the instance's product item"""
 
-        # Note: here we return the available thumbnail, either the one that
-        #       related to the instance's product item itself or the product
-        #       parent instance, in this case Django can't serialize the
-        #       thumbnail directly as absolute url we need to do manually.
+        if instance.product_item.available_thumbnail:
 
-        # Get request object from 'context'.
-        request = self.context.get("request", None)
+            # Get url of retrieved thumbnail file.
+            url = instance.product_item.available_thumbnail.url
 
-        # Get url of retrieved thumbnail file.
-        url = instance.product_item.available_thumbnail.url
+            # Note: here we return the available thumbnail, either the one that
+            #       related to the instance's product item itself or the
+            #       product parent instance, in this case Django can't
+            #       serialize the thumbnail directly as absolute url we need to
+            #       do manually.
 
-        if request:
+            # Get request object from 'context'.
+            # request = self.context.get("request", None)
 
-            return request.build_absolute_uri(url)
+            # if request:
+            #
+            #     return request.build_absolute_uri(url)
+            #
+            # else:
+            #     # Get current 'Site' model instance from database.
+            #     current_site = Site.objects.get_current()
+            #
+            #     # Use 'domain' field value with thumbnail url value to create
+            #     # full path (absolute url) to thumbnail file.
+            #     return current_site.domain + url
 
-        else:
-            # Get current 'Site' model instance from database.
-            current_site = Site.objects.get_current()
-
-            # Use 'domain' field value with thumbnail url value to create full
-            # path (absolute url) to thumbnail file.
-            return current_site.domain + url
+            return url
 
     def get_product_url(self, instance):
         """Return the product item url of frontend server"""
@@ -172,8 +177,8 @@ class POItemSerializer(serializers.ModelSerializer):
             # Get current 'Site' model instance from database.
             current_site = Site.objects.get_current()
 
-            # Use 'domain' field value with thumbnail url value to create full
-            # path (absolute url) to thumbnail file.
+            # Use 'domain' field value with product url value to create full
+            # path (absolute url) to product.
             return current_site.domain + url
 
 
@@ -228,7 +233,11 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
         # Get current 'Site' model instance from database.
         current_site = Site.objects.get_current()
 
-        # Return 'domain' field value
+        # Return 'domain' field value, which looks like:
+        # http://127.0.0.1:8000/ or https://jamieandcassie.store
+
+        # Note: if you are using nginx server for development or localhost,
+        #       this will return the port of Django service not the nginx.
         return current_site.domain
 
     @property
@@ -371,8 +380,8 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
                 # Get current 'Site' model instance from database.
                 current_site = Site.objects.get_current()
 
-                # Use 'domain' field value with thumbnail url value to create
-                # full path (absolute url) to thumbnail file.
+                # Use 'domain' field value with given url value to create
+                # full path (absolute url) to the given url.
                 return current_site.domain + url
 
         return None
@@ -396,21 +405,27 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
         logo_thumbnail_url = None
         logo_svg_url = None
 
-        # Check if use source for meta item is True:
-        if meta_item.use_source:
-            logo_svg_url = meta_item.source_url
-            logo_thumbnail_url = meta_item.source2_url
+        # check if meta item is exists.
+        if meta_item:
+            # Check if use source for meta item is True:
+            if meta_item.use_source:
+                logo_svg_url = meta_item.source_url
+                logo_thumbnail_url = meta_item.source2_url
 
-        else:
-            # Check if meta item has thumbnail
-            if meta_item.thumbnail:
-                logo_thumbnail_url = self.get_absolute_url(
-                    meta_item.thumbnail.url
-                )
+            else:
+                # Check if meta item has thumbnail
+                if meta_item.thumbnail:
+                    # logo_thumbnail_url = self.get_absolute_url(
+                    #     meta_item.thumbnail.url
+                    # )
 
-            # Check if meta item has file
-            if meta_item.file:
-                logo_svg_url = self.get_absolute_url(meta_item.file.url)
+                    logo_thumbnail_url = meta_item.thumbnail.url
+
+                # Check if meta item has file
+                if meta_item.file:
+                    # logo_svg_url = self.get_absolute_url(meta_item.file.url)
+
+                    logo_svg_url = meta_item.file.url
 
         # Set JSON keys value.
         to_ret['logo_thumbnail'] = logo_thumbnail_url

@@ -81,6 +81,7 @@ class CategorySerializer(serializers.ModelSerializer):
     #       return null.
     # leaf_nodes = CategoryChildSerializer(many=True, read_only=True)
     leaf_nodes = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
 
     def get_leaf_nodes(self, instance):
         """Return all children of instance"""
@@ -113,6 +114,12 @@ class CategorySerializer(serializers.ModelSerializer):
             many=True,
             read_only=True
         ).data
+
+    def get_thumbnail(self, instance):
+        """Return thumbnail url"""
+
+        if instance.thumbnail:
+            return instance.thumbnail.url
 
 
 class CategoryDetailsSerializer(CategorySerializer):

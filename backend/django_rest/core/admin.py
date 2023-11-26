@@ -913,7 +913,8 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
         'item_list_price',
         'item_deal_price',
         'admin_thumbnail',
-        'slug'
+        'slug',
+        'is_available'
     ]
     list_display_links = ['title']
     readonly_fields = [

@@ -28,7 +28,7 @@ export const useHomeStore = defineStore('Home',{
         this.dataResult = this.response.data;
       }
       catch (error){
-          console.log("Error while trying to retrieve the requested data from backend server!");
+          // console.log("Error while trying to retrieve the requested data from backend server!");
           // console.log(error.response.statusText);
       }
       finally {

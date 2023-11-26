@@ -1,7 +1,6 @@
 """Define the serializers for you views"""
 
 # from rest_framework import serializers
-
 from product.serializers import ProductItemSerializer
 
 
@@ -20,6 +19,9 @@ class CartCheckSerializer(ProductItemSerializer):
         # If you want to add new field to the existing ones.
         # fields = ProductItemSerializer.Meta.fields+('detail_only_property',)
 
+        # Note: in this class no need to write method to return thumbnail.url
+        #       because we already do in the parent serializer class.
+
         fields = [
             'sku',
             'slug',
@@ -27,6 +29,6 @@ class CartCheckSerializer(ProductItemSerializer):
             'price_currency_symbol',
             'list_price_amount',
             'deal_price_amount',
-            'limit_per_order',
+            'limit_per_order'
         ]
         read_only_fields = ['sku', 'slug', 'limit_per_order']

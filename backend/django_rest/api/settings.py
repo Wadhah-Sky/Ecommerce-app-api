@@ -12,9 +12,13 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 
 from pathlib import Path
+from django.contrib import admin
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Note: BASE_DIR will be represented inside Docker container not in host
+#       machine, so it's will be:
+#       /usr/src/backend/django_rest
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
@@ -218,9 +222,11 @@ REST_FRAMEWORK = {
 }
 
 # Specify Site ID to domain name that defined in Site table in database.
-# Note: default SITE_ID is '1' with domain/display name of 'example.com', you
-#       should change it through shell or django admin Site model page to value
-#       of production domain name.
+# Note: default SITE_ID is '1' or '2' with domain/display name of 'example.com'
+#       you should change it through shell, django admin Site model page or
+#       directly through database to value of production domain name.
+#       Knowing that you should reset/change the table of 'django_site' in the
+#       database so 'id' field increment in the right way.
 if DEBUG is True:
     # In case we are in development environment, you should create/set domain
     # name of 127.0.0.1:8000
@@ -234,18 +240,140 @@ else:
 # videos.
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-# Specify the url for the web server where can view static files.
-STATIC_URL = '/static/static/'
-MEDIA_URL = '/static/media/'
-
 # Specify the directories for the project static files (where they were created
 # in Docker image).
 STATIC_ROOT = '/usr/src/vol/web/static'
 MEDIA_ROOT = '/usr/src/vol/web/media'
 
-# Define a list of all static files of project apps.
-STATICFILES_DIRS = [
+# Specify the url for the web server where can view static files.
+STATIC_URL = '/static/static/'
+MEDIA_URL = '/static/media/'
+
+# Define additional list for static files to collect.
+# Note: if your container is not connected to source code in host machine, then
+#       you need to re-build the image, before run 'collectstatic' command
+#       because the listed directory maybe in not uploaded to the container
+#       image.
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+# Define sorted list of tuples of your project apps and its models.
+ADMIN_ORDERING = [
+    # ('auth', ['Group']),
+    ('sites', ['Site']),
+    ('core', [
+        'Meta',
+        'MetaItem',
+        'Icon',
+        'Country',
+        'Address',
+        'User',
+        'Category',
+        'TopBanner',
+        'Banner',
+        'Card',
+        'Section',
+        'Attribute',
+        'Supplier',
+        'Product',
+        'ProductAttribute',
+        'ProductItem',
+        'ProductItemAttribute',
+        'ProductGroup',
+        'Promotion',
+        'PromotionCategory',
+        'PromotionItem',
+        'Tax',
+        'PaymentMethod',
+        'ShippingMethod',
+        'PurchaseOrder',
+        'POProfile',
+        'POPayment',
+        'POShipping',
+        'POItem',
+        'Review'
+    ]),
 ]
+
+
+# def get_app_list(self, request, app_label=None):
+#     """Method to override the sort of Django admin models/indexes"""
+#
+#     app_dict = self._build_app_dict(request, app_label)
+#
+#     if not app_dict:
+#         return
+#
+#     new_admin_ordering = []
+#
+#     if app_label:
+#         for ao in ADMIN_ORDERING:
+#             if ao[0] == app_label:
+#                 new_admin_ordering.append(ao)
+#                 break
+#
+#     if not app_label:
+#         for app_key in list(app_dict.keys()):
+#             if not any(app_key in ao_app for ao_app in ADMIN_ORDERING):
+#                 app_dict.pop(app_key)
+#
+#     app_list = sorted(
+#         app_dict.values(),
+#         key=lambda x: [ao[0] for ao in ADMIN_ORDERING].index(x['app_label'])
+#     )
+#
+#     for app, ao in zip(app_list, new_admin_ordering or ADMIN_ORDERING):
+#         if app['app_label'] == ao[0]:
+#             for model in list(app['models']):
+#                 if not model['object_name'] in ao[1]:
+#                     app['models'].remove(model)
+#         app['models'].sort(key=lambda x: ao[1].index(x['object_name']))
+#     return app_list
+
+def get_app_list(self, request):
+    """Method to override the sort of Django admin models/indexes"""
+
+    app_dict = self._build_app_dict(request)
+    for app_name, object_list in ADMIN_ORDERING:
+        app = app_dict[app_name]
+        app['models'].sort(key=lambda x: object_list.index(x['object_name']))
+        yield app
+
+
+# Override the default method of admin get_app_list().
+# Note: using this way will force Django admin to show models that only set in
+#       the given list, so anything that not defined like (authtoken) will not
+#       be shown by default.
+admin.AdminSite.get_app_list = get_app_list
+
+# Set list of hosts which are trusted origins for unsafe requests. If you need
+# cross-origin unsafe requests over HTTPS, continuing the example, add
+# “subdomain.safesite.com” to this list.
+# Note: if you used http://localhost:80 will face issue of:
+#
+#       forbidden (403) CSRF verification failed. Request aborted
+#
+#       When trying to pass username and password (authentication) to Django.
+CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS.extend(
+    filter(
+        None,
+        os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(','),
+    )
+)
+
+# Set whether to use header of proxy server or not, set boolean value that
+# specifies whether to use the X-Forwarded-Host header in preference to the
+# Host header. This should only be enabled if a proxy which sets this header
+# is in use, the X-Forwarded-Host header can include the port number, in which
+# case you shouldn’t use USE_X_FORWARDED_PORT.
+# Note: this useful when using request.build_absolute_uri(<url>) which in this
+#       case will use proxy server host:port not application host:port.
+#       So, you should set in 'default.conf' file for django app path:
+#
+#       proxy_set_header X-Forwarded-Host $host:80
+#
+#       Where 80 is port of nginx container to get reach.
+USE_X_FORWARDED_HOST = bool(int(os.environ.get('USE_X_FORWARDED_HOST', 0)))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -271,6 +399,7 @@ CELERY_RESULT_BACKEND = os.environ.get(
 )
 
 # Specify caches of your backend.
+# Note: 'CACHE' directory will be created for media files in MEDIA_ROOT.
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
