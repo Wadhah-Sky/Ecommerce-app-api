@@ -193,7 +193,7 @@ jobs:
           port: 22
           script_stop: true
           # The following script will run in the connected AWS EC2 instance and will:
-          # 1- Create (if not exists) and move into directory 'ecommerce-app-api'
+          # 1- Remove (if exists), Create and move into directory 'ecommerce-app-api'
           # 2- Create '.env' file with all required environment variables.
           #
           # Note: since we don't initialize git repository locally, we will face following error:
@@ -220,7 +220,9 @@ jobs:
           # 8- Run 'deploy-docker-compose.sh' file script with --compose-file argument that represent docker
           #    compose file to use.
           script: |
-            mkdir -p /home/ubuntu/ecommerce-app-api
+            sudo rm -rf /home/ubuntu/ecommerce-app-api
+            
+            sudo mkdir -p /home/ubuntu/ecommerce-app-api
             
             cd /home/ubuntu/ecommerce-app-api
             
