@@ -278,6 +278,10 @@ jobs:
             PROJECT_GIT_URL='https://github.com/Wadhah-Sky/Ecommerce-app-api.git'
             PROJECT_BASE_PATH='/home/ubuntu/ecommerce-app-api'
             
+            git init
+            
+            git remote add origin $PROJECT_GIT_URL
+            
             git pull origin production
             
             sudo chmod +x ./deploy/deploy-docker-compose.sh
