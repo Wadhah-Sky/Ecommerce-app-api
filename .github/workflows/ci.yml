@@ -172,6 +172,19 @@ jobs:
 
       - name: Deploy to production server
         # Install specific version of 'appleboy/ssh-action' and deploy required values like, host, username, key and script.
+        # Note: key should be private not public, where private is used by the node trying to connect to the node that have
+        #       public key in this case AWS account.
+        #       To print public key in your node, copy the whole text:
+        #       >> cat ~/.ssh/id_rsa.pub
+        #
+        #       To print private key in your node, copy the whole text even the comment:
+        #       >> cat ~/.ssh/id_rsa
+        #
+        # Note: if face the following error while trying to connect to aws host using appleboy/ssh-action@master:
+        #
+        #       ssh.ParsePrivateKey: ssh: no key found
+        #
+        #       This is because you are providing ssh public key not the private.
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_IP }}
@@ -191,6 +204,8 @@ jobs:
           # 7- Run 'deploy-docker-compose.sh' file script with --compose-file argument that represent docker
           #    compose file to use.
           script: |
+            mkdir /home/ubuntu/ecommerce-app-api
+            
             cd /home/ubuntu/ecommerce-app-api
             
             cat << EOF > .env
