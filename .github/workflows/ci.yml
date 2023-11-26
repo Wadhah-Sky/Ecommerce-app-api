@@ -19,6 +19,7 @@ jobs:
     name: Test
     # if you faced issue of queued jobs, it's related to matrix option and its strategy option (we deleted it).
     runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
+    # Using the following line instead of above will lead to issue of waiting runner to pick up the job.
     # runs-on: Ubuntu 20.04
     environment: development
     steps:
@@ -128,7 +129,7 @@ jobs:
 
   deploy_staging:
     name: Deploy to Staging
-    runs-on: Ubuntu 20.04
+    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     needs: [test]
     if: github.ref == 'refs/heads/staging'
 
@@ -143,7 +144,7 @@ jobs:
     #       git pull (or git fetch + git merge): I am working on this, please get me the new changes that may
     #                                            be updated by others.
     name: Deploy to Production
-    runs-on: Ubuntu 20.04
+    runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     needs: [test]
     if: github.ref == 'refs/heads/production'
     environment: production
