@@ -195,19 +195,29 @@ jobs:
           # The following script will run in the connected AWS EC2 instance and will:
           # 1- Create (if not exists) and move into directory 'ecommerce-app-api'
           # 2- Create '.env' file with all required environment variables.
+          #
+          # Note: since we don't initialize git repository locally, we will face following error:
+          #
+          #       fatal: not a git repository error
+          #
+          #       So, we remove the step 3, 4 and 5 and use 'git clone' command instead.
           # 3- Run 'git stash', saves the uncommitted changes locally, allowing you to make changes,
           #    switch branches, and perform other Git operations. You can then reapply the stashed changes
-          #    when you need them. A stash is locally scoped and is not pushed to the remote.
-          #    Here, we remove 'git stash' because it leads to error:
+          #    when you need them. A stash is locally scoped and is not pushed to the remote:
           #
-          #    fatal: not a git repository error
+          #    >> git stash
           #
-          #    That because we didn't initialize git repository locally which happens when you do first pull from
-          #    remote repository.
-          # 4- Connect to remote repository.
-          # 5- Pull the project files from GitHub repository. note that we pull the 'production' branch.
-          # 6- Give the 'deploy-docker-compose.sh' file an execute permission.
-          # 7- Run 'deploy-docker-compose.sh' file script with --compose-file argument that represent docker
+          # 4- Connect to remote repository, using:
+          #
+          #    >> git remote add origin $PROJECT_GIT_URL
+          #
+          # 5- Pull the project files from GitHub repository. note that we pull the 'production' branch, using:
+          #
+          #    >> git pull origin production
+          #
+          # 6- Clone your project from remote repository.
+          # 7- Give the 'deploy-docker-compose.sh' file an execute permission.
+          # 8- Run 'deploy-docker-compose.sh' file script with --compose-file argument that represent docker
           #    compose file to use.
           script: |
             mkdir -p /home/ubuntu/ecommerce-app-api
@@ -263,10 +273,9 @@ jobs:
             EOF
             
             PROJECT_GIT_URL='https://github.com/Wadhah-Sky/Ecommerce-app-api.git'
+            PROJECT_BASE_PATH='/home/ubuntu/ecommerce-app-api'
             
-            git remote add origin $PROJECT_GIT_URL
-            
-            git pull origin production
+            git clone $PROJECT_GIT_URL $PROJECT_BASE_PATH
             
             sudo chmod +x ./deploy/deploy-docker-compose.sh
             
