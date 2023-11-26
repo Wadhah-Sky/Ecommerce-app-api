@@ -198,6 +198,12 @@ jobs:
           # 3- Run 'git stash', saves the uncommitted changes locally, allowing you to make changes,
           #    switch branches, and perform other Git operations. You can then reapply the stashed changes
           #    when you need them. A stash is locally scoped and is not pushed to the remote.
+          #    Here, we remove 'git stash' because it leads to error:
+          #
+          #    fatal: not a git repository error
+          #
+          #    That because we didn't initialize git repository locally which happens when you do first pull from
+          #    remote repository.
           # 4- Connect to remote repository.
           # 5- Pull the project files from GitHub repository. note that we pull the 'production' branch.
           # 6- Give the 'deploy-docker-compose.sh' file an execute permission.
@@ -255,8 +261,6 @@ jobs:
             DJANGO_SUPERUSER_LAST_NAME=${{secrets.DJANGO_SUPERUSER_LAST_NAME}}
             DJANGO_SUPERUSER_PASSWORD=${{secrets.DJANGO_SUPERUSER_PASSWORD}}
             EOF
-            
-            git stash
             
             PROJECT_GIT_URL='https://github.com/Wadhah-Sky/Ecommerce-app-api.git'
             
