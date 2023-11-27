@@ -201,25 +201,28 @@ jobs:
           #
           #       fatal: not a git repository error
           #
-          #       So, we remove the step 3, 4 and 5 and use 'git clone' command instead.
-          # 3- Run 'git stash', saves the uncommitted changes locally, allowing you to make changes,
+          # 3- initialize .git file and config 'init.defaultBranch' to be production
+          #
+          # 4- Run 'git stash', saves the uncommitted changes locally, allowing you to make changes,
           #    switch branches, and perform other Git operations. You can then reapply the stashed changes
           #    when you need them. A stash is locally scoped and is not pushed to the remote:
           #
           #    >> git stash
           #
-          # 4- Connect to remote repository, using:
+          # 5- Connect to remote repository, using:
           #
           #    >> git remote add origin $PROJECT_GIT_URL
           #
-          # 5- Pull the project files from GitHub repository. note that we pull the 'production' branch, using:
+          # 6- Pull the project files from GitHub repository. note that we pull the 'production' branch, using:
           #
           #    >> git pull origin production
           #
-          # 6- Clone your project from remote repository.
           # 7- Give the 'deploy-docker-compose.sh' file an execute permission.
+          #
           # 8- Run 'deploy-docker-compose.sh' file script with --compose-file argument that represent docker
           #    compose file to use.
+          #
+          # 9- Remove .env file.
           script: |
             rm -rf /home/ubuntu/ecommerce-app-api
             
@@ -288,3 +291,6 @@ jobs:
             
             sudo chmod +x ./deploy/deploy-docker-compose.sh
             
+            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml
+            
+            rm .env

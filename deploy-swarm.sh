@@ -128,17 +128,18 @@ set -a; . .env; set +a
 # Define a function to be call when help option is been called or no arguments are provided,.
 function usage() {
   # Using cat tool to print on the screen the following text.
-    cat <<USAGE
+  cat <<USAGE
 
-    Usage: $0 [-c compose-file] [-s stack-name]
+  Usage: $0 [-c compose-file] [-s stack-name]
 
-    Options:
-        -c, --compose-file:   Specify the docker compose file to be use, i.e., docker-compose.yml,
-                              default value is 'docker-compose.yml'.
-        -s, --stack-name:     Specify a name to represent the stack that will deploy into docker swarm,
-                              default value is 'ecommerce'.
+  Options:
+      -c, --compose-file:   Specify the docker compose file to be use, i.e., docker-compose.yml,
+                            default value is 'docker-compose.yml'.
+
+      -s, --stack-name:     Specify a name to represent the stack that will deploy into docker swarm,
+                            default value is 'ecommerce'.
 USAGE
-    exit 1
+  exit 1
 }
 
 # if no arguments are provided, return usage function, if not able to call usage function then will
@@ -153,26 +154,26 @@ DOCKER_COMPOSE_FILE=
 STACK_NAME=
 
 # We iterating through all arguments (flags) and its values of the command and use the 'shift' statement to
-# remove the current argument or value.
-for arg in "$@"; do
-    case $arg in
-    -c | --compose-file)
-        DOCKER_COMPOSE_FILE=$1 # Save flag value
-        shift # Remove --compose-file or -c from `$@`
-        shift # Remove argument value from `$@`
-        ;;
+# remove the current argument or value, the while loop will breaks when there is no more argument left.
+while [[ $# -gt 0 ]]; do
+  case $1 in # Check argument value
+
+    -c| --compose-file)
+    DOCKER_COMPOSE_FILE=$2; # Save flag (argument) value
+    shift;; # Remove --compose-file or -c from `$#`
+
     -s | --stack-name)
-        STACK_NAME=$2 # Save flag value
-        shift # Remove argument (-t) name from `$@`
-        shift # Remove argument value (latest) from `$@`
-        ;;
-    -h | --help)
-        usage # run usage function on help
-        ;;
+    STACK_NAME=$2; # Save flag (argument) value
+    shift;; # Remove --stack-name or -s from `$#`
+
+    -h| --help)
+    usage;; # run usage function on help
+
     *) # Any other arguments.
-        usage # run usage function if wrong argument provided
-        ;;
-    esac # end of case statement
+    usage;; # run usage function if wrong argument provided
+
+  esac # end of case statement
+  shift # Remove argument's value from `$#`
 done
 
 # Check the flags values if empty or not.

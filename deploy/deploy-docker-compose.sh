@@ -7,15 +7,16 @@ set -o nounset
 # Define a function to be call when help option is been called or no arguments are provided,.
 function usage() {
   # Using cat tool to print on the screen the following text.
-    cat <<USAGE
+  cat <<USAGE
 
-    Usage: $0 [-c compose-file]
+  Usage: $0 [-c compose-file]
 
-    Options:
-        -c, --compose-file:   Specify the docker compose file to be use, i.e., docker-compose.yml,
+  Options:
+
+      -c, --compose-file:   Specify the docker compose file to be use, i.e., docker-compose.yml,
                               default value is 'docker-compose.yml'.
 USAGE
-    exit 1
+  exit 1
 }
 
 # if no arguments are provided, return usage function, if not able to call usage function then will
@@ -29,21 +30,22 @@ fi # end of if statement
 DOCKER_COMPOSE_FILE=
 
 # We iterating through all arguments (flags) and its values of the command and use the 'shift' statement to
-# remove the current argument or value.
-for arg in "$@"; do
-    case $arg in
-    -c | --compose-file)
-        DOCKER_COMPOSE_FILE=$1 # Save flag value
-        shift # Remove --compose-file or -c from `$@`
-        shift # Remove argument value from `$@`
-        ;;
-    -h | --help)
-        usage # run usage function on help
-        ;;
+# remove the current argument or value, the while loop will breaks when there is no more argument left.
+while [[ $# -gt 0 ]]; do
+  case $1 in # Check argument value
+
+    -c| --compose-file)
+    DOCKER_COMPOSE_FILE=$2; # Save flag (argument) value
+    shift;; # Remove --compose-file or -c from `$#`
+
+    -h| --help)
+    usage;; # run usage function on help
+
     *) # Any other arguments.
-        usage # run usage function if wrong argument provided
-        ;;
-    esac # end of case statement
+    usage;; # run usage function if wrong argument provided
+
+  esac # end of case statement
+  shift # Remove argument's value from `$#`
 done
 
 # Check the flags values if empty or not.
