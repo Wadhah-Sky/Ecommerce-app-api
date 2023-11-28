@@ -61,8 +61,13 @@ fi
 sudo docker compose -f $DOCKER_COMPOSE_FILE stop
 sudo docker compose -f $DOCKER_COMPOSE_FILE down
 
-# Build the given docker compose file service.
-sudo docker compose -f $DOCKER_COMPOSE_FILE build
+# Build the given docker compose file service (only the ones who have build argument).
+sudo docker compose -f $DOCKER_COMPOSE_FILE build elk_setup
+sudo docker compose -f $DOCKER_COMPOSE_FILE build elasticsearch
+sudo docker compose -f $DOCKER_COMPOSE_FILE build db
+sudo docker compose -f $DOCKER_COMPOSE_FILE build app
+sudo docker compose -f $DOCKER_COMPOSE_FILE build worker
+sudo docker compose -f $DOCKER_COMPOSE_FILE build nginx
 
 # Note: I choose to run each service manually without using 'up' command with service profile.
 
