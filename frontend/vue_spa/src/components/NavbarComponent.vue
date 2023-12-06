@@ -235,11 +235,11 @@ onMounted(() => {
     to certain element, in order to close the cart dropdown menu component if it opens.
     So need to set a handler on 'document' that listen for event click whenever triggered.
    */
-  document.addEventListener("click", e => handleClick(e));
+  document.addEventListener("click", e => handleClick(e), {passive: true});
 
 });
 onUnmounted(() => {
-  document.removeEventListener("click", e => handleClick(e))
+  document.removeEventListener("click", e => handleClick(e));
 });
 
 // Watch route

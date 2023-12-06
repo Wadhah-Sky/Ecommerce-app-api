@@ -40,7 +40,7 @@ export const useHomeStore = defineStore('Home',{
           const storeContentLoading = useContentLoadingStore();
           // Set state of homeViewDataLoading to be false so the user can view the content of home page.
           // Note: We need to delay this step so that the 'LogoLoadingComponent' still active for longer time.
-          setTimeout(() => {storeContentLoading.$patch({homeViewDataLoading: false})},1000);
+          setTimeout(() => {storeContentLoading.$patch({homeViewDataLoading: false})},0);
       }
     },
 

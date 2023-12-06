@@ -23,6 +23,15 @@ Hot Reload is always enabled except following situations:
 
 const { defineConfig } = require('@vue/cli-service');
 const path = require(`path`);
+/*
+  To install compression plugin:
+
+  >> npm install compression-webpack-plugin --save-dev
+ */
+const CompressionPlugin = require('compression-webpack-plugin');
+// The node:zlib module provides compression functionality implemented using Gzip, Deflate/Inflate, and Brotli.
+// it's already folded withing node package.
+const zlib = require("node:zlib");
 
 module.exports = defineConfig({
   /*
@@ -87,14 +96,89 @@ module.exports = defineConfig({
     //   }
     // }
     resolve: {
-      extensions: ['.js', '.jsx', '.vue'],
+      extensions: ['.js', '.jsx', '.vue', '.br'],
       symlinks: false,
       alias: {
         "@": path.resolve(__dirname, './src'),
         'vue$': 'vue/dist/vue.esm-bundler.js',
         vue: path.resolve(__dirname, `./node_modules/vue`)
       }
-    }
+    },
+    plugins: [
+        // Use compression plugin to create minimized size of statics files, only for production.
+        process.env.NODE_ENV === "production" ? new CompressionPlugin({
+          /*
+             Available options:
+
+              1- test
+              2- include
+              3- exclude
+              4- algorithm
+              5- compressionOptions
+              6- threshold
+              7- minRatio
+              8- filename
+              9- deleteOriginalAssets
+
+              Look at following link to know default and how to set options:
+
+              https://github.com/webpack-contrib/compression-webpack-plugin
+           */
+
+          // Default for filename is "[path][base].gz"
+          /*
+            For example, we have following static >> assets/images/image.png?foo=bar#hash:
+
+              [path] is replaced with the directories to the original asset, included trailing / (assets/images/).
+              [file] is replaced with the path of original asset (assets/images/image.png).
+              [base] is replaced with the base ([name] + [ext]) of the original asset (image.png).
+              [name] is replaced with the name of the original asset (image).
+              [ext] is replaced with the extension of the original asset, included . (.png).
+              [query] is replaced with the query of the original asset, included ? (?foo=bar).
+              [fragment] is replaced with the fragment (in the concept of URL it is called hash) of the original asset (#hash).
+           */
+          filename: '[path][base].br',
+          // Brotli: is a  lossless data compression algorithm originally developed by Google,
+          //         and offers compression superior to gzip.
+          algorithm: 'brotliCompress',
+          // set regex test to deal with files that pass it.
+          // Note: if you want only to compress javascript files use the regex:
+          //       /\.js(\?.*)?$/i
+          test: /\.(js|css|html|svg)$/,
+          compressionOptions: {
+            params: {
+              // Note: Brotli’s BROTLI_PARAM_QUALITY option is functionally equivalent to zlib’s level option
+              //       that you are using in Nginx server.
+              [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
+            },
+          },
+          // threshold means only assets bigger than this size are processed. In bytes. Default is 0
+          threshold: 8192,
+          /*
+             minRatio is only assets that compress better than specified ratio are processed, Default is 0.8:
+
+             (minRatio = Compressed Size / Original Size)
+
+             Example: you have image.png file with 1024b size, compressed version of file has 768b size, so
+                      minRatio equal 0.75. In other words assets will be processed when the:
+
+                      Compressed Size / Original Size value
+
+                      is less minRatio value.
+
+                      Note: You can use 1 value to process assets that are smaller than the original.
+                            Or use a value of 'Infinity' (no quotes) to process all assets even if they are larger
+                            than the original size or their original size is 0 bytes (useful when you are pre-zipping
+                            all assets for AWS cloud).
+          */
+          minRatio: Infinity,
+          // Note: don't delete the original files because Nginx server can't handle <file-name>.extension.br and
+          //       <file-name>.extension.gz without having <file-name>.extension version in folder, Nginx will send
+          //       compressed files (of course if browser will send proper accept-encoding attribute in request
+          //       (e.g. accept-encoding: gzip, deflate, br).
+          // deleteOriginalAssets: true,
+        }) : ""
+    ]
   },
 
   /* Webpack Configurations.
@@ -159,6 +243,41 @@ module.exports = defineConfig({
         port: 8080,
       },
     },
+    /*
+      It seems like the compression-webpack-plugin only compresses files, but it doesn't automatically
+      configure the dev server to serve the compressed files in place of the original file.
+
+      You can manually setup a middleware via vue.config.js's devServer option (passed through to webpack-dev-server)
+      to do this:
+
+      1- Rewrite all .js requests that accept 'br' encoding to append .br to the original URL, which matches the filename
+         setting given to compression-webpack-plugin. This effectively fetches the .br file compressed by the plugin.
+
+      2- Set response headers to indicate the 'br' content encoding and application/javascript content type so that browsers
+         could understand how to process the file.
+     */
+    setupMiddlewares(middlewares, devServer) {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined')
+      }
+
+      // middlewares.unshift({
+      //   // In case you only compressed the all javascript files using Brotli algorithm.
+      //   name: 'serve-brotli-js',
+      //   // If you want to serve only .js files, use '*.js'
+      //   path: '*.js',
+      //   middleware: (req, res, next) => {
+      //     if (req.get('Accept-Encoding')?.includes('br')) {
+      //       req.url += '.br'
+      //       res.set('Content-Encoding', 'br')
+      //       res.set('Content-Type', 'application/javascript; charset=utf-8')
+      //     }
+      //     next()
+      //   }
+      // });
+
+      return middlewares
+    }
   },
 });
 

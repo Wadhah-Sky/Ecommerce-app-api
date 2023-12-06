@@ -63,10 +63,10 @@ const onToggleCollapse = () => {
 
 // Life-cycle
 onMounted(() => {
-    window.addEventListener('resize', handleResize)
+    window.addEventListener('resize', handleResize, {passive: true});
 });
 onUnmounted(() => {
-    window.removeEventListener('resize', handleResize)
+    window.removeEventListener('resize', handleResize, {passive: true});
 });
 
 // Watch window width

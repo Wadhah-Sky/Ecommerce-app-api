@@ -10,7 +10,7 @@
         }"
         class="img-wrap"
     >
-      <img v-lazy="props.thumbnail" :alt="props.productTitle">
+      <img v-lazy="props.thumbnail" :alt="props.productTitle" width="260" height="220">
     </router-link>
 
     <figcaption class="card-body info-wrap">

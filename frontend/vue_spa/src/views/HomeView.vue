@@ -12,7 +12,7 @@
                          class="img-wrap"
                          style="max-width: 1118px !important; max-height: 280px!important;"
             >
-              <img v-lazy="banner.thumbnail" :alt="banner.title" >
+              <img v-lazy="banner.thumbnail" :alt="banner.title" width="1118" height="280" style="width:auto; height: auto;">
             </router-link>
           </div>
 
@@ -68,7 +68,7 @@
             <router-link
                 :to="{ name: 'storeCategory', params:{ slug: card.category_slug }, query: {page: 1} }"
             >
-              <img v-lazy="card.thumbnail" :alt="card.title" class="card-img-top img-wrap" style="object-fit: contain; -o-object-fit: contain">
+              <img v-lazy="card.thumbnail" :alt="card.title" class="card-img-top img-wrap" width="260" height="220" style="object-fit: contain; -o-object-fit: contain">
             </router-link>
 
             <div class="card-body">

@@ -247,7 +247,7 @@ export const useNavSidebarStore = defineStore('NavSidebar',{
                 const storeContentLoading = useContentLoadingStore();
                 // Set state of homeViewDataLoading to be false so the user can view the content of home page.
                 // Note: We need to delay this step so that the 'LogoLoadingComponent' still active for longer time.
-                setTimeout(() => {storeContentLoading.$patch({navSidebarDataLoading: false})},1000);
+                setTimeout(() => {storeContentLoading.$patch({navSidebarDataLoading: false})},0);
             }
         },
     }

@@ -42,6 +42,7 @@
     "@vue/cli-plugin-router": "~5.0.8",
     "@vue/cli-service": "^5.0.8",
     "@vue/test-utils": "^2.4.1",
+    "compression-webpack-plugin": "^10.0.0",
     "cypress": "^13.3.2",
     "eslint": "8.52.0",
     "eslint-plugin-vue": "^9.17.0",

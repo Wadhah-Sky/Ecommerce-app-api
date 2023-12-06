@@ -238,7 +238,7 @@ services:
   nginx:
     # This service will use deploy stage in Vue docker file where copy contain of 'dist' directory
     # from build process and paste it into 'html' directory of Nginx image.
-    image: 127.0.0.1:5000/vue
+    image: 127.0.0.1:5000/nginx
     build:
       context: .
       dockerfile: compose/local/vue/Dockerfile

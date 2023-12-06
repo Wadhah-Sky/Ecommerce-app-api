@@ -32,10 +32,14 @@ function scrollTopSmooth(initY, duration = 300, timingName = "linear") {
 
 // Subscribe any element with [href="#"]
 Array.from(document.querySelectorAll("[href='#']")).forEach(btn => {
+    // Note: By marking a touch or wheel listener as passive, the developer is promising the handler
+    //       won't call 'preventDefault()' to disable scrolling. This frees the browser up to respond to
+    //       scrolling immediately without waiting for JavaScript, thus ensuring a reliably smooth scrolling
+    //       experience for the user.
     btn.addEventListener("click", (e) => {
         e.preventDefault();
         scrollTopSmooth(window.scrollY, 300, "ease-in-out");
-    });
+    }, {passive: true});
 });
 
 export {scrollTopSmooth};
