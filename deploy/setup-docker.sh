@@ -23,7 +23,7 @@ if service_exists docker; then
        echo "Yes, Docker is active, cancel installation process"
     else
        echo "No, Starting Docker service..."
-       sudo service docker start
+       service docker start
     fi
 
 else
@@ -33,31 +33,31 @@ else
   echo "Add Docker's official GPG key"
 
   # The option -y to apt-get will automatically answer "yes" to prompts.
-  sudo apt-get -y install ca-certificates curl gnupg
+  apt-get -y install ca-certificates curl gnupg
 
-  sudo install -m 0755 -d /etc/apt/keyrings
+  install -m 0755 -d /etc/apt/keyrings
 
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-  sudo chmod a+r /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
 
   echo "Add the repository to (apt) package manager sources"
 
-  echo "deb [arch='$(dpkg --print-architecture)' signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu '$(. /etc/os-release && echo "$VERSION_CODENAME")' stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  echo "deb [arch='$(dpkg --print-architecture)' signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu '$(. /etc/os-release && echo "$VERSION_CODENAME")' stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-  sudo apt-get -y update
+  apt-get -y update
 
   echo "Step 2: Install the Docker packages..."
 
-  sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
   echo "Step 3: Verify Docker is installed successfully"
 
-  sudo docker -v | grep -E "Docker version" || ehco "Docker is NOT installed successfully"
+  docker -v | grep -E "Docker version" || ehco "Docker is NOT installed successfully"
 
   echo "Step 4: Starting Docker service..."
 
-  sudo service docker start
+  service docker start
 
   echo "Done! :)"
 

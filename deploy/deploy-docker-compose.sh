@@ -58,28 +58,28 @@ fi
 
 # First stop the current running docker services (in case there are) in given docker compose file,
 # and remove them (only containers while volumes keep it).
-sudo docker compose -f $DOCKER_COMPOSE_FILE stop
-sudo docker compose -f $DOCKER_COMPOSE_FILE down
+docker compose -f $DOCKER_COMPOSE_FILE stop
+docker compose -f $DOCKER_COMPOSE_FILE down
 
 # Build the given docker compose file service (only the ones who have build argument).
-# sudo docker compose -f $DOCKER_COMPOSE_FILE build elk_setup
-# sudo docker compose -f $DOCKER_COMPOSE_FILE build elasticsearch
-# sudo docker compose -f $DOCKER_COMPOSE_FILE build db
-# sudo docker compose -f $DOCKER_COMPOSE_FILE build app
-# sudo docker compose -f $DOCKER_COMPOSE_FILE build worker
-# sudo docker compose -f $DOCKER_COMPOSE_FILE build nginx
-sudo docker compose -f $DOCKER_COMPOSE_FILE build
+# docker compose -f $DOCKER_COMPOSE_FILE build elk_setup
+# docker compose -f $DOCKER_COMPOSE_FILE build elasticsearch
+# docker compose -f $DOCKER_COMPOSE_FILE build db
+# docker compose -f $DOCKER_COMPOSE_FILE build app
+# docker compose -f $DOCKER_COMPOSE_FILE build worker
+# docker compose -f $DOCKER_COMPOSE_FILE build nginx
+docker compose -f $DOCKER_COMPOSE_FILE build
 
 # Note: I choose to run each service manually without using 'up' command with service profile.
 
 # Run elasticsearch service.
-sudo docker compose -f $DOCKER_COMPOSE_FILE up elasticsearch
+docker compose -f $DOCKER_COMPOSE_FILE up elasticsearch
 
 # Run the setup process for elasticsearch.
-sudo docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
+docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
 
 # Run the database service.
-sudo docker compose -f $DOCKER_COMPOSE_FILE up db
+docker compose -f $DOCKER_COMPOSE_FILE up db
 
 # Create migration of your django service (app) apps models to the database:
 # 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps.
@@ -89,24 +89,24 @@ sudo docker compose -f $DOCKER_COMPOSE_FILE up db
 #    the -f option indicates that this action will be forcefully performed.
 # 3- Create a new initial migration for the apps.
 # 4- Fake a migration to the initial migration for the apps.
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake zero"
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake zero"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
 
 # Create super user depending on environment variables.
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
 
 # Collect static files of Django service (app)
 # Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.
 #       --clear flag means clear the existing static files before creating the new ones.
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py collectstatic --no-input --clear"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py collectstatic --no-input --clear"
 
 # Re-build indexes of elasticsearch engine.
-sudo docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "/usr/src/compose/es-index-rebuild.sh"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "/usr/src/compose/es-index-rebuild.sh"
 
 # Run the other services.
-sudo docker compose -f $DOCKER_COMPOSE_FILE up
+docker compose -f $DOCKER_COMPOSE_FILE up
 
 echo "Your docker compose services is up..."
 
