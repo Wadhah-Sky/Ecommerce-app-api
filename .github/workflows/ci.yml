@@ -312,8 +312,8 @@ jobs:
     if: github.ref == 'refs/heads/production/linode'
     environment: production
     steps:
-      - name: Deploy to production server
-        uses: appleboy/ssh-action@master
+      - uses: appleboy/ssh-action@master
+        name: Deploy to production server
         with:
           # Host: is public IP (unchangeable) or DNS IPv4 for Linode instance
           host: ${{ secrets.Linode_HOST_IP }}
