@@ -21,8 +21,7 @@ jobs:
     environment: production
     steps:
       - name: Deploy to production server
-        uses: actions/checkout@v4
-        run: echo "Test" && exit 0
+        run: echo "Test"
 
 #  test:
 #    name: Test
