@@ -202,7 +202,7 @@ services:
       - "9300:9300"
     healthcheck:
       # Here our test is not about starting the service, it's about the Elasticsearch engine is ready and run
-      # in another means http response of engine health is containing "status" : "yellow".
+      # in another means http response of engine health is containing "status" : "yellow" or "status" : "green".
       # Note: if you want to use this command within this service container directly, then use 'localhost:9200' or
       #       'http://localhost:9200' but if your trying to connect from another service then use '<name_of_service:port>'
       #       because 'elasticsearch' is related to docker daemon that use names of containers to manage connection.
@@ -214,7 +214,7 @@ services:
       #       3- if you are running Elasticsearch with only 1 node, like when running Elasticsearch on local in
       #          a Docker container, and you only have 1 container. Elasticsearch will not make that node/container
       #          a replica, so your indices would always be yellow.
-      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "yellow"', " || exit 1" ]
+      test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "yellow|green"', " || exit 1" ]
       interval: 30s
       timeout: 10s
       start_period: 240s
@@ -443,9 +443,13 @@ services:
       - SQL_USER=${SQL_USER}
       - SQL_PASS=${SQL_PASS}
       - SQL_PORT=5432
+      - EMAIL_BACKEND_NAME=${EMAIL_BACKEND_NAME}
+      - EMAIL_BACKEND=${EMAIL_BACKEND}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - MAILJET_API_KEY=${MAILJET_API_KEY}
+      - MAILJET_SECRET_KEY=${MAILJET_SECRET_KEY}
       - ELASTIC_USERNAME=${ELASTIC_USERNAME}
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_HOSTS}

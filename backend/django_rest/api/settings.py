@@ -444,14 +444,17 @@ MONEY_DECIMAL_PLACES = 2
 # Specify Money default currency.
 MONEY_DEFAULT_CURRENCY = 'USD'
 
-# Specify backend to send mail with Anymail’s Amazon SES.
-EMAIL_BACKEND = 'anymail.backends.amazon_ses.EmailBackend'
+# Specify backend to send mail with Anymail’s backend.
+EMAIL_BACKEND = os.getenv(
+    'EMAIL_BACKEND',
+    'anymail.backends.amazon_ses.EmailBackend'
+)
 
 # Specify Default email address to use for various automated correspondence
 # from the site manager(s). This does not include error messages sent to ADMINS
 # and MANAGERS;
 # Django’s defaults is “webmaster@localhost”
-DEFAULT_FROM_EMAIL = "noreply@jamieandcassie.store"
+DEFAULT_FROM_EMAIL = "no-reply@jamieandcassie.store"
 
 # Specify the email address that error messages come from, such as those sent
 # to ADMINS and MANAGERS. Django’s defaults is “root@localhost”
@@ -474,48 +477,56 @@ SERVER_EMAIL = "wadhah.sky@gmail.com"
 #       AWS_PROFILE  # Profile name for (.aws) file that contains (credentials)
 #                    # and (config) files, if you set this parameter then no
 #                    # need to above parameters. Default is (.aws)
-ANYMAIL = {
+if os.getenv('EMAIL_BACKEND_NAME', '').lower() == 'mailjet':
+    ANYMAIL = {
+        "MAILJET_API_KEY": os.getenv('MAILJET_API_KEY', ''),
+        "MAILJET_SECRET_KEY": os.getenv('MAILJET_SECRET_KEY', ''),
+    }
+else:
+    ANYMAIL = {
 
-    # Optional. Additional client parameters Anymail should use to create the
-    # boto3 session client.
-    'AMAZON_SES_CLIENT_PARAMS': {
-        # example: override normal Boto credentials specifically for Anymail
-        'aws_access_key_id': os.getenv('AWS_ACCESS_KEY_ID', ''),
-        'aws_secret_access_key': os.getenv('AWS_SECRET_ACCESS_KEY', ''),
-        # Specify your Amazon SES identity region (that been created)
-        # Info: Here we are specified Bahrain (me-south-1)
-        'region_name': os.getenv('AWS_DEFAULT_REGION', ''),
-        # override other default options
-        # "config": {
-        #    "connect_timeout": 30,
-        #    "read_timeout": 30,
-        # }
-    },
+        # Optional. Additional client parameters Anymail should use to create
+        # the boto3 session client.
+        'AMAZON_SES_CLIENT_PARAMS': {
+            # example: override normal Boto credentials specifically for
+            #          Anymail.
+            'aws_access_key_id': os.getenv('AWS_ACCESS_KEY_ID', ''),
+            'aws_secret_access_key': os.getenv('AWS_SECRET_ACCESS_KEY', ''),
+            # Specify your Amazon SES identity region (that been created)
+            # Info: Here we are specified Bahrain (me-south-1)
+            'region_name': os.getenv('AWS_DEFAULT_REGION', ''),
+            # override other default options
+            # "config": {
+            #    "connect_timeout": 30,
+            #    "read_timeout": 30,
+            # }
+        },
 
-    # Some email capabilities aren’t supported by all ESPs. When you try to
-    # send a message using features Anymail can’t communicate to the current
-    # ESP, you’ll get an AnymailUnsupportedFeature error, and the message won’t
-    # be sent.
-    # If you’d like to silently ignore and send the email, Set the following
-    'IGNORE_UNSUPPORTED_FEATURES': True,
+        # Some email capabilities aren’t supported by all ESPs. When you try to
+        # send a message using features Anymail can’t communicate to the
+        # current ESP, you’ll get an AnymailUnsupportedFeature error, and the
+        # message won’t be sent.
+        # If you’d like to silently ignore and send the email, Set the
+        # following
+        'IGNORE_UNSUPPORTED_FEATURES': True,
 
-    # Optional, Additional session parameters Anymail should use to create the
-    # boto3 Session.
-    # 'AMAZON_SES_SESSION_PARAMS': {
-    #      'profile_name': 'anymail-testing',
-    #  },
+        # Optional, Additional session parameters Anymail should use to create
+        # the boto3 Session.
+        # 'AMAZON_SES_SESSION_PARAMS': {
+        #      'profile_name': 'anymail-testing',
+        #  },
 
-    # Optional, The name of an Amazon SES Configuration Set Anymail should use
-    # when sending messages. The default is to send without any Configuration
-    # Set.
-    # Note: that a Configuration Set is required to receive SES Event
-    #       Publishing tracking events.
-    # AMAZON_SES_CONFIGURATION_SET_NAME: "",
+        # Optional, The name of an Amazon SES Configuration Set Anymail should
+        # use when sending messages. The default is to send without any
+        # Configuration Set.
+        # Note: that a Configuration Set is required to receive SES Event
+        #       Publishing tracking events.
+        # AMAZON_SES_CONFIGURATION_SET_NAME: "",
 
-    # Optional, default None. The name of an Amazon SES “Message Tag” whose
-    # value is set from a message’s Anymail tags.
-    # AMAZON_SES_MESSAGE_TAG_NAME: '',
-}
+        # Optional, default None. The name of an Amazon SES “Message Tag” whose
+        # value is set from a message’s Anymail tags.
+        # AMAZON_SES_MESSAGE_TAG_NAME: '',
+    }
 
 # Set Elasticsearch engine configuration.
 ELASTICSEARCH_DSL = {

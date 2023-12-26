@@ -174,7 +174,7 @@ class Command(BaseCommand):
 
         cmd = f'curl -u {host_username}:{host_password} ' \
               f'{elasticsearch_host}/_cluster/health?pretty | ' \
-              f'grep -E "yellow" || exit 1'
+              f'grep -E "yellow|green" || exit 1'
 
         es_ready = False
 

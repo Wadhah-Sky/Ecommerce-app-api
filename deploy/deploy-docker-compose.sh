@@ -75,7 +75,8 @@ docker compose -f $DOCKER_COMPOSE_FILE build
 # Run elasticsearch service.
 docker compose -f $DOCKER_COMPOSE_FILE up elasticsearch
 
-# Run the setup process for elasticsearch.
+# Run the setup process for elasticsearch (this service has script to wait until elasticsearch service is ready,
+# do its job and exit).
 docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
 
 # Run the database service.

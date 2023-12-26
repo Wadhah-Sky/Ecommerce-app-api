@@ -8,7 +8,7 @@ name: Ecommerce CI
 # Specify events.
 on:
   push:
-    branches: [main, staging, production]
+    branches: [main, staging, production-aws]
   pull_request:
 
 
@@ -137,16 +137,16 @@ jobs:
       - uses: actions/checkout@v4
       - run: echo "Deploy to STAGING code here"
 
-  deploy_production:
+  deploy_production_aws:
     # Important: first of all you need to make sure that AWS EC2 that will connect to, have installed Docker.
     # Note: AWS EC2 is already have 'git' version control installed.
     # info: git clone: Get a working copy of the remote repository.
     #       git pull (or git fetch + git merge): I am working on this, please get me the new changes that may
     #                                            be updated by others.
-    name: Deploy to Production
+    name: Deploy to Production on AWS cloud
     runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     needs: [test]
-    if: github.ref == 'refs/heads/production'
+    if: github.ref == 'refs/heads/production-aws'
     environment: production
     steps:
       - name: Get Github action IP
