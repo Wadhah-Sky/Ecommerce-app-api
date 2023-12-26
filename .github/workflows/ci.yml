@@ -8,7 +8,7 @@ name: Ecommerce CI
 # Specify events.
 on:
   push:
-    branches: [main, staging, production/aws]
+    branches: [main, staging, production/aws, production/linode]
   pull_request:
 
 
@@ -305,6 +305,7 @@ jobs:
             rm .env
 
   deploy_production_linode:
+    # Deploy to Linode cloud
     name: Deploy to Production on Linode cloud
     runs-on: ${{ fromJSON('["ubuntu-latest", "self-hosted"]')[github.repository == 'github/docs-internal'] }}
     needs: [ test ]
