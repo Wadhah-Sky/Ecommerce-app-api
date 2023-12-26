@@ -313,7 +313,8 @@ jobs:
     environment: production
     steps:
       - name: Deploy to production server
-        run: echo "Hello"
+        uses: actions/checkout@v4
+        run: echo "Test" && exit 0
 #        uses: appleboy/ssh-action@master
 #        with:
 #          # Host: is public IP (unchangeable) or DNS IPv4 for Linode instance
