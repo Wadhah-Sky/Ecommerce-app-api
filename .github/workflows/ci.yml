@@ -312,15 +312,15 @@ jobs:
     if: github.ref == 'refs/heads/production/linode'
     environment: production
     steps:
-      - uses: appleboy/ssh-action@master
-        name: Deploy to production server
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@master
         with:
           # Host: is public IP (unchangeable) or DNS IPv4 for Linode instance
-          host: ${{ secrets.Linode_HOST_IP }}
+          host: ${{ secrets.LINODE_HOST_IP }}
           # Username: is username of Linode instance which trying to connect (default root), Use the following command
           #           inside EC2 Linux instance to know the username:
           #           >> whoamI
-          username: ${{ secrets.Linode_HOST_USERNAME }}
+          username: ${{ secrets.LINODE_HOST_USERNAME }}
           # key: is private key that related to SSH public key that your instance use (same one that your PC use).
           key: ${{ secrets.SSH_KEY }}
           port: 22
