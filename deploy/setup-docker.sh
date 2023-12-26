@@ -28,12 +28,20 @@ if service_exists docker; then
 
 else
 
+  echo "Uninstall all Docker related conflicting packages!"
+  # The option -y to apt-get will automatically answer "yes" to prompts.
+  for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
+
+  echo "Update package manger..."
+
+  apt-get update -y
+
   echo "Installing Docker service!"
   echo "Step 1: Setup Docker's (apt) package manager repository..."
   echo "Add Docker's official GPG key"
 
   # The option -y to apt-get will automatically answer "yes" to prompts.
-  apt-get -y install ca-certificates curl gnupg
+  apt-get install -y ca-certificates curl gnupg
 
   install -m 0755 -d /etc/apt/keyrings
 
@@ -43,13 +51,13 @@ else
 
   echo "Add the repository to (apt) package manager sources"
 
-  echo "deb [arch='$(dpkg --print-architecture)' signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu '$(. /etc/os-release && echo "$VERSION_CODENAME")' stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-  apt-get -y update
+  apt-get update -y
 
   echo "Step 2: Install the Docker packages..."
 
-  apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
   echo "Step 3: Verify Docker is installed successfully"
 
