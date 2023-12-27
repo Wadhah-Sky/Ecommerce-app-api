@@ -107,20 +107,19 @@ echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f 
 echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
 
 # Create migration of your django service (app) apps models to the database:
-# 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps.
+# 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps (you can
+#    specify a certain app like, --fake core).
 # 2- Remove your existing migration scripts for the apps. Where 'rm -rf' command is mostly used to remove
 #    directories. As you will notice, this command uses two different options together.
 #    The -r option indicates that the entire directory will be removed, while
 #    the -f option indicates that this action will be forcefully performed.
 # 3- Create a new initial migration for the apps.
-# 4- Fake a migration to the initial migration for the apps.
 # Note: here we don't use detach mode to execute the run command of container because we run the container to
 #       do a certain job and then exit.
 echo "Executing migration process of database..."
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake zero"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
 echo "Migration process of database is Done."
 
 echo "Create superuser in database if not exist..."
