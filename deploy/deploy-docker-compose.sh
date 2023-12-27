@@ -63,46 +63,46 @@ docker compose -f $DOCKER_COMPOSE_FILE stop && docker compose -f $DOCKER_COMPOSE
 
 echo "Building Docker containers..."
 # Build the given docker compose file service (only the ones who have build argument).
+# Important: you don't have to worry about existing build version of images because docker will check if
+#            it's the same image, will skip build process and pull it from local repository.
 
-# If you want to build them in one command (not recommended)
+# If you want to build all docker images in one command (not recommended):
 # docker compose -f $DOCKER_COMPOSE_FILE build
 
 echo "Building Docker 'elk_setup' service image..."
 docker compose -f $DOCKER_COMPOSE_FILE build elk_setup
-echo "Building Docker 'elk_setup' service image is Done."
 
 echo "Building Docker 'elasticsearch' service image..."
 docker compose -f $DOCKER_COMPOSE_FILE build elasticsearch
-echo "Building Docker 'elasticsearch' service image is Done."
 
 echo "Building Docker 'db' service image..."
 docker compose -f $DOCKER_COMPOSE_FILE build db
-echo "Building Docker 'db' service image is Done."
 
 echo "Building Docker 'app' service image..."
 docker compose -f $DOCKER_COMPOSE_FILE build app
-echo "Building Docker 'app' service image is Done."
 
 echo "Building Docker 'worker' service image..."
 docker compose -f $DOCKER_COMPOSE_FILE build worker
-echo "Building Docker 'worker' service image is Done."
 
 echo "Building Docker 'nginx' service image..."
 docker compose -f $DOCKER_COMPOSE_FILE build nginx
-echo "Building Docker 'nginx' service image is Done."
 
-echo "Process of building Docker services is Done and wait 30 seconds..."; sleep 30 && echo "Initialize and Start Docker containers..."
+echo "Process of building Docker services is Done and wait 30 seconds..."; sleep 30 && echo "Initialize and Start Docker containers in detach mode..."
 # Note: I choose to run each service manually without using 'up' command with service profile.
+# Important: you should run containers in detach mode so container run in background and not take the terminal
+#            which lead to command run timeout error if there is another container want to run.
 
 # Run elasticsearch service.
-echo "Run 'elasticsearch' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elasticsearch
+echo "Run 'elasticsearch' service..."; docker compose -f $DOCKER_COMPOSE_FILE up -d elasticsearch
 
 # Run the setup process for elasticsearch (this service has script to wait until elasticsearch service is ready,
 # do its job and exit).
+# Note: here we don't use detach mode to execute the up command of container because we up the container to
+#       do a certain job and then exit.
 echo "Run 'elk_setup' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
 
 # Run the database service.
-echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up db && sleep 30
+echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
 
 # Create migration of your django service (app) apps models to the database:
 # 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps.
@@ -112,6 +112,8 @@ echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOS
 #    the -f option indicates that this action will be forcefully performed.
 # 3- Create a new initial migration for the apps.
 # 4- Fake a migration to the initial migration for the apps.
+# Note: here we don't use detach mode to execute the run command of container because we run the container to
+#       do a certain job and then exit.
 echo "Executing migration process of database..."
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake zero"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
@@ -121,7 +123,7 @@ echo "Migration process of database is Done."
 
 echo "Create superuser in database if not exist..."
 # Create super user depending on environment variables.
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"; echo "Superuser created successfully!"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
 
 # Collect static files of Django service (app)
 # Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.
@@ -134,9 +136,10 @@ echo "Run process of index re-build of Django documents to elasticsearch engine.
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "/usr/src/compose/es-index-rebuild.sh"
 
 echo "Wait 30 seconds..."
+sleep 30
 
 # Run the other services.
-echo "Run the rest of docker containers..."
-docker compose -f $DOCKER_COMPOSE_FILE up && echo "Your docker compose services is up!"
+echo "Run the rest of docker containers in detach mode..."
+docker compose -f $DOCKER_COMPOSE_FILE up -d && echo "Your docker compose services is up!"
 
 exit 0
