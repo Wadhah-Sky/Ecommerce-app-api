@@ -93,13 +93,15 @@ echo "Process of building Docker services is Done and wait 30 seconds..."; sleep
 #            which lead to command run timeout error if there is another container want to run.
 
 # Run elasticsearch service.
-echo "Run 'elasticsearch' service..."; docker compose -f $DOCKER_COMPOSE_FILE up -d elasticsearch
+# Note: we prefer to use --profile flag to run 'elk_setup' service which defined as setup profile in order to solve
+#       issue of network <name_of_network> is not found in case we run it separately.
+echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f $DOCKER_COMPOSE_FILE up -d elasticsearch
 
 # Run the setup process for elasticsearch (this service has script to wait until elasticsearch service is ready,
 # do its job and exit).
 # Note: here we don't use detach mode to execute the up command of container because we up the container to
 #       do a certain job and then exit.
-echo "Run 'elk_setup' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
+# echo "Run 'elk_setup' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
 
 # Run the database service.
 echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
