@@ -258,8 +258,7 @@ services:
     healthcheck:
       # Test will return 0 if /health url response with 200.
       # Note: /health is location url that we set in 'default.conf' file of Nginx image.
-      # Info: don't use localhost because it's use same port to Docker network (local) instead use docker service name.
-      test: [ "CMD-SHELL", "curl -s -I http://nginx:80/health | grep -q 'HTTP/1.1 200 ok' || exit 1"]
+      test: [ "CMD-SHELL", "curl -s -I http://localhost/health | grep -q 'HTTP/1.1 200 ok' || exit 1"]
       interval: 10s
       timeout: 10s
       start_period: 60s

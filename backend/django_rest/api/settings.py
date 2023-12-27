@@ -375,6 +375,25 @@ CSRF_TRUSTED_ORIGINS.extend(
 #       Where 80 is port of nginx container to get reach.
 USE_X_FORWARDED_HOST = bool(int(os.environ.get('USE_X_FORWARDED_HOST', 0)))
 
+# Change the SecurityMiddleware value of the Cross-Origin Opener Policy (COOP)
+# header on all responses that do not already have it to the value provided,
+# the Default is 'same-origin'.
+# COOP will process-isolate your document and potential attackers can't access
+# your global object if they were to open it in a popup, preventing a set of
+# cross-origin attacks dubbed XS-Leaks (Cross-site leaks) where allow websites
+# to interact with each other and abuse legitimate mechanisms to gather
+# information about the user, often based upon responses received, whether it
+# may be timing, error based or abusing features of the browser.
+# Note: if you gonna to use HTTP protocol will default value of COOP then will
+#       face issue to connect to Django server epically if you are forward host
+#       from Nginx server to Django server:
+#
+#       The Cross-Origin-Opener-Policy header has been ignored, because the
+#       URL's origin was untrustworthy. It was defined either in the final r
+#       esponse or a redirect. Please deliver the response using the HTTPS
+#       protocol. You can also use the 'localhost' origin instead.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
