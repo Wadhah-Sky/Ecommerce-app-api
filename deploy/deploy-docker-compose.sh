@@ -58,29 +58,51 @@ fi
 
 # First stop the current running docker services (in case there are) in given docker compose file,
 # and remove them (only containers while volumes keep it).
-docker compose -f $DOCKER_COMPOSE_FILE stop
-docker compose -f $DOCKER_COMPOSE_FILE down
+echo "Stop Docker containers if running and remove any exist containers..."
+docker compose -f $DOCKER_COMPOSE_FILE stop && docker compose -f $DOCKER_COMPOSE_FILE down
 
+echo "Building Docker containers..."
 # Build the given docker compose file service (only the ones who have build argument).
-# docker compose -f $DOCKER_COMPOSE_FILE build elk_setup
-# docker compose -f $DOCKER_COMPOSE_FILE build elasticsearch
-# docker compose -f $DOCKER_COMPOSE_FILE build db
-# docker compose -f $DOCKER_COMPOSE_FILE build app
-# docker compose -f $DOCKER_COMPOSE_FILE build worker
-# docker compose -f $DOCKER_COMPOSE_FILE build nginx
-docker compose -f $DOCKER_COMPOSE_FILE build
 
+# If you want to build them in one command (not recommended)
+# docker compose -f $DOCKER_COMPOSE_FILE build
+
+echo "Building Docker 'elk_setup' service image..."
+docker compose -f $DOCKER_COMPOSE_FILE build elk_setup
+echo "Building Docker 'elk_setup' service image is Done."
+
+echo "Building Docker 'elasticsearch' service image..."
+docker compose -f $DOCKER_COMPOSE_FILE build elasticsearch
+echo "Building Docker 'elasticsearch' service image is Done."
+
+echo "Building Docker 'db' service image..."
+docker compose -f $DOCKER_COMPOSE_FILE build db
+echo "Building Docker 'db' service image is Done."
+
+echo "Building Docker 'app' service image..."
+docker compose -f $DOCKER_COMPOSE_FILE build app
+echo "Building Docker 'app' service image is Done."
+
+echo "Building Docker 'worker' service image..."
+docker compose -f $DOCKER_COMPOSE_FILE build worker
+echo "Building Docker 'worker' service image is Done."
+
+echo "Building Docker 'nginx' service image..."
+docker compose -f $DOCKER_COMPOSE_FILE build nginx
+echo "Building Docker 'nginx' service image is Done."
+
+echo "Process of building Docker services is Done and wait 30 seconds..."; sleep 30 && echo "Initialize and Start Docker containers..."
 # Note: I choose to run each service manually without using 'up' command with service profile.
 
 # Run elasticsearch service.
-docker compose -f $DOCKER_COMPOSE_FILE up elasticsearch
+echo "Run 'elasticsearch' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elasticsearch
 
 # Run the setup process for elasticsearch (this service has script to wait until elasticsearch service is ready,
 # do its job and exit).
-docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
+echo "Run 'elk_setup' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
 
 # Run the database service.
-docker compose -f $DOCKER_COMPOSE_FILE up db
+echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up db && sleep 30
 
 # Create migration of your django service (app) apps models to the database:
 # 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps.
@@ -90,25 +112,31 @@ docker compose -f $DOCKER_COMPOSE_FILE up db
 #    the -f option indicates that this action will be forcefully performed.
 # 3- Create a new initial migration for the apps.
 # 4- Fake a migration to the initial migration for the apps.
+echo "Executing migration process of database..."
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake zero"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
+echo "Migration process of database is Done."
 
+echo "Create superuser in database if not exist..."
 # Create super user depending on environment variables.
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"; echo "Superuser created successfully!"
 
 # Collect static files of Django service (app)
 # Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.
 #       --clear flag means clear the existing static files before creating the new ones.
+echo "Collecting static files of Django to related volume..."
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py collectstatic --no-input --clear"
 
 # Re-build indexes of elasticsearch engine.
+echo "Run process of index re-build of Django documents to elasticsearch engine..."
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "/usr/src/compose/es-index-rebuild.sh"
 
-# Run the other services.
-docker compose -f $DOCKER_COMPOSE_FILE up
+echo "Wait 30 seconds..."
 
-echo "Your docker compose services is up..."
+# Run the other services.
+echo "Run the rest of docker containers..."
+docker compose -f $DOCKER_COMPOSE_FILE up && echo "Your docker compose services is up!"
 
 exit 0
