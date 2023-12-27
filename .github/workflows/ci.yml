@@ -18,7 +18,6 @@ jobs:
     # Deploy to Linode cloud
     name: Test
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v2
       - name: Write a multi-line message
