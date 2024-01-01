@@ -59,7 +59,7 @@ fi
 # First stop the current running docker services (in case there are) in given docker compose file,
 # and remove them (only containers while volumes keep it).
 echo "Stop Docker containers if running and remove any exist containers..."
-docker compose -f $DOCKER_COMPOSE_FILE stop && docker compose -f $DOCKER_COMPOSE_FILE down
+docker compose -f $DOCKER_COMPOSE_FILE stop && sleep 50 && docker compose -f $DOCKER_COMPOSE_FILE down && sleep 30
 
 echo "Building Docker containers..."
 # Build the given docker compose file service (only the ones who have build argument).
@@ -142,5 +142,3 @@ sleep 30
 # Run the other services.
 echo "Run the rest of docker containers in detach mode..."
 docker compose -f $DOCKER_COMPOSE_FILE up -d && echo "Your docker compose services is up!"
-
-exit 0

@@ -177,7 +177,7 @@ RUN cd nginx-1.25.3 && \
     make modules
 
 # Deployment stage.
-# Specify the docker image that your service build on.
+# Specify the docker image that your service build on (nginx:1.25.3 is Debian distribute image).
 FROM nginx:1.25.3 AS deploy
 
 # Remove unnecessary directories and files.
@@ -194,10 +194,30 @@ COPY --from=Nginx /app/nginx-1.25.3/objs/ngx_http_brotli_filter_module.so /etc/n
 COPY --from=prod /usr/src/frontend/vue_spa/dist /usr/share/nginx/html/
 
 # Copy the configuration file and mime.types
+COPY /compose/production/nginx/start-nginx.sh /usr/src/compose/start-nginx.sh
+COPY /compose/production/nginx/certbot.sh /usr/src/compose/certbot.sh
+COPY /compose/production/nginx/ssl-options/ /etc/ssl-options
 # Note: if you set file 'default.conf' as read_only (:ro) will lead to get 403 forbbiden.
 COPY /compose/production/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY /compose/production/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY /compose/production/nginx/mime.types /etc/nginx/mime.types
+
+# Update package manger
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    # Install:
+    # 1- 'inotify-tools' so we have access to watch our certificates and trigger some actions when they change.
+    # 2- With our configuration the certificates loaded into memory when nginx starts, we must ensure we have some
+    #    certificates, even though dummy, when nginx starts so it doesn't complain about the missing files, and that’s
+    #    why we will need 'openssl' which is is an all-around cryptography library that offers an open-source
+    #    application of the TLS protocol. It allows users to perform various SSL-related tasks, including CSR
+    #    (Certificate Signing Request) and private keys generation, and SSL certificate installation.
+    # 3- 'certbot' is what we will need to actually emit valid ssl certificates.
+    apt-get install -y inotify-tools openssl certbot && \
+    sed -i 's/\r$//g' /usr/src/compose/start-nginx.sh && \
+    chmod +x /usr/src/compose/start-nginx.sh && \
+    sed -i 's/\r$//g' /usr/src/compose/certbot.sh && \
+    chmod +x /usr/src/compose/certbot.sh
 
 # Run command to re-write 'brotli.conf' file withe required configuration.
 RUN echo 'brotli on;\n \
@@ -225,10 +245,10 @@ WORKDIR /usr/share/nginx/html
 #
 #       ENTRYPOINT ["/bin/ping"]
 #       CMD ["localhost"]
-CMD ["nginx", "-g", "daemon off;"]
+# CMD ["nginx", "-g", "daemon off;"]
 
 # ------------------------------------------------------------------------------------
-# Deployment stage.
+# Deployment stage if you want to use alpine abstract image.
 # Specify the docker image that your service build on.
 # If you want to use abstract image:
 ## FROM alpine AS deploy

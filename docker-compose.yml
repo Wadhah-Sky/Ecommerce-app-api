@@ -179,7 +179,7 @@ services:
           cpus: '0.05'
           memory: 20M
     ports:
-      - "5050:80"
+      - '5050:80'
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
@@ -198,8 +198,8 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - '9200:9200'
+      - '9300:9300'
     healthcheck:
       # Here our test is not about starting the service, it's about the Elasticsearch engine is ready and run
       # in another means http response of engine health is containing "status" : "yellow" or "status" : "green".
@@ -321,10 +321,10 @@ services:
       - ./compose/local/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
       - ./compose/local/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
     ports:
-      - "5044:5044"
-      - "50000:50000/tcp"
-      - "50000:50000/udp"
-      - "9600:9600"
+      - '5044:5044'
+      - '50000:50000/tcp'
+      - '50000:50000/udp'
+      - '9600:9600'
     healthcheck:
       test: [ "CMD-SHELL", "bin/logstash -t" ]
       interval: 10s
@@ -358,7 +358,7 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     ports:
-      - "5601:5601"
+      - '5601:5601'
     healthcheck:
       test: [ "CMD-SHELL", "curl -s -I http://localhost:5601 | grep -q 'HTTP/1.1 302 Found'" ]
       interval: 10s
@@ -487,7 +487,7 @@ services:
       dockerfile: compose/local/vue/Dockerfile
       target: dev
     ports:
-      - "8080:8080"
+      - '8080:8080'
     healthcheck:
       # Since this service using linux Alpine image, then its has 'wget' network command tool.
       # we just need to check if server is up or not.
@@ -580,7 +580,7 @@ services:
     image: 127.0.0.1:5000/flower
     build: *app_build
     ports:
-      - "5557:5555"
+      - '5557:5555'
     healthcheck:
       test: [ "CMD-SHELL", "celery inspect ping || exit 1"]
       interval: 10s

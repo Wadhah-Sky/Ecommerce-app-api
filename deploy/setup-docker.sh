@@ -90,5 +90,3 @@ else
   echo "Done! :)"
 
 fi
-
-exit 0

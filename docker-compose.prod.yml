@@ -1,4 +1,8 @@
 # Define the version of docker compose.
+
+# Note: for production environment we expose (using ports variable) only the services that we want
+#       to be reachable from host machine (e.g, cloud node machine)
+
 version: "3.9"
 
 services:
@@ -15,8 +19,10 @@ services:
         reservations:
           cpus: '0.05'
           memory: 20M
-    ports:
-      - '6379:6379'
+    # ports:
+    #  - '6379:6379'
+    expose:
+      - '6379'
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep 'PONG' || exit 1"]
       interval: 10s
@@ -32,8 +38,10 @@ services:
       context: .
       dockerfile: compose/local/postgres/Dockerfile
       target: prod
-    ports:
-      - '5432:5432'
+    # ports:
+    #  - '5432:5432'
+    expose:
+      - '5432'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready --quiet --dbname=$${POSTGRES_DB} --username=$${POSTGRES_USER} || exit 1"]
       interval: 10s
@@ -72,8 +80,10 @@ services:
         reservations:
           cpus: '0.05'
           memory: 20M
-    ports:
-      - "5050:80"
+    # ports:
+    #  - '5050:80'
+    expose:
+      - '5050'
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
@@ -89,9 +99,12 @@ services:
       dockerfile: compose/local/elk/elasticsearch/Dockerfile
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
-    ports:
-      - "9200:9200"
-      - "9300:9300"
+    # ports:
+    #  - "9200:9200"
+    #  - "9300:9300"
+    expose:
+      - '9200'
+      - '9300'
     healthcheck:
       test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "yellow"', " || exit 1" ]
       interval: 30s
@@ -240,7 +253,7 @@ services:
       - webnet
 
   nginx:
-    # This service will use deploy stage in Vue docker file where copy contain of 'dist' directory
+    # This service will use deploy stage in Vue docker file where copy the contains of 'dist' directory
     # from build process and paste it into 'html' directory of Nginx image.
     image: 127.0.0.1:5000/nginx
     build:
@@ -258,7 +271,7 @@ services:
     healthcheck:
       # Test will return 0 if /health url response with 200.
       # Note: /health is location url that we set in 'default.conf' file of Nginx image.
-      test: [ "CMD-SHELL", "curl -s -I http://localhost/health | grep -q 'HTTP/1.1 200 ok' || exit 1"]
+      test: [ "CMD-SHELL", "curl -s -I http://localhost:80/health | grep -q 'HTTP/1.1 200 OK' || exit 1"]
       interval: 10s
       timeout: 10s
       start_period: 60s
@@ -271,6 +284,21 @@ services:
       # Nginx shares the same volume that connected to static files which being served in django service (app)
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media
+      # /var/www/certbot/ is already exists in the image so no need to create it.
+      - certbot-www:/var/www/certbot
+      # You can point volume to file because you will get an error is that file a directory?
+      - letsencrypt:/usr/share/nginx/certificates/
+    command: bash -c "/usr/src/compose/start-nginx.sh"
+    environment:
+      - CERT_DOMAINS=${CERT_DOMAINS} # example.com
+      - CERT_WEBSITE_NAME=${CERT_WEBSITE_NAME} # example
+      - CERT_EMAIL=${CERT_EMAIL} # Your email
+      - CERT_GENERATE=${CERT_GENERATE:-0} # default is 0 (means false)
+      - CERT_TEST_CERT=${CERT_TEST_CERT}
+      - LETSENCRYPT_DIR=${LETSENCRYPT_DIR}
+      - CERT_NAME=${CERT_NAME}
+      - CERT_RENEW_INTERVAL=${CERT_RENEW_INTERVAL}
+      - CUSTOM_CERT_COMMAND=${CUSTOM_CERT_COMMAND} # if set, will have the priority to be executed.
     depends_on:
       - app
     networks:
@@ -288,4 +316,8 @@ volumes:
   static_volume:
     driver: local
   media_volume:
+    driver: local
+  certbot-www:
+    driver: local
+  letsencrypt:
     driver: local

@@ -30,7 +30,16 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.environ.get('DEBUG', 0)))
 
-
+# Note: Values in this list can be fully qualified names (e.g.
+#       'www.example.com'), in which case they will be matched against the
+#       request’s Host header exactly (case-insensitive, not including port).
+#       A value beginning with a period can be used as a subdomain wildcard:
+#       '.example.com' will match example.com, www.example.com, and any other
+#       subdomain of example.com. A value of '*' will match anything; in this
+#       case you are responsible to provide your own validation of the Host
+#       header (perhaps in a middleware; if so this middleware must be listed
+#       first in MIDDLEWARE_CLASSES). In case you try to reach Django server
+#       with a host name that not listed will get response of HTTP Bad Request.
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(
     filter(
@@ -392,6 +401,13 @@ USE_X_FORWARDED_HOST = bool(int(os.environ.get('USE_X_FORWARDED_HOST', 0)))
 #       URL's origin was untrustworthy. It was defined either in the final r
 #       esponse or a redirect. Please deliver the response using the HTTPS
 #       protocol. You can also use the 'localhost' origin instead.
+#
+# Note: if you faced "Mixed Content" warnings in browser console, that because
+#       it's occur when an HTTPS page is asked to load a resource over HTTP.
+#       This is dangerous because the insecure resources are vulnerable to
+#       alteration by an active attacker or eavesdropping by a passive
+#       attacker, which violates the user's expectation of security for an
+#       HTTPS page. So check if you are using https over http with domain name.
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # Default primary key field type
