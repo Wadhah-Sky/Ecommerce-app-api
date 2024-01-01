@@ -285,6 +285,14 @@ jobs:
             DJANGO_SUPERUSER_FIRST_NAME=${{secrets.DJANGO_SUPERUSER_FIRST_NAME}}
             DJANGO_SUPERUSER_LAST_NAME=${{secrets.DJANGO_SUPERUSER_LAST_NAME}}
             DJANGO_SUPERUSER_PASSWORD=${{secrets.DJANGO_SUPERUSER_PASSWORD}}
+            CERT_DOMAINS=${{secrets.CERT_DOMAINS}}
+            CERT_EMAIL=${{secrets.CERT_EMAIL}}
+            CERT_GENERATE=${{secrets.CERT_GENERATE}}
+            CERT_TEST_CERT=${{secrets.CERT_TEST_CERT}}
+            LETSENCRYPT_DIR=${{secrets.LETSENCRYPT_DIR}}
+            CERT_NAME=${{secrets.CERT_NAME}}
+            CERT_RENEW_INTERVAL=${{secrets.CERT_RENEW_INTERVAL}}
+            CUSTOM_CERT_COMMAND=${{secrets.CUSTOM_CERT_COMMAND}}
             EOF
             
             PROJECT_GIT_URL='https://github.com/Wadhah-Sky/Ecommerce-app-api.git'
@@ -351,9 +359,6 @@ jobs:
             CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
             EMAIL_BACKEND_NAME=${{secrets.EMAIL_BACKEND_NAME}}
             EMAIL_BACKEND=${{secrets.EMAIL_BACKEND}}
-            AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}
-            AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}
-            AWS_DEFAULT_REGION=${{secrets.AWS_DEFAULT_REGION}}
             MAILJET_API_KEY=${{secrets.MAILJET_API_KEY}}
             MAILJET_SECRET_KEY=${{secrets.MAILJET_SECRET_KEY}}
             PGADMIN_DEFAULT_EMAIL=${{secrets.PGADMIN_DEFAULT_EMAIL}}
@@ -382,6 +387,14 @@ jobs:
             DJANGO_SUPERUSER_FIRST_NAME=${{secrets.DJANGO_SUPERUSER_FIRST_NAME}}
             DJANGO_SUPERUSER_LAST_NAME=${{secrets.DJANGO_SUPERUSER_LAST_NAME}}
             DJANGO_SUPERUSER_PASSWORD=${{secrets.DJANGO_SUPERUSER_PASSWORD}}
+            CERT_DOMAINS=${{secrets.CERT_DOMAINS}}
+            CERT_EMAIL=${{secrets.CERT_EMAIL}}
+            CERT_GENERATE=${{secrets.CERT_GENERATE}}
+            CERT_TEST_CERT=${{secrets.CERT_TEST_CERT}}
+            LETSENCRYPT_DIR=${{secrets.LETSENCRYPT_DIR}}
+            CERT_NAME=${{secrets.CERT_NAME}}
+            CERT_RENEW_INTERVAL=${{secrets.CERT_RENEW_INTERVAL}}
+            CUSTOM_CERT_COMMAND=${{secrets.CUSTOM_CERT_COMMAND}}
             EOF
 
             PROJECT_GIT_URL='https://github.com/Wadhah-Sky/Ecommerce-app-api.git'

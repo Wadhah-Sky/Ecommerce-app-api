@@ -291,7 +291,6 @@ services:
     command: bash -c "/usr/src/compose/start-nginx.sh"
     environment:
       - CERT_DOMAINS=${CERT_DOMAINS} # example.com
-      - CERT_WEBSITE_NAME=${CERT_WEBSITE_NAME} # example
       - CERT_EMAIL=${CERT_EMAIL} # Your email
       - CERT_GENERATE=${CERT_GENERATE:-0} # default is 0 (means false)
       - CERT_TEST_CERT=${CERT_TEST_CERT}
