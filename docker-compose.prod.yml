@@ -271,7 +271,7 @@ services:
     healthcheck:
       # Test will return 0 if /health url response with 200.
       # Note: /health is location url that we set in 'default.conf' file of Nginx image.
-      test: [ "CMD-SHELL", "curl -s -I https://localhost:80/health | grep -q 'HTTP/1.1 200 OK' || exit 1"]
+      test: [ "CMD-SHELL", "curl -s -I http://localhost:80/health | grep -q 'HTTP/1.1 200 OK' || exit 1"]
       interval: 10s
       timeout: 10s
       start_period: 60s
@@ -281,13 +281,15 @@ services:
       restart_policy:
         condition: on-failure
     volumes:
+      - ./logs/nginx:/var/log/letsencrypt/
+      - ./logs/nginx:/tmp/
       # Nginx shares the same volume that connected to static files which being served in django service (app)
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media
       # /var/www/certbot/ is already exists in the image so no need to create it.
       - certbot-www:/var/www/certbot
       # You can point volume to file because you will get an error is that file a directory?
-      - letsencrypt:/usr/share/nginx/certificates/
+      - letsencrypt:/usr/share/nginx/certificates
     command: bash -c "/usr/src/compose/start-nginx.sh"
     environment:
       - CERT_DOMAINS=${CERT_DOMAINS} # example.com

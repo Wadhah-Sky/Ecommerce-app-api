@@ -142,3 +142,5 @@ sleep 30
 # Run the other services.
 echo "Run the rest of docker containers in detach mode..."
 docker compose -f $DOCKER_COMPOSE_FILE up -d && echo "Your docker compose services is up!"
+
+exit 0

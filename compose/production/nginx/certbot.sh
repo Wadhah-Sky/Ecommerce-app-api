@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+set -o nounset
+
 # This script is running in the background every 60 days by default, and its responsible for emiting
 # and renewing the certificates, copying them from the letsencrypt folder to the location nginx will be
 # using to serve.
@@ -42,6 +46,8 @@
 #       >> curl -Iki http://jamieandcassie.store
 #       >> curl -Iki http://www.jamieandcassie.store
 
+echo "Check webroot path directory is exists otherwise create it"
+
 # Check if file of /var/www/certbot is not exists, create it.
 if [[ ! -f /var/www/certbot ]]; then
     mkdir -p /var/www/certbot
@@ -49,6 +55,7 @@ fi
 
 # Clear the existing certificates file in "live" folder in letsencrypt directory for given $CERT_NAME. To prevent of
 # creating copy files of received certificates from server.
+echo "Clear letsencrypt directory for received certificates from ACM server"
 if [[ -f ${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store} ]]; then
     rm "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}"
 fi
@@ -145,6 +152,19 @@ elif [[ ${CERT_TEST_CERT:-1} == 1 ]]; then
   # 16) --staple-ocsp: Enables OCSP Stapling. A valid OCSP response is stapled to the certificate that
   #                    the server offers during TLS. (default: None)
   #
+  # 17) --verbose: This flag can be used multiple times to incrementally increase the verbosity of
+  #                output, e.g. -vvv. (default: 0)
+  #
+  # 18) --no-verify-ssl: Disable verification of the ACME server's certificate. The root certificates
+  #                      trusted by Certbot can be overriden by setting the REQUESTS_CA_BUNDLE environment
+  #                      variable. (default: False)
+  #
+  # 19) --register-unsafely-without-email: Specifying this flag enables registering an account with no email
+  #                                        address. This is strongly discouraged, because you will be unable to
+  #                                        receive notice about impending expiration or revocation of your certificates
+  #                                        or problems with your Certbot installation that will lead to failure to
+  #                                        renew. (default: False)
+
   # Note: || true is used in case certbot faced an error.
 
   certbot certonly \
@@ -153,12 +173,12 @@ elif [[ ${CERT_TEST_CERT:-1} == 1 ]]; then
           --config-dir "${LETSENCRYPT_DIR:-/etc/letsencrypt}" \
           --domains "${CERT_DOMAINS:-jamieandcassie.store}" \
           --cert-name "${CERT_NAME:-jamieandcassie.store}" \
-          --email "${CERT_EMAIL:-wadhah_sky@hotmail.com}" \
           --agree-tos \
           --no-eff-email \
+          --register-unsafely-without-email \
           --webroot \
-          --webroot-path /var/www/certbot \
-          --debug || true
+          --webroot-path "/var/www/certbot" \
+          --verbose || echo "Certbot has failed to generate test certificate" && exit 0
 
 # Else condition
 else
@@ -171,21 +191,23 @@ else
           --agree-tos \
           --no-eff-email \
           --webroot \
-          --webroot-path /var/www/certbot \
+          --webroot-path "/var/www/certbot/" \
           --expand \
-          --redirect || true
+          --redirect || echo "Certbot has failed" && exit 0
 fi
 
 # Check if we get the certificate files from server, copy it to wanted destination as specified in default.conf file as
 # ssl_certificate and ssl_certificate_key.
 if [[ -f "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/privkey.pem" ]]; then
   # Remove the file privkey.pem that been used by Nginx.
-  rm /usr/share/nginx/certificates/privkey.pem
+  rm /usr/share/nginx/certificates/privkey.pem &&
   # Use the cp command to create a copy of the contents of the file or directory specified by the SourceFile or
   # SourceDirectory parameters into the file or directory specified by the TargetFile or TargetDirectory parameters.
   cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/privkey.pem" /usr/share/nginx/certificates/privkey.pem
 
   # Remove the file fullchain.pem that been used by Nginx.
-  rm /usr/share/nginx/certificates/fullchain.pem
+  rm /usr/share/nginx/certificates/fullchain.pem &&
   cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/fullchain.pem" /usr/share/nginx/certificates/fullchain.pem
 fi
+
+exit 0
