@@ -27,6 +27,7 @@ if [[ ${CERT_GENERATE:-1} == 1 ]]; then
   ## Let's Encrypt certificates are valid for 90 days. You can read about why here. There is no way to adjust this,
   ## there are no exceptions. We recommend automatically renewing your certificates every 60 days.
   ## Note: || true is used in case certbot faced an error.
+  ## Info: `&`: It starts a asynchronous process.
   # shellcheck disable=SC2091
   $(while :; do /usr/src/compose/certbot.sh || true; sleep "${CERT_RENEW_INTERVAL:-12h}"; done;) &
 

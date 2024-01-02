@@ -54,10 +54,10 @@ if [[ ! -f /var/www/certbot ]]; then
 fi
 
 # Clear the existing certificates file in "live" folder in letsencrypt directory for given $CERT_NAME. To prevent of
-# creating copy files of received certificates from server.
+# creating another copy of received certificates from server.
 echo "Clear letsencrypt directory for received certificates from ACM server"
 if [[ -f ${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store} ]]; then
-    rm "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}"
+    rm -rf "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}"
 fi
 
 
@@ -177,7 +177,7 @@ elif [[ ${CERT_TEST_CERT:-1} == 1 ]]; then
           --no-eff-email \
           --register-unsafely-without-email \
           --webroot \
-          --webroot-path "/var/www/certbot" \
+          --webroot-path /var/www/certbot/ \
           --verbose || echo "Certbot has failed to generate test certificate" && exit 0
 
 # Else condition
@@ -191,7 +191,7 @@ else
           --agree-tos \
           --no-eff-email \
           --webroot \
-          --webroot-path "/var/www/certbot/" \
+          --webroot-path /var/www/certbot/ \
           --expand \
           --redirect || echo "Certbot has failed" && exit 0
 fi
@@ -199,15 +199,14 @@ fi
 # Check if we get the certificate files from server, copy it to wanted destination as specified in default.conf file as
 # ssl_certificate and ssl_certificate_key.
 if [[ -f "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/privkey.pem" ]]; then
-  # Remove the file privkey.pem that been used by Nginx.
-  rm /usr/share/nginx/certificates/privkey.pem &&
+
+  # Remove all file from /usr/share/nginx/certificates/.
+  rm -rf /usr/share/nginx/certificates/* &&
+
   # Use the cp command to create a copy of the contents of the file or directory specified by the SourceFile or
   # SourceDirectory parameters into the file or directory specified by the TargetFile or TargetDirectory parameters.
-  cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/privkey.pem" /usr/share/nginx/certificates/privkey.pem
+  cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/*" /usr/share/nginx/certificates/
 
-  # Remove the file fullchain.pem that been used by Nginx.
-  rm /usr/share/nginx/certificates/fullchain.pem &&
-  cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/fullchain.pem" /usr/share/nginx/certificates/fullchain.pem
 fi
 
 exit 0
