@@ -83,8 +83,10 @@ RUN python3 -m venv /opt/venv && \
     mkdir -p /usr/src/vol/web/static && \
     # create 'media' directory.
     mkdir -p /usr/src/vol/web/media && \
-    # create 'logs/django' directory.
-    mkdir -p /usr/src/logs/django && \
+    # create 'backend/django_rest/logs' directory.
+    mkdir -p /usr/src/backend/django_rest/logs && \
+    # Create file 'debug.log'.
+    touch /usr/src/backend/django_rest/logs/debug.log && \
     sed -i 's/\r$//g' /usr/src/compose/es-index-rebuild.sh && \
     # Add the x permission which is the symbol for the execution permission. The execution
     # permission will give the execution ability to the owner user or group of the file.
