@@ -53,6 +53,8 @@ ALLOWED_HOSTS.extend(
 INSTALLED_APPS = [
     'dal',
     'dal_select2',
+    'admin_interface',
+    'colorfield',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -69,7 +71,6 @@ INSTALLED_APPS = [
     'django_phonenumbers',
     'djmoney',
     'imagekit',
-    'colorfield',
     'nested_admin',
     'durationwidget',
     'django_admin_hstore_widget',
@@ -265,43 +266,65 @@ MEDIA_URL = '/static/media/'
 #       image.
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
+# if you want to use modals instead of popup windows, ensure to add
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
+# The security checks do not make your site secure. They do not audit code, do
+# intrusion detection, or do anything particularly complex. Rather, they help
+# perform an automated, low-hanging-fruit checklist, that can help you to
+# improve your site’s security.
+# Some of these checks may not be appropriate for your particular deployment
+# configuration. For instance, if you do your HTTP to HTTPS redirection in
+# a load balancer, it’d be irritating to be constantly warned about not having
+# enabled SECURE_SSL_REDIRECT. Use SILENCED_SYSTEM_CHECKS to silence unneeded
+# checks.
+#
+# Info: security.W019 in case you have:
+#
+#       django.middleware.clickjacking.XFrameOptionsMiddleware
+#
+#       in your MIDDLEWARE, but X_FRAME_OPTIONS is not set to 'DENY'. Unless
+#       there is a good reason for your site to serve other parts of itself
+#       in a frame, you should change it to 'DENY'.
+SILENCED_SYSTEM_CHECKS = ["security.W019"]
+
 # Define sorted list of tuples of your project apps and its models.
-ADMIN_ORDERING = [
-    # ('auth', ['Group']),
-    ('sites', ['Site']),
-    ('core', [
-        'Meta',
-        'MetaItem',
-        'Icon',
-        'Country',
-        'Address',
-        'User',
-        'Category',
-        'TopBanner',
-        'Banner',
-        'Card',
-        'Section',
-        'Attribute',
-        'Supplier',
-        'Product',
-        'ProductAttribute',
-        'ProductItem',
-        'ProductItemAttribute',
-        'ProductGroup',
-        'Promotion',
-        'PromotionCategory',
-        'PromotionItem',
-        'Tax',
-        'PaymentMethod',
-        'ShippingMethod',
-        'PurchaseOrder',
-        'POProfile',
-        'POPayment',
-        'POShipping',
-        'POItem',
-        'Review'
-    ]),
-]
+# ADMIN_ORDERING = [
+#     # ('auth', ['Group']),
+#     ('sites', ['Site']),
+#     ('core', [
+#         'Meta',
+#         'MetaItem',
+#         'Icon',
+#         'Country',
+#         'Address',
+#         'User',
+#         'Category',
+#         'TopBanner',
+#         'Banner',
+#         'Card',
+#         'Section',
+#         'Attribute',
+#         'Supplier',
+#         'Product',
+#         'ProductAttribute',
+#         'ProductItem',
+#         'ProductItemAttribute',
+#         'ProductGroup',
+#         'Promotion',
+#         'PromotionCategory',
+#         'PromotionItem',
+#         'Tax',
+#         'PaymentMethod',
+#         'ShippingMethod',
+#         'PurchaseOrder',
+#         'POProfile',
+#         'POPayment',
+#         'POShipping',
+#         'POItem',
+#         'Review'
+#     ]),
+# ]
 
 
 # def get_app_list(self, request, app_label=None):
@@ -338,21 +361,26 @@ ADMIN_ORDERING = [
 #         app['models'].sort(key=lambda x: ao[1].index(x['object_name']))
 #     return app_list
 
-def get_app_list(self, request):
-    """Method to override the sort of Django admin models/indexes"""
-
-    app_dict = self._build_app_dict(request)
-    for app_name, object_list in ADMIN_ORDERING:
-        app = app_dict[app_name]
-        app['models'].sort(key=lambda x: object_list.index(x['object_name']))
-        yield app
+# def get_app_list(self, request):
+#     """Method to override the sort of Django admin models/indexes"""
+#
+#     ###################################################
+#     #                                                 #
+#     # USE This method to order django admin index     #
+#     #                                                 #
+#     ###################################################
+#     app_dict = self._build_app_dict(request)
+#     for app_name, object_list in ADMIN_ORDERING:
+#         app = app_dict[app_name]
+#         app['models'].sort(key=lambda x: object_list.index(x['object_name']))
+#         yield app
 
 
 # Override the default method of admin get_app_list().
 # Note: using this way will force Django admin to show models that only set in
 #       the given list, so anything that not defined like (authtoken) will not
 #       be shown by default.
-admin.AdminSite.get_app_list = get_app_list
+# admin.AdminSite.get_app_list = get_app_list
 
 # Set list of hosts which are trusted origins for unsafe requests. If you need
 # cross-origin unsafe requests over HTTPS, continuing the example, add

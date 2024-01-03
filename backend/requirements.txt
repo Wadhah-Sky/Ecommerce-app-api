@@ -3,6 +3,15 @@
 # Install the latest version of Django framework 4.0.2 but less than 4.1.0 version.
 Django>=4.0.2,<4.1.0
 
+# Install django's default admin interface with superpowers - customizable themes, popup windows replaced
+# by modals and many other features.
+# Note: 1- Add admin_interface and colorfield to settings.INSTALLED_APPS before django.contrib.admin
+#       2- if you want to use modals instead of popup windows, ensure to
+#          add X_FRAME_OPTIONS = "SAMEORIGIN" in settings.py.
+#       3- Run "python manage.py migrate"
+#       4- Run "python manage.py collectstatic --clear"
+django-admin-interface>=0.28.1,<1.1.0
+
 # Install the latest version of Django REST framework 3.13 but less than 3.14 version.
 djangorestframework>=3.13.0,<3.14.0
 

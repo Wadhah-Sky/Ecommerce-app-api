@@ -954,6 +954,11 @@ class ReviewAdmin(BaseModelAdmin):
     search_fields = ['__str__', 'is_accepted']
 
 
+# Change some field that related to Admin site
+admin.sites.AdminSite.site_header = 'Jamie & Cassie - Management Console'
+admin.sites.AdminSite.site_title = 'Jamie & Cassie'
+admin.sites.AdminSite.index_title = 'Jamie & Cassie - Index'
+
 # Note: django.contrib.admin.sites.AlreadyRegistered: The model Site is already
 #       registered with 'sites.SiteAdmin', if you want to register custom class
 #       first unregister the current one.
