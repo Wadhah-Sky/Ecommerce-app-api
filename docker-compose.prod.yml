@@ -189,7 +189,7 @@ services:
     #       django browsable api will not show in style, can be fixed it with Nginx that loading static files
     #       by share common volume between django service and nginx.
     volumes:
-      - ./backend/django_rest/logs/debug.log:/usr/src/backend/django_rest/logs/debug.log
+      - ./backend/django_rest/logs:/usr/src/backend/django_rest/logs
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media
     command: bash -c "/usr/src/compose/start-django.sh"
