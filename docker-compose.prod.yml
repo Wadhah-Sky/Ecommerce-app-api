@@ -189,7 +189,9 @@ services:
     #       django browsable api will not show in style, can be fixed it with Nginx that loading static files
     #       by share common volume between django service and nginx.
     volumes:
-      - ./backend/django_rest/logs:/usr/src/backend/django_rest/logs
+      # Note: Trying to connect logs of Django with host machine log file causing issue of permission denied only
+      #       in production server, even if we give this file a 766 permission, so we comment the following line.
+      # - ./logs/django:/var/log/django
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media
     command: bash -c "/usr/src/compose/start-django.sh"
@@ -245,8 +247,6 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-    volumes: &worker_vol
-      - ./backend/django_rest:/usr/src/backend/django_rest
     command: bash -c "/usr/src/compose/start-celeryworker.sh"
     environment: *app_env
     depends_on:

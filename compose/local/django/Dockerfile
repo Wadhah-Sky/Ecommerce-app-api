@@ -83,10 +83,10 @@ RUN python3 -m venv /opt/venv && \
     mkdir -p /usr/src/vol/web/static && \
     # create 'media' directory.
     mkdir -p /usr/src/vol/web/media && \
-    # create 'backend/django_rest/logs' directory.
-    mkdir -p /usr/src/backend/django_rest/logs && \
+    # create directory for django logs.
+    mkdir -p /var/log/django && \
     # Create file 'debug.log'.
-    touch /usr/src/backend/django_rest/logs/debug.log && \
+    touch /var/log/django/debug.log && \
     sed -i 's/\r$//g' /usr/src/compose/es-index-rebuild.sh && \
     # Add the x permission which is the symbol for the execution permission. The execution
     # permission will give the execution ability to the owner user or group of the file.
@@ -111,8 +111,9 @@ FROM builder AS dev
 
 # Copy the diffrent service start shell.
 COPY /compose/local/django/start-django.sh /usr/src/compose/start-django.sh
-# Copy dependences names from your project source code to docker image 'requirements.txt' file.
-COPY /backend/requirements.txt /usr/src/backend/requirements.txt
+# Copy source code from your project 'backend' directory to docker container 'backend' directory.
+# Note: since there is no 'backend' directory in the image yet, will create it automatically.
+COPY /backend /usr/src/backend
 
 # install the required dependencies in 'requirements' file in python virtual environment.
 RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.txt && \
@@ -122,12 +123,10 @@ RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.txt && \
     # change permission to allow for each digit:
     # owner: read(4)/write(2)/execute(1) =7, group: read/execute =5, more: read/execute =5
     chmod -R 755 /usr/src/vol/ && \
+    chown -R user:usergroup /var/log/django/ && \
+    chmod -R 766 /var/log/django/ && \
     sed -i 's/\r$//g' /usr/src/compose/start-django.sh && \
     chmod +x /usr/src/compose/start-django.sh
-
-# Copy source code from your project 'django_rest' directory to docker container 'django_rest' directory.
-# Note: since there is no 'django_rest' directory in the image yet, will create it automatically.
-COPY /backend/django_rest /usr/src/backend/django_rest
 
 # Specify the default directory of this image layer (This should be where 'manage.py' file is holding or will be).
 WORKDIR /usr/src/backend/django_rest
@@ -146,23 +145,22 @@ FROM builder AS prod
 
 # Copy the diffrent service start shell.
 COPY /compose/production/django/start-django.sh /usr/src/compose/start-django.sh
-# Copy dependences names from your project source code to docker image 'requirements.txt' file.
-COPY /backend/requirements.prod.txt /usr/src/backend/requirements.txt
+# Copy source code from your project 'backend' directory to docker container 'backend' directory.
+# Note: since there is no 'backend' directory in the image yet, will create it automatically.
+COPY /backend /usr/src/backend
 
 # install the required dependencies in 'requirements' file in python virtual environment.
-RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.txt && \
+RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.prod.txt && \
     # change ownership of '/usr/src/compose/vol' directory and it's sub-folders using -R flag from 'root' user
     # to 'user' in 'usergroup' group.
     chown -R user:usergroup /usr/src/vol/ && \
     # change permission to allow for each digit:
     # owner: read(4)/write(2)/execute(1) =7, group: read/execute =5, more: read/execute =5
     chmod -R 755 /usr/src/vol/ && \
+    chown -R user:usergroup /var/log/django/ && \
+    chmod -R 755 /var/log/django/ && \
     sed -i 's/\r$//g' /usr/src/compose/start-django.sh && \
     chmod +x /usr/src/compose/start-django.sh
-
-# Copy source code from your project 'django_rest' directory to docker container 'django_rest' directory.
-# Note: since there is no 'django_rest' directory in the image yet, will create it automatically.
-COPY /backend/django_rest /usr/src/backend/django_rest
 
 # Specify the default directory of this image layer (This should be where 'manage.py' file is holding or will be).
 WORKDIR /usr/src/backend/django_rest

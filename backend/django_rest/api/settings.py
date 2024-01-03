@@ -51,10 +51,10 @@ ALLOWED_HOSTS.extend(
 # Application definition
 
 INSTALLED_APPS = [
-    'dal',
-    'dal_select2',
     'admin_interface',
     'colorfield',
+    'dal',
+    'dal_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -216,7 +216,7 @@ LOGGING = {
             #           occurred.
             "level": "DEBUG",
             "class": "logging.handlers.RotatingFileHandler",
-            "filename": os.path.join(BASE_DIR, 'logs/debug.log'),
+            "filename": '/var/log/django/debug.log',
             "formatter": "verbose",
             "maxBytes": 1024 * 1024 * 5,  # 5MB
             # When specified log file reach the size of 5MB, a new one will

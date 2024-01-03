@@ -4,6 +4,9 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+# Important: don't put && after command that not return 0 or 1 exit value and can be fail because your will
+#            force the command behind to run.
+
 # Define a function to be call when help option is been called or no arguments are provided,.
 function usage() {
   # Using cat tool to print on the screen the following text.
@@ -58,8 +61,9 @@ fi
 
 # First stop the current running docker services (in case there are) in given docker compose file,
 # and remove them (only containers while volumes keep it).
+# Note: we execute 'down' command twice in case first attempt didn't delete all containers and its resource (like network).
 echo "Stop Docker containers if running and remove any exist containers..."
-docker compose -f $DOCKER_COMPOSE_FILE stop && sleep 50 && docker compose -f $DOCKER_COMPOSE_FILE down && sleep 30
+docker compose -f $DOCKER_COMPOSE_FILE stop && sleep 50 && docker compose -f $DOCKER_COMPOSE_FILE down && sleep 30 && docker compose -f $DOCKER_COMPOSE_FILE down
 
 echo "Building Docker containers..."
 # Build the given docker compose file service (only the ones who have build argument).
@@ -116,9 +120,11 @@ echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOS
 # 3- Create a new initial migration for the apps.
 # Note: here we don't use detach mode to execute the run command of container because we run the container to
 #       do a certain job and then exit.
+# Important: since we are not using 'root' user (privileges), so we can't use 'rm' command and will
+#            return permission denied
 echo "Executing migration process of database..."
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
+# docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
+# docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
 echo "Migration process of database is Done."
 
