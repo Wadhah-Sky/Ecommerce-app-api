@@ -180,10 +180,6 @@ RUN cd nginx-1.25.3 && \
 # Specify the docker image that your service build on (nginx:1.25.3 is Debian distribute image).
 FROM nginx:1.25.3 AS deploy
 
-# Remove unnecessary directories and files.
-RUN rm -rf /var/lib/apk/lists/* && \
-    rm -rf /usr/share/nginx/html/index.html
-
 # Get from 'Nginx' bulding stage the 'modules' file.
 COPY --from=Nginx /app/nginx-1.25.3/objs/ngx_http_brotli_static_module.so /etc/nginx/modules/
 COPY --from=Nginx /app/nginx-1.25.3/objs/ngx_http_brotli_filter_module.so /etc/nginx/modules/
@@ -217,10 +213,20 @@ RUN apt-get update -y && \
     sed -i 's/\r$//g' /usr/src/compose/start-nginx.sh && \
     chmod +x /usr/src/compose/start-nginx.sh && \
     sed -i 's/\r$//g' /usr/src/compose/certbot.sh && \
-    chmod +x /usr/src/compose/certbot.sh
-
-# Run command to re-write 'brotli.conf' file withe required configuration.
-RUN echo 'brotli on;\n \
+    chmod +x /usr/src/compose/certbot.sh && \
+    # Remove unnecessary directories and files.
+    rm -rf /var/lib/apk/lists/* && \
+    rm -rf /usr/share/nginx/html/index.html && \
+    ## Remove existing log/nginx directory.
+    # rm -rf /var/log/nginx && \
+    ## Create new directory of log/nginx.
+    # mkdir /var/log/nginx && \
+    ## Create files for error.log and access.log and give them write permission.
+    # touch /var/log/nginx/error.log && \
+    # touch /var/log/nginx/access.log && \
+    chown -R 755 /var/log/ && \
+    # Re-write 'brotli.conf' file withe required configuration.
+    echo 'brotli on;\n \
           brotli_static on;\n \
           brotli_comp_level 11;\n \
           brotli_types application/atom+xml application/javascript application/json application/rss+xml\n \
