@@ -189,8 +189,7 @@ services:
     #       django browsable api will not show in style, can be fixed it with Nginx that loading static files
     #       by share common volume between django service and nginx.
     volumes:
-      # - ./backend/django_rest:/usr/src/backend/django_rest
-      # - ./backend/django_rest/data:/usr/src/vol/web
+      - ./backend/django_rest/logs/debug.log:/usr/src/backend/django_rest/logs/debug.log
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media
     command: bash -c "/usr/src/compose/start-django.sh"
@@ -210,6 +209,8 @@ services:
       - SQL_PORT=5432
       - EMAIL_BACKEND_NAME=${EMAIL_BACKEND_NAME}
       - EMAIL_BACKEND=${EMAIL_BACKEND}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      - SERVER_EMAIL=${SERVER_EMAIL}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-0}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-0}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-0}

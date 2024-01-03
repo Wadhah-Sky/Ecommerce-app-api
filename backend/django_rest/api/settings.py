@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'mptt',
     'anymail',
     'django_elasticsearch_dsl',
+    'log_viewer',
     'core',
     'home',
     'store',
@@ -117,7 +118,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'api.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -169,6 +169,125 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+# A sample logging configuration. The only tangible logging performed by this
+# configuration is to send email to the site admins on every HTTP error or
+# warning...etc. when the DEBUG=False.
+# See http://docs.djangoproject.com/en/dev/topics/logging for more details on
+# how to customize your logging configuration.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    # The handler is the engine that determines what happens to each message
+    # in a logger. It describes a particular logging behavior, such as writing
+    # a message to the screen, to a file, or to a network socket.
+    'handlers': {
+        # This handler that we named it "console" is useful to watch logs as
+        # stdr screen to watch logging stream in the terminal.
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple"
+        },
+        # The built-in AdminEmailHandler deserves a mention in the context of
+        # security. If its include_html option is enabled, the email message it
+        # sends will contain a full traceback, with names and values of local
+        # variables at each level of the stack, plus the values of your Django
+        # settings (in other words, the same level of detail that is exposed
+        # in a web page when DEBUG is True).
+        # It’s generally not considered a good idea to send such potentially
+        # sensitive information over email. Consider instead using one of the
+        # many third-party services to which detailed logs can be sent.
+        # Note: the email address will be used is the same SERVER_EMAIL.
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'file': {
+            # This log level describes the severity of the messages that the
+            # logger will handle. Python defines the following log levels:
+            #
+            # DEBUG: Low level system information for debugging purposes
+            # INFO: General system information
+            # WARNING: Information describing a minor problem that has
+            #          occurred.
+            # ERROR: Information describing a major problem that has occurred.
+            # CRITICAL: Information describing a critical problem that has
+            #           occurred.
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(BASE_DIR, 'logs/debug.log'),
+            "formatter": "verbose",
+            "maxBytes": 1024 * 1024 * 5,  # 5MB
+            # When specified log file reach the size of 5MB, a new one will
+            # be created and so on until we reach the 'backupCount' then Django
+            # will delete the oldest.
+            "backupCount": 5,
+            "encoding": "utf-8"
+        },
+    },
+    # Each message that is written to the logger is a Log Record. Each log
+    # record also has a log level indicating the severity of that specific
+    # message. A log record can also contain useful metadata that describes the
+    # event that is being logged. This can include details such as a stack
+    # trace or an error code.
+    'loggers': {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        'django.request': {
+            'handlers': ['mail_admins', "file"],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+    # A filter is used to provide additional control over which log records are
+    # passed from logger to handler. By default, any log message that meets log
+    # level requirements will be handled. However, by installing a filter, you
+    # can place additional criteria on the logging process. For example, you
+    # could install a filter that only allows ERROR messages from a particular
+    # source to be emitted.
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    # Ultimately, a log record needs to be rendered as text. Formatters
+    # describe the exact format of that text. A formatter usually consists of
+    # a Python formatting string containing LogRecord attributes; however, you
+    # can also write custom formatters to implement specific formatting
+    # behavior.
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d}"
+                      " {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {module} {message}",
+            "style": "{",
+        },
+    },
+}
+
+# Set values for django logging viewer
+LOG_VIEWER_FILES = ['/usr/src/logs/django/']
+LOG_VIEWER_FILES_PATTERN = '*.log*'
+LOG_VIEWER_FILES_DIR = 'logs/'
+# total log lines per-page
+LOG_VIEWER_PAGE_LENGTH = 25
+# total log lines will be read
+LOG_VIEWER_MAX_READ_LINES = 1000
+# Max log files loaded in Datatable per page
+LOG_VIEWER_FILE_LIST_MAX_ITEMS_PER_PAGE = 25
+LOG_VIEWER_PATTERNS = [
+    '[INFO]', '[DEBUG]', '[WARNING]', '[ERROR]', '[CRITICAL]'
+]
+# String regex expression to exclude the log from line
+LOG_VIEWER_EXCLUDE_TEXT_PATTERN = None
+
 
 # Set global throttle classes for authenticated/unauthenticated user to be used
 # with api requests.
@@ -517,13 +636,13 @@ EMAIL_BACKEND = os.getenv(
 # from the site manager(s). This does not include error messages sent to ADMINS
 # and MANAGERS;
 # Django’s defaults is “webmaster@localhost”
-DEFAULT_FROM_EMAIL = "no-reply@jamieandcassie.store"
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'webmaster@localhost')
 
 # Specify the email address that error messages come from, such as those sent
 # to ADMINS and MANAGERS. Django’s defaults is “root@localhost”
 # Note: This address is used only for error messages. It is not the address
 #       that regular email messages sent with send_mail() come from.
-SERVER_EMAIL = "wadhah.sky@gmail.com"
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', '')
 
 # Configure Anymail parameters. Not required but in case happen to change
 # default name of environment variables for AWS SDK (Boto3) or change some

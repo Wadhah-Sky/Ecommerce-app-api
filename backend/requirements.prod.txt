@@ -51,5 +51,7 @@ elasticsearch-dsl>=8.9.0,<8.10.0
 
 django-elasticsearch-dsl>=8.0,<9.0
 
+django-log-viewer>=1.1.7,<2.0.0
+
 # Install Python WSGI HTTP Server for UNIX.
 gunicorn>=21.2.0,<22.0.0

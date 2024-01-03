@@ -254,6 +254,8 @@ jobs:
             CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
             EMAIL_BACKEND_NAME=${{secrets.EMAIL_BACKEND_NAME}}
             EMAIL_BACKEND=${{secrets.EMAIL_BACKEND}}
+            DEFAULT_FROM_EMAIL=${{secrets.DEFAULT_FROM_EMAIL}}
+            SERVER_EMAIL=${{secrets.SERVER_EMAIL}}
             AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}
             AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}
             AWS_DEFAULT_REGION=${{secrets.AWS_DEFAULT_REGION}}
@@ -359,6 +361,8 @@ jobs:
             CHOKIDAR_USEPOLLING=${{secrets.CHOKIDAR_USEPOLLING}}
             EMAIL_BACKEND_NAME=${{secrets.EMAIL_BACKEND_NAME}}
             EMAIL_BACKEND=${{secrets.EMAIL_BACKEND}}
+            DEFAULT_FROM_EMAIL=${{secrets.DEFAULT_FROM_EMAIL}}
+            SERVER_EMAIL=${{secrets.SERVER_EMAIL}}
             MAILJET_API_KEY=${{secrets.MAILJET_API_KEY}}
             MAILJET_SECRET_KEY=${{secrets.MAILJET_SECRET_KEY}}
             PGADMIN_DEFAULT_EMAIL=${{secrets.PGADMIN_DEFAULT_EMAIL}}

@@ -1,0 +1,5 @@
+# git can't push empty directories. It can only track files.
+# If you try to push a folder with nothing in it, although it will exist on your local machine,
+# nothing will go into your branch.
+# So if someone tries to clone your code, they won't have the same folder structure as you do on your local machine.
+# .gitkeep is a common thing you will see in codebases, where an empty folder needs to be tracked via Git.
