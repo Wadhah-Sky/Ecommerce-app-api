@@ -310,9 +310,7 @@ jobs:
             
             sudo chmod +x ./deploy/deploy-docker-compose.sh
             
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml
-            
-            rm .env
+            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env
 
   deploy_production_linode:
     # Deploy to Linode cloud
@@ -414,6 +412,4 @@ jobs:
 
             sudo chmod +x ./deploy/deploy-docker-compose.sh
 
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml
-
-            rm .env
+            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env

@@ -108,9 +108,18 @@ echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f 
 # echo "Run 'elk_setup' service..."; docker compose -f $DOCKER_COMPOSE_FILE up elk_setup
 
 # Run the database service.
+# Important: Don't run migration process before database is ready, because will cause an issue for packages
+#            that depends on migration process like 'django-admin-interface' and its error:
+#
+#            django.db.utils.ProgrammingError: relation "admin_interface_theme" does not exist
+#
 echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
 
-# Create migration of your django service (app) apps models to the database:
+echo "Installing default django theme..."
+# Note: no need to this step but in case you want to install different theme.
+# docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py loaddata admin_interface_theme_django.json" && sleep 10
+
+# Create migration of your django service (app) apps models to the database (that is running):
 # 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps (you can
 #    specify a certain app like, --fake core).
 # 2- Remove your existing migration scripts for the apps. Where 'rm -rf' command is mostly used to remove
@@ -126,17 +135,18 @@ echo "Executing migration process of database..."
 # docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
 # docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate"
 echo "Migration process of database is Done."
-
-echo "Create superuser in database if not exist..."
-# Create super user depending on environment variables.
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
 
 # Collect static files of Django service (app)
 # Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.
 #       --clear flag means clear the existing static files before creating the new ones.
 echo "Collecting static files of Django to related volume..."
 docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py collectstatic --no-input --clear"
+
+echo "Create superuser in database if not exist..."
+# Create super user depending on environment variables.
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
 
 # Re-build indexes of elasticsearch engine.
 echo "Run process of index re-build of Django documents to elasticsearch engine..."
@@ -148,5 +158,8 @@ sleep 30
 # Run the other services.
 echo "Run the rest of docker containers in detach mode..."
 docker compose -f $DOCKER_COMPOSE_FILE up -d && echo "Your docker compose services is up!"
+
+echo "Wait 10 seconds before exit..."
+sleep 10
 
 exit 0

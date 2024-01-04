@@ -191,7 +191,7 @@ services:
     volumes:
       # Note: Trying to connect logs of Django with host machine log file causing issue of permission denied only
       #       in production server, even if we give this file a 766 permission, so we comment the following line.
-      # - ./logs/django:/var/log/django
+      # - ./logs/django:/var/log/django:ro,Z
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media
     command: bash -c "/usr/src/compose/start-django.sh"

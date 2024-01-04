@@ -105,13 +105,21 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': ['public/templates'],
-        'APP_DIRS': True,
+        # With APP_DIRS set to True, the template loader will look in the app’s
+        # templates directory and find the templates. APP_DIRS must not be set
+        # when loaders is defined.
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            'loaders': [
+                'apptemplates.Loader',
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
             ],
         },
     },
