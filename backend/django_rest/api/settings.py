@@ -281,9 +281,9 @@ LOGGING = {
 }
 
 # Set values for django logging viewer
-LOG_VIEWER_FILES = ['/usr/src/logs/django/']
+LOG_VIEWER_FILES = ['/var/log/']
+LOG_VIEWER_FILES_DIR = 'django/'
 LOG_VIEWER_FILES_PATTERN = '*.log*'
-LOG_VIEWER_FILES_DIR = 'logs/'
 # total log lines per-page
 LOG_VIEWER_PAGE_LENGTH = 25
 # total log lines will be read
@@ -512,7 +512,8 @@ SILENCED_SYSTEM_CHECKS = ["security.W019"]
 # Set list of hosts which are trusted origins for unsafe requests. If you need
 # cross-origin unsafe requests over HTTPS, continuing the example, add
 # “subdomain.safesite.com” to this list.
-# Note: if you used http://localhost:80 will face issue of:
+# Note: if you used http://localhost:80 or any domain/subdomain that is
+#       unregistered will face issue of:
 #
 #       forbidden (403) CSRF verification failed. Request aborted
 #

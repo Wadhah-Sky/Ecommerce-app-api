@@ -141,8 +141,13 @@ echo "Migration process of database is Done."
 # Collect static files of Django service (app)
 # Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.
 #       --clear flag means clear the existing static files before creating the new ones.
+#
+# Note: echo yes is for question of You have requested to collect static files at the destination
+#       ocation as specified in your settings:
+#       /usr/src/vol/web/static
+#       This will DELETE ALL FILES in this location! Are you sure you want to do this?
 echo "Collecting static files of Django to related volume..."
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py collectstatic --no-input --clear"
+docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "echo yes | python manage.py collectstatic --clear"
 
 echo "Create superuser in database if not exist..."
 # Create super user depending on environment variables.
