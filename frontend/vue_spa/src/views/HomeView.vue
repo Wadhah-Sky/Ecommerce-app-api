@@ -4,15 +4,17 @@
     <div class="container">
 
       <div class="intro-banner-wrap">
-        <agile v-if="storeHome.dataResult.Banner.length" :options="storeAgileSlider.options">
+        <agile v-if="storeHome.dataResult.Banner && storeHome.dataResult.Banner.length > 0"
+               :options="storeAgileSlider.options"
+        >
           <div v-for="( banner, index ) in storeHome.dataResult.Banner" :key="index" class="slide">
 
             <router-link v-if="banner.frontend_path"
                          :to="{ path: banner.frontend_path }"
                          class="img-wrap"
-                         style="max-width: 1118px !important; max-height: 280px!important;"
+                         style="max-width: 1118px; max-height: 300px;"
             >
-              <img v-lazy="banner.thumbnail" :alt="banner.title" width="1118" height="280" style="width:auto; height: auto;">
+              <img v-lazy="banner.thumbnail" :alt="banner.title" width="1118" height="300">
             </router-link>
           </div>
 
@@ -32,7 +34,7 @@
 
     <div class="container">
 
-      <product-swiper-component :slider-title="slider.title" :products="slider.products" />
+      <product-swiper-component :slider-title="slider.title" :products="slider.products" :autoplay="slider.frontend_autoplay" />
 
     </div>
 
@@ -60,7 +62,7 @@
         <h3 class="section-title">{{ section.title }}</h3>
       </header><!-- sect-heading -->
 
-      <div class="row">
+      <div class="row section-cards">
         <div v-for="( card, index ) in section.cards" :key="index" class="col-sm-6 col-md-6 col-lg-3 col-xxl-2">
 
           <div v-if="card.category_slug" class="card card-product-grid" >
@@ -68,7 +70,7 @@
             <router-link
                 :to="{ name: 'storeCategory', params:{ slug: card.category_slug }, query: {page: 1} }"
             >
-              <img v-lazy="card.thumbnail" :alt="card.title" class="card-img-top img-wrap" width="260" height="220" style="object-fit: contain; -o-object-fit: contain">
+              <img v-lazy="card.thumbnail" :alt="card.title" class="img-wrap card-img-top" width="260" height="220" style="object-fit: contain; -o-object-fit: contain">
             </router-link>
 
             <div class="card-body">
@@ -225,9 +227,12 @@ await checkDataResultAvailability();
 // Slides styles
 .slide
   display: block
-  //height: 500px
-  object-fit: cover
+  height: 300px
   width: 100%
+
+.slide img
+  object-fit: fill
+  -o-object-fit: fill
 
 p .card-text
   position: absolute
@@ -238,16 +243,54 @@ p .card-text
   //text-align: justify
   text-justify: inter-word
 
+.section-cards .card-product-grid
+  min-height: 370px
+
+</style>
+
+<style lang="scss">
+
+@media (min-width: 280px) and (max-width: 767px) {
+  // .agile__slides > img
+  .slide {
+    height: 170px !important;
+    width: 100% !important;
+  }
+
+  .slide img {
+    height: 170px;
+    width: 100%;
+    object-fit: fill;
+    -o-object-fit: fill;
+  }
+
+}
+
 </style>
 
 <style lang="scss" scoped>
 
 // override the default min-width value (576px) of .col-sm-* column to be 330px
 // also you should set the of max-width to same column as breakpoint to .col-md-* which by default it's 768px
-@media (min-width: 330px) and (max-width: 767px) {
+@media (min-width: 280px) and (max-width: 767px) {
   .col-sm-6 {
     flex: 0 0 auto;
     width: 50%;
+  }
+  .section-title{
+    font-size: 17px;
+  }
+  .section-cards .card-img-top{
+    height: 200px;
+  }
+  .section-cards .card-body{
+    padding: 3px 6px;
+  }
+  .section-cards .title{
+    font-size: 14px;
+  }
+  .section-cards .card-text{
+    font-size: 13px;
   }
 }
 

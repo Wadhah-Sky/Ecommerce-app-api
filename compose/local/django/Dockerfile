@@ -143,7 +143,7 @@ USER user
 # use the 'builder' layer as base for this layer of the image.
 FROM builder AS prod
 
-# Copy the diffrent service start shell.
+# Copy the required scripts.
 COPY /compose/production/django/start-django.sh /usr/src/compose/start-django.sh
 # Copy source code from your project 'backend' directory to docker container 'backend' directory.
 # Note: since there is no 'backend' directory in the image yet, will create it automatically.
@@ -158,9 +158,31 @@ RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.prod.txt && \
     # owner: read(4)/write(2)/execute(1) =7, group: read/execute =5, more: read/execute =5
     chmod -R 755 /usr/src/vol/ && \
     chown -R user:usergroup /var/log/django/ && \
-    chmod -R 755 /var/log/django/ && \
+    chmod -R 766 /var/log/django/ && \
     sed -i 's/\r$//g' /usr/src/compose/start-django.sh && \
-    chmod +x /usr/src/compose/start-django.sh
+    chmod +x /usr/src/compose/start-django.sh && \
+    # Since this build stage will be used in container that not connected to source code in local host,
+    # so you need a write permission for non root user. here we give the permission to write migration files.
+    # Note: -exec <command> {} +
+    #       This variant of the -exec action runs the specified command on the selected files, but the command line
+    #       is built by appending each selected file name at the end; the total number of invocations of the command
+    #       will be much less than the number of matched files. The command line is built in much the same way that
+    #       'xargs' command builds its command lines. Only one instance of {} is allowed within the command.
+    #       The command is executed in the starting directory.
+    find /usr/src/backend/django_rest/ -type d -name "migrations" -execdir chown -R user:usergroup {} + && \
+    find /usr/src/backend/django_rest/ -type d -name "migrations" -execdir chmod -R 766 {} +
+    # Remove any migrations files (except __init__.py file) to prevent confusion when run create migrations command.
+    # IMPORTANT: it's recommended to not delete the migrations files:
+    #            1- it's better to correct the initial one or the last one that causing issue for you like different
+    #               column name (between mode and database table) for same column in local machine and then re-create
+    #               (makemigrations) new one and push it to production server in order to update the database and track
+    #               changes in models and refelect into database.
+    #            2- if you still have issue, remove all migrations files from local machine and create initial migration
+    #               file that represent same database details in porudction server and then add your changes like
+    #               add/remove model fields (without makemigration) and push it to production server to update database
+    #               where there you will create the new migration file and migrate it, after that create migration file
+    #               in your local machine.
+    # find /usr/src/backend/django_rest/*/migrations/* -not -name "__init__.py" -execdir rm -f {} +
 
 # Specify the default directory of this image layer (This should be where 'manage.py' file is holding or will be).
 WORKDIR /usr/src/backend/django_rest

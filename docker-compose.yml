@@ -99,7 +99,7 @@ services:
   db:
     # In Docker swarm environment, it's very important to name image that build using dockerfile as:
     # registry_URL:target_port/name_for_image
-    image: 127.0.0.1:5000/postgres
+    image: 127.0.0.1:5000/postgres-dev
     # Building configuration of this service.
     # ampersand mark means this service build config will be used by other services to build.
     build:
@@ -191,7 +191,7 @@ services:
   elasticsearch:
     # In Docker swarm environment, it's very important to name image that build using dockerfile as:
     # registry_URL:target_port/name_for_image
-    image: 127.0.0.1:5000/elasticsearch
+    image: 127.0.0.1:5000/elasticsearch-dev
     build:
       context: .
       dockerfile: compose/local/elk/elasticsearch/Dockerfile
@@ -278,7 +278,7 @@ services:
       # profiles: ["setup"]
       #
       - setup
-    image: 127.0.0.1:5000/elk-setup
+    image: 127.0.0.1:5000/elk-setup-dev
     build:
       context: .
       dockerfile: compose/local/elk/setup/Dockerfile
@@ -311,7 +311,7 @@ services:
       - webnet
 
   logstash:
-    image: 127.0.0.1:5000/logstash
+    image: 127.0.0.1:5000/logstash-dev
     build:
       context: .
       dockerfile: compose/local/elk/logstash/Dockerfile
@@ -351,7 +351,7 @@ services:
       - webnet
 
   kibana:
-    image: 127.0.0.1:5000/kibana
+    image: 127.0.0.1:5000/kibana-dev
     build:
       context: .
       dockerfile: compose/local/elk/kibana/Dockerfile
@@ -386,7 +386,7 @@ services:
       - webnet
 
   app:
-    image: 127.0.0.1:5000/django
+    image: 127.0.0.1:5000/django-dev
     # Building configuration of this service.
     # ampersand mark means this service build config will be used by other services to build.
     build: &app_build
@@ -434,6 +434,7 @@ services:
     environment: &app_env
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
+      - MAIN_DOMAIN_NAME=${MAIN_DOMAIN_NAME}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - CELERY_BROKER=${CELERY_BROKER}
       - CELERY_BACKEND=${CELERY_BACKEND}
@@ -483,7 +484,7 @@ services:
       - webnet
 
   ui:
-    image: 127.0.0.1:5000/vue
+    image: 127.0.0.1:5000/vue-dev
     build:
       context: .
       dockerfile: compose/local/vue/Dockerfile
@@ -532,7 +533,7 @@ services:
       - webnet
 
   worker:
-    image: 127.0.0.1:5000/worker
+    image: 127.0.0.1:5000/worker-dev
     # asterisk mark refer to another service same variable configs to be use in this service.
     build: *app_build
     healthcheck:
@@ -558,7 +559,7 @@ services:
       - webnet
 
   beat:
-    image: 127.0.0.1:5000/beat
+    image: 127.0.0.1:5000/beat-dev
     build: *app_build
     healthcheck:
       test: ["CMD-SHELL", "celery inspect ping || exit 1"]
@@ -579,7 +580,7 @@ services:
       - webnet
 
   flower:
-    image: 127.0.0.1:5000/flower
+    image: 127.0.0.1:5000/flower-dev
     build: *app_build
     ports:
       - '5557:5555'

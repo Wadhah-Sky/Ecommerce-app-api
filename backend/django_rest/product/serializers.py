@@ -138,10 +138,28 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
         # Initialize empty list to store images url.
         images_url = []
+        # Initialize None object.
+        selected_instance = instance
 
-        if instance.images:
+        # Check if current product item instance is not the default item and is
+        # set True to use default product item instance images.
+        if instance.is_default is False \
+                and instance.use_default_images:
 
-            for item in instance.images:
+            # Get related default product item instance.
+            default_product_item = ProductItem.objects.filter(
+                product=instance.product,
+                is_default=True
+            ).first()
+
+            if default_product_item:
+                # If there is a return value. set to selected_instance.
+                selected_instance = default_product_item
+
+        # Check if selected product item instance has images.
+        if selected_instance.images:
+
+            for item in selected_instance.images:
                 # Append current image instance url to the list.
                 # images_url.append(request.build_absolute_uri(item.image.url))
 
@@ -152,7 +170,7 @@ class ProductItemSerializer(serializers.ModelSerializer):
         else:
             # if instance has no images, return the product item available
             # thumbnail.
-            images_url = [self.get_thumbnail(instance=instance)]
+            images_url = [self.get_thumbnail(instance=selected_instance)]
 
             return images_url
 
@@ -304,7 +322,13 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
             # Get the root node title of the item instance.
             root_title = item.attribute.get_root().title
-            attributes_dict[root_title] = item.attribute.title
+
+            # Check if attributes dictionary has root title as key or not.
+            if attributes_dict.get(root_title) is None:
+                attributes_dict[root_title] = [item.attribute.title]
+            elif item.attribute.title not in attributes_dict[root_title]:
+                # Append non-duplicate values for specified key.
+                attributes_dict[root_title].append(item.attribute.title)
 
         return attributes_dict
 

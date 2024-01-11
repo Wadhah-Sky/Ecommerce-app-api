@@ -346,7 +346,8 @@ class ProductGroupSerializer(serializers.ModelSerializer):
         model = ProductGroup
         fields = [
             'title',
-            'products'
+            'products',
+            'frontend_autoplay'
         ]
 
     # Define related/reverse model fields.

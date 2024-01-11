@@ -261,16 +261,24 @@ export const useProductStore = defineStore('Product', {
           // Loop over array of objects.
           for (let item of arrOfObjs) {
 
-            // Loop over array where 'index' of object is the key and its value is 'val'.
+            // Loop over array where 'index' of object is the key (like color) and its value is 'val' (["brown"]).
             for (let [index, val] of Object.entries(item)) {
 
               // Check that if index is not exists as key, set new key with its value.
               if (!returnedObj[index]) {
-                returnedObj[index] = val;
+                // Convert the list (val) to string seperated by comma and then replace the last comma with ' and' word.
+                // g: With this flag the search looks for all matches, without it – only the first match is returned.
+                // m: In the multiline mode they match not only at the beginning and the end of the string, but also
+                //    at start/end of line.
+                // i: With this flag the search is case-insensitive: no difference between 'A' and 'a'.
+                returnedObj[index] = val.join(', ').replace(/,(?!.*,)/gmi, ' and');
               }
               else {
                 // Otherwise update current value four current index.
-                returnedObj[index] = returnedObj[index] + ', ' + val;
+                // Note: 1- first replace ' and' with comma for current returnedObj[index]
+                //       2- add comma.
+                //       3- for new added list (val) we repeat the same above.
+                returnedObj[index] = returnedObj[index].replace(' and', ',') + ', ' + val.join(', ').replace(/,(?!.*,)/gmi, ' and');
               }
             }
           }

@@ -181,6 +181,9 @@ RUN cd nginx-1.25.3 && \
 FROM nginx:1.25.3 AS deploy
 
 # Remove unnecessary directories and files.
+# Info: flags in mentioned location:
+#       The -r option indicates that the entire directory will be removed, while
+#       the -f option indicates that this action will be forcefully performed.
 # Note: this step should be before copying 'dist' folder and past it in 'html' folder,
 #       otherwise will face issue of 'directory index of "/usr/share/nginx/html/" is forbidden'
 #       when start/running Nginx.

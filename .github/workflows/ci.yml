@@ -37,6 +37,7 @@ jobs:
           cat << EOF > .env
           SECRET_KEY=${{secrets.SECRET_KEY}}
           DEBUG=${{secrets.DEBUG}}
+          MAIN_DOMAIN_NAME=${{secrets.MAIN_DOMAIN_NAME}}
           ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
           CELERY_BROKER=${{secrets.CELERY_BROKER}}
           CELERY_BACKEND=${{secrets.CELERY_BACKEND}}
@@ -103,6 +104,7 @@ jobs:
 
       - name: Run tests
         run: |
+          docker compose -f docker-compose.yml run --rm app sh -c "python manage.py makemigrations" &&
           docker compose -f docker-compose.yml up app -d &&
           docker-compose -f docker-compose.yml run --rm app sh -c "python manage.py test"
 
@@ -238,6 +240,7 @@ jobs:
             cat << EOF > .env
             SECRET_KEY=${{secrets.SECRET_KEY}}
             DEBUG=${{secrets.DEBUG}}
+            MAIN_DOMAIN_NAME=${{secrets.MAIN_DOMAIN_NAME}}
             ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
             CSRF_TRUSTED_ORIGINS=${{secrets.CSRF_TRUSTED_ORIGINS}}
             USE_X_FORWARDED_HOST=${{secrets.USE_X_FORWARDED_HOST}}
@@ -293,6 +296,7 @@ jobs:
             CERT_TEST_CERT=${{secrets.CERT_TEST_CERT}}
             LETSENCRYPT_DIR=${{secrets.LETSENCRYPT_DIR}}
             CERT_NAME=${{secrets.CERT_NAME}}
+            OU_CERT_NAME=${{secrets.OU_CERT_NAME}}
             CERT_RENEW_INTERVAL=${{secrets.CERT_RENEW_INTERVAL}}
             CUSTOM_CERT_COMMAND=${{secrets.CUSTOM_CERT_COMMAND}}
             EOF
@@ -343,6 +347,7 @@ jobs:
             cat << EOF > .env
             SECRET_KEY=${{secrets.SECRET_KEY}}
             DEBUG=${{secrets.DEBUG}}
+            MAIN_DOMAIN_NAME=${{secrets.MAIN_DOMAIN_NAME}}
             ALLOWED_HOSTS=${{secrets.ALLOWED_HOSTS}}
             CSRF_TRUSTED_ORIGINS=${{secrets.CSRF_TRUSTED_ORIGINS}}
             USE_X_FORWARDED_HOST=${{secrets.USE_X_FORWARDED_HOST}}
@@ -395,6 +400,7 @@ jobs:
             CERT_TEST_CERT=${{secrets.CERT_TEST_CERT}}
             LETSENCRYPT_DIR=${{secrets.LETSENCRYPT_DIR}}
             CERT_NAME=${{secrets.CERT_NAME}}
+            OU_CERT_NAME=${{secrets.OU_CERT_NAME}}
             CERT_RENEW_INTERVAL=${{secrets.CERT_RENEW_INTERVAL}}
             CUSTOM_CERT_COMMAND=${{secrets.CUSTOM_CERT_COMMAND}}
             EOF
@@ -412,4 +418,4 @@ jobs:
 
             sudo chmod +x ./deploy/deploy-docker-compose.sh
 
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env
+            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml

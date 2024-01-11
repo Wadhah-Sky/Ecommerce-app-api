@@ -180,6 +180,7 @@ services:
     environment: &app_env
       - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG}
+      - MAIN_DOMAIN_NAME=${MAIN_DOMAIN_NAME}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - CELERY_BROKER=${CELERY_BROKER}
       - CELERY_BACKEND=${CELERY_BACKEND}

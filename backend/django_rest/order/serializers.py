@@ -3,11 +3,30 @@
 from rest_framework import serializers
 # from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.sites.models import Site
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
 from django.conf import settings
 from datetime import date
 
 from core.models import POItem, PurchaseOrder, MetaItem, Address
+
+
+def get_home_url():
+    """Return the home url of frontend server"""
+
+    try:
+        # Get current 'Site' model instance from database.
+        current_site = Site.objects.get_current()
+
+        # Return 'domain' field value, which looks like:
+        # http://127.0.0.1:8000/ or https://jamieandcassie.store
+
+        # Note: if you are using nginx server for development or localhost,
+        #       this will return the port of Django service not the nginx.
+        return current_site.domain
+
+    except ObjectDoesNotExist:
+        return settings.MAIN_DOMAIN_NAME
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -154,7 +173,7 @@ class POItemSerializer(serializers.ModelSerializer):
             #     # full path (absolute url) to thumbnail file.
             #     return current_site.domain + url
 
-            return url
+            return f'{get_home_url()}{url}'
 
     def get_product_url(self, instance):
         """Return the product item url of frontend server"""
@@ -174,12 +193,7 @@ class POItemSerializer(serializers.ModelSerializer):
         if request:
             return request.build_absolute_uri(url)
         else:
-            # Get current 'Site' model instance from database.
-            current_site = Site.objects.get_current()
-
-            # Use 'domain' field value with product url value to create full
-            # path (absolute url) to product.
-            return current_site.domain + url
+            return f'{get_home_url()}{url}'
 
 
 class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
@@ -227,30 +241,16 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
     billing_address = serializers.SerializerMethodField()
 
     @property
-    def get_home_url(self):
-        """Return the home url of frontend server"""
-
-        # Get current 'Site' model instance from database.
-        current_site = Site.objects.get_current()
-
-        # Return 'domain' field value, which looks like:
-        # http://127.0.0.1:8000/ or https://jamieandcassie.store
-
-        # Note: if you are using nginx server for development or localhost,
-        #       this will return the port of Django service not the nginx.
-        return current_site.domain
-
-    @property
     def get_contact_url(self):
         """Return the contact us url of frontend server"""
 
-        return f'{self.get_home_url}/contact'
+        return f'{get_home_url()}/contact'
 
     @property
     def get_about_url(self):
         """Return the about us url of frontend server"""
 
-        return f'{self.get_home_url}/about'
+        return f'{get_home_url()}/about'
 
     def get_order_details_url(self, instance):
         """Return the order details url of backend view template"""
@@ -261,9 +261,9 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
             kwargs={'po_code': instance.po_code}
         )
 
-        # Note: don't pust back-slash between two values because order_url
+        # Note: don't put back-slash between two values because order_url
         # start with back-slash.
-        return f'{self.get_home_url}{order_url}'
+        return f'{get_home_url()}{order_url}'
 
     def get_po_profile(self, instance):
         """Return the instance's po_profile details"""
@@ -377,12 +377,9 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(url)
 
             else:
-                # Get current 'Site' model instance from database.
-                current_site = Site.objects.get_current()
-
                 # Use 'domain' field value with given url value to create
                 # full path (absolute url) to the given url.
-                return current_site.domain + url
+                return f'{get_home_url()}{url}'
 
         return None
 
@@ -407,7 +404,7 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
 
         # check if meta item is exists.
         if meta_item:
-            # Check if use source for meta item is True:
+            # Check if your source for meta item is True:
             if meta_item.use_source:
                 logo_svg_url = meta_item.source_url
                 logo_thumbnail_url = meta_item.source2_url
@@ -428,11 +425,11 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
                     logo_svg_url = meta_item.file.url
 
         # Set JSON keys value.
-        to_ret['logo_thumbnail'] = logo_thumbnail_url
-        to_ret['logo_svg'] = logo_svg_url
+        to_ret['logo_thumbnail'] = f'{get_home_url()}{logo_thumbnail_url}'
+        to_ret['logo_svg'] = f'{get_home_url()}{logo_svg_url}'
         to_ret['current_year'] = current_year
         to_ret['order_details_url'] = self.get_order_details_url(instance)
-        to_ret['home_url'] = self.get_home_url
+        to_ret['home_url'] = get_home_url()
         to_ret['contact_url'] = self.get_contact_url
         to_ret['about_url'] = self.get_about_url
 

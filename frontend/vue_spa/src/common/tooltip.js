@@ -9,12 +9,14 @@
 import { Tooltip } from 'bootstrap';
 
 export const tooltip = {
-
   // Called after the DOM has been mounted or rendered. Here you have access to
   // the DOM elements and DOM manipulation can be performed for example get the
   // innerHTML
   mounted(el) {
-    new Tooltip(el);
+    new Tooltip(el, {
+        container: 'body',
+        trigger : 'hover'
+    });
   }
 
 };

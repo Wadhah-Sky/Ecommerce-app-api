@@ -2415,6 +2415,7 @@ class ProductGroup(TimeStampedModel):
         unique=True
     )
     is_active = models.BooleanField(default=False)
+    frontend_autoplay = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         """On save() method call for this model, update timestamps"""
@@ -2681,6 +2682,11 @@ class ProductItem(TimeStampedModel):
     is_default = models.BooleanField(
         default=False,
         help_text="You should set at least one True value and no more than one"
+    )
+    use_default_images = models.BooleanField(
+        default=False,
+        help_text="With selecting, the default product item images will be "
+                  "use even if the current product item has images"
     )
 
     @property
@@ -3194,7 +3200,7 @@ class ProductItemAttribute(models.Model):
         blank=True,
         upload_to=create_file_path,
         format='JPEG',
-        options={'quality': 70},
+        options={'quality': 100},
         processors=[Thumbnail(64, 64)],
     )
     product_item = models.ForeignKey(

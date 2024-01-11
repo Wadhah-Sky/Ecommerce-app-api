@@ -5,7 +5,7 @@
     <section class="border-bottom">
       <div class="container">
 
-        <template v-if="storeHome.dataResult.TopBanner.length > 0">
+        <template v-if="storeHome.dataResult.TopBanner && storeHome.dataResult.TopBanner.length > 0">
           <top-bar-banner-component :data="storeHome.dataResult.TopBanner" />
         </template>
 

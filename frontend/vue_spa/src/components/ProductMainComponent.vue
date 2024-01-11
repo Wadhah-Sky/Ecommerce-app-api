@@ -3,7 +3,7 @@
   <main class="col-md-6 border-left">
     <article class="content-body">
 
-      <h2 class="title">{{props.title}}</h2>
+      <h3 class="title">{{props.title}}</h3>
 
       <div v-if="props.promotionTitle || props.promotionSummary" class="content h5">
           <span v-if="props.promotionTitle" class="badge bg-danger promotion-title">{{ props.promotionTitle }}</span>

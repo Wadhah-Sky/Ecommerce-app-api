@@ -17,10 +17,6 @@
                 slidesPerView: 2,
                 spaceBetween: 15,
               },
-              // '640': {
-              //   slidesPerView: 2,
-              //   spaceBetween: 15,
-              // },
               '768': {
                 slidesPerView: 3,
                 spaceBetween: 20,
@@ -31,11 +27,16 @@
               }}"
               :modules="modules"
               :cssMode="true"
-              :navigation="true"
+              :navigation="!props.autoplay"
               :mousewheel="true"
               :keyboard="true"
               :freeMode="true"
               :lazy="true"
+              :autoplay="{
+                delay: 3000,
+                disableOnInteraction: true,
+              }"
+              :loop="props.autoplay"
           >
 
             <swiper-slide v-for="( slide, index ) in props.products" :key="index">
@@ -70,7 +71,7 @@
 */
 import ProductCardComponent from "@/components/ProductCardComponent";
 import { Swiper, SwiperSlide } from 'swiper/vue';
-import { Navigation, Mousewheel, Keyboard, FreeMode } from "swiper/modules";
+import { Autoplay, Navigation, Mousewheel, Keyboard, FreeMode } from "swiper/modules";
 import { defineProps} from "vue";
 
 export default {
@@ -96,12 +97,29 @@ const props = defineProps({
   sliderTitle: {
     type: String,
     required: true
+  },
+  autoplay: {
+    type: Boolean,
+    default: false
   }
 });
-const modules = [Navigation, Mousewheel, Keyboard, FreeMode];
+const modules = [Mousewheel, Keyboard, FreeMode];
+
+if (props.autoplay === true){
+  modules.push(Autoplay);
+}
+else {
+  modules.push(Navigation)
+}
 
 </script>
 
 <style scoped>
+
+@media (min-width: 280px) and (max-width: 767px) {
+  .section-title{
+    font-size: 17px;
+  }
+}
 
 </style>

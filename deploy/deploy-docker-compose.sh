@@ -115,50 +115,19 @@ echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f 
 #
 echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
 
-echo "Installing default django theme..."
-# Note: no need to this step but in case you want to install different theme.
+# echo "Installing default django theme..."
+# Note: no need to this step but in case you want to install different theme you should do it development PC so the
+#       new files loaded to Github repository and here only collect it.
 # docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py loaddata admin_interface_theme_django.json" && sleep 10
 
-# Create migration of your django service (app) apps models to the database (that is running):
-# 1- Pretend to rollback all of your migrations without touching the actual tables in the project apps (you can
-#    specify a certain app like, --fake core).
-# 2- Remove your existing migration scripts for the apps. Where 'rm -rf' command is mostly used to remove
-#    directories. As you will notice, this command uses two different options together.
-#    The -r option indicates that the entire directory will be removed, while
-#    the -f option indicates that this action will be forcefully performed.
-# 3- Create a new initial migration for the apps.
-# Note: here we don't use detach mode to execute the run command of container because we run the container to
-#       do a certain job and then exit.
-# Important: since we are not using 'root' user (privileges), so we can't use 'rm' command and will
-#            return permission denied
-echo "Executing migration process of database..."
-# docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate --fake"
-# docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "rm -rf migrations"
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py makemigrations"
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py migrate"
-echo "Migration process of database is Done."
+# Run 'app' service in detach mode that will make sure database is updated.
+# Important: since we are not using 'root' user (privileges), so we can't use 'rm' command and will return permission
+#            denied.
+echo "Run 'app' service and wait 30 seconds..."
+docker compose -f $DOCKER_COMPOSE_FILE up -d app && sleep 30
 
-# Collect static files of Django service (app)
-# Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.
-#       --clear flag means clear the existing static files before creating the new ones.
-#
-# Note: echo yes is for question of You have requested to collect static files at the destination
-#       ocation as specified in your settings:
-#       /usr/src/vol/web/static
-#       This will DELETE ALL FILES in this location! Are you sure you want to do this?
-echo "Collecting static files of Django to related volume..."
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "echo yes | python manage.py collectstatic --clear"
-
-echo "Create superuser in database if not exist..."
-# Create super user depending on environment variables.
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py create-superuser"
-
-# Re-build indexes of elasticsearch engine.
-echo "Run process of index re-build of Django documents to elasticsearch engine..."
-docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "/usr/src/compose/es-index-rebuild.sh"
-
-echo "Wait 30 seconds..."
-sleep 30
+echo "Run 'nginx' service and wait 10 seconds..."
+docker compose -f $DOCKER_COMPOSE_FILE up -d nginx && sleep 10
 
 # Run the other services.
 echo "Run the rest of docker containers in detach mode..."

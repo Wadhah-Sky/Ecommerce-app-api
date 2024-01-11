@@ -29,7 +29,7 @@
         </div>
 
         <div class="col-sm-12 col-md-4 text-md-end">
-          <p class="text-muted">© 2023 Jamie & Cassie All Rights Received</p>
+          <p class="text-muted">© 2024 Jamie & Cassie All Rights Received</p>
         </div>
 
 <!--        <div class="col-md-2 text-md-right text-muted">-->

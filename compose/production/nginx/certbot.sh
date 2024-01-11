@@ -46,30 +46,30 @@ set -o nounset
 #       >> curl -Iki http://jamieandcassie.store
 #       >> curl -Iki http://www.jamieandcassie.store
 
-echo "Check webroot path directory is exists otherwise create it"
-
 # Check if file of /var/www/certbot is not exists, create it.
 if [[ ! -f /var/www/certbot ]]; then
-    mkdir -p /var/www/certbot
+  echo "Create webroot path directory"
+  mkdir -p /var/www/certbot
 fi
 
 # Clear the existing certificates file in "live" folder in letsencrypt directory for given $CERT_NAME. To prevent of
 # creating another copy of received certificates from server.
-echo "Clear letsencrypt directory for received certificates from ACM server"
 if [[ -f ${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store} ]]; then
-    rm -rf "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}"
+  echo "Clear letsencrypt directory for received certificates from ACM server"
+  rm -rf "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}"
 fi
 
 
 # Check that if a given custom certbot command is available and not None.
-if [[ ${CUSTOM_CERT_COMMAND:-None} != None ]]; then
+if [[ ${CUSTOM_CERT_COMMAND:-0} != 0 ]]; then
+  echo "Use custom certbot command"
   cert_command="certbot $CUSTOM_CERT_COMMAND"
   # eval command is a built-in function that allows you to execute arguments as a bash command.
   eval "$cert_command" || true
 
 # Else, check if environment variable "CERT_TEST_CERT" is 1 (means call certbot for test purpose).
 elif [[ ${CERT_TEST_CERT:-1} == 1 ]]; then
-
+  echo "Generate certbot test certificates"
   # Note: Let's Encrypt limits the amount of available free certificates per month (100), so in case of test, run
   #       this service with adding the flag: --dry-run. to the commands renew, certonly or certbot, or you can
   #       test your syntax without actually having any certificates issued on your behalf. As a result, you will
@@ -178,28 +178,29 @@ elif [[ ${CERT_TEST_CERT:-1} == 1 ]]; then
           --register-unsafely-without-email \
           --webroot \
           --webroot-path /var/www/certbot/ \
-          --verbose || echo "Certbot has failed to generate test certificate" && exit 0
+          --verbose || echo "Certbot has failed to generate test certificate"
 
 # Else condition
 else
+  echo "Generate certbot certificates"
   certbot certonly \
           --non-interactive \
           --config-dir "${LETSENCRYPT_DIR:-/etc/letsencrypt}" \
           --domains "${CERT_DOMAINS:-jamieandcassie.store}" \
           --cert-name "${CERT_NAME:-jamieandcassie.store}" \
-          --email "${CERT_EMAIL:-wadhah_sky@hotmail.com}" \
+          --email "${CERT_EMAIL:-wadhah.sky@gmail.com}" \
           --agree-tos \
           --no-eff-email \
           --webroot \
           --webroot-path /var/www/certbot/ \
           --expand \
-          --redirect || echo "Certbot has failed" && exit 0
+          --redirect || echo "Certbot has failed"
 fi
 
 # Check if we get the certificate files from server, copy it to wanted destination as specified in default.conf file as
 # ssl_certificate and ssl_certificate_key.
 if [[ -f "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/privkey.pem" ]]; then
-
+  echo "Copy certbot generated certificates to /usr/share/nginx/certificates/"
   # Remove all file from /usr/share/nginx/certificates/.
   rm -rf /usr/share/nginx/certificates/* &&
 

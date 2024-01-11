@@ -16,12 +16,12 @@ fi
 if [[ ! -f /usr/share/nginx/certificates/fullchain.pem ]]; then
   echo "Create dummy SSL certificates..."
   openssl genrsa -out /usr/share/nginx/certificates/privkey.pem 4096
-  openssl req -new -key /usr/share/nginx/certificates/privkey.pem -out /usr/share/nginx/certificates/cert.csr -nodes -subj "/C=PT/ST=World/L=World/O=example.store/OU=example lda/CN=example.store"
+  openssl req -new -key /usr/share/nginx/certificates/privkey.pem -out /usr/share/nginx/certificates/cert.csr -nodes -subj "/C=PT/ST=World/L=World/O=${CERT_NAME:-example.com}/OU=${OU_CERT_NAME:-example} lda/CN=${CERT_NAME:-example.com}"
   openssl x509 -req -days 365 -in /usr/share/nginx/certificates/cert.csr -signkey /usr/share/nginx/certificates/privkey.pem -out /usr/share/nginx/certificates/fullchain.pem
 fi
 
 # Check if legitimate certificates are requested.
-if [[ ${CERT_GENERATE:-1} == 1 ]]; then
+if [[ ${CERT_GENERATE:-0} == 1 ]]; then
 
   ## Send certbot Emission/Renewal to background
   ## Let's Encrypt certificates are valid for 90 days. You can read about why here. There is no way to adjust this,

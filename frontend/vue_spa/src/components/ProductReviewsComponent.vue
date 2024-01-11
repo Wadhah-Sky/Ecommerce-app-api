@@ -4,7 +4,7 @@
     <div class="col-md-9">
 
       <header class="section-heading">
-        <h3>Customer Reviews </h3>
+        <h3 class="section-title">Customer Reviews </h3>
 
       </header>
 
@@ -20,11 +20,7 @@
         </div> <!-- icontext.// -->
         <div class="mt-3">
           <p>
-            Dummy comment Lorem ipsum dolor sit amet, consectetur
-            adipisicing elit, sed do eiusmod
-            tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-            minim veniam,
-            quis nostrud exercitation ullamco laboris nisi ut aliquip
+            It has exceeded my expectations and I would highly recommend it to others.
           </p>
         </div>
       </article>
@@ -41,11 +37,7 @@
         </div> <!-- icontext.// -->
         <div class="mt-3">
           <p>
-            Dummy comment Lorem ipsum dolor sit amet, consectetur
-            adipisicing elit, sed do eiusmod
-            tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-            minim veniam,
-            quis nostrud exercitation ullamco laboris nisi ut aliquip
+            The product I purchased is simply amazing. It has greatly improved my daily life and I can't imagine going without it now.
           </p>
         </div>
       </article>
@@ -64,5 +56,9 @@ export default {
 </script>
 
 <style scoped>
-
+@media (min-width: 280px) and (max-width: 767px) {
+  .section-title{
+    font-size: 17px;
+  }
+}
 </style>

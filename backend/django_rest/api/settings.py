@@ -89,9 +89,18 @@ INSTALLED_APPS = [
     'order'
 ]
 
+# How to set LocaleMiddleware that related to language select (here we don't
+# use)?
+# 1- Make sure it’s one of the first middleware installed.
+# 2- It should come after SessionMiddleware, because LocaleMiddleware makes use
+#    of session data. And it should come before CommonMiddleware because
+#    CommonMiddleware needs an activated language in order to resolve the
+#    requested URL.
+# 3- If you use CacheMiddleware, put LocaleMiddleware after it.
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -170,7 +179,33 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
+# LocaleMiddleware tries to determine the user’s language preference by
+# following this algorithm:
+# 1- it looks for the language prefix in the requested URL. This is only
+#    performed when you are using the i18n_patterns function in your root
+#    URLconf. add the following to your main url.py file within urlpatterns:
+#
+#    re_path(r'^i18n/', include('django.conf.urls.i18n'))
+#
+# 2- if no url is defined, it looks for a cookie. The name of the cookie used
+#    is set by the LANGUAGE_COOKIE_NAME setting. (The default name is
+#    django_language.)
+# 3- if there is no cookie, it looks at the Accept-Language HTTP header. This
+#    header is sent by your browser and tells the server which language(s) you
+#    prefer, in order by priority. Django tries each language in the header
+#    until it finds one with available translations.
+# 4- if there is no Accept-Language HTTP header, it uses the global
+#    LANGUAGE_CODE setting.
+
 LANGUAGE_CODE = 'en-us'
+
+# Only languages listed in the LANGUAGES setting can be selected. If you want
+# to restrict the language selection to a subset of provided languages (because
+# your application doesn't provide all those languages), set LANGUAGES to a
+# list of languages.
+LANGUAGES = [
+    ("en", "English"),
+]
 
 TIME_ZONE = 'UTC'
 
@@ -364,13 +399,9 @@ REST_FRAMEWORK = {
 #       directly through database to value of production domain name.
 #       Knowing that you should reset/change the table of 'django_site' in the
 #       database so 'id' field increment in the right way.
-if DEBUG is True:
-    # In case we are in development environment, you should create/set domain
-    # name of 127.0.0.1:8000
-    SITE_ID = 2
-else:
-    # Otherwise set to your defined production environment domain name.
-    SITE_ID = 1
+SITE_ID = 1
+
+MAIN_DOMAIN_NAME = os.environ.get('MAIN_DOMAIN_NAME', '')
 
 # Static files are made at server run (CSS, JavaScript, Images)
 # Media files are made at runtime and uploaded by users like images, files or
