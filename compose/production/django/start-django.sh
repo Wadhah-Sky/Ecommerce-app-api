@@ -8,28 +8,19 @@ set -o nounset
 #           production server.
 
 # Note: since this script is will be used by container is not connected to local host, so any process that run
-#       on container is related to that container, and this is the reason why we put 'makemigrations' process
-#       here not like when we do in development where we use:
+#       on container is related to that container, So we do the following after make sure database is up and ready
+#       and in order to track changes that happened or should happen:
 #
-#       docker-compose -f docker-compose.yml run --rm app sh -c "python manage.py makemigrations"
-#
-#       which will write the new migrations file into local host that when we start 'app' service will be migrate
-#       automatically.
-#
-#       So we do the following after make sure database is up and ready:
-#       1- Create a new initial migrations for the apps.
-#       2- Migrate the new created migrations files.
+#       1- To prevent confusion between local development database migrations and running production database,
+#          delete all migrations files and create initial migrations file that the same on production server.
+#       2- If you have any delete/add model fields, create new migrations file.
+#       3- Push your source code to production server.
+#       4- Migrate the migrations files in local and development server.
 
 python manage.py wait_for_db
 
 echo "Run the process to migrate the existing migrations files..."
 echo yes | python manage.py migrate
-
-# echo "Run the process to create new migrations files..."
-# echo yes | python manage.py makemigrations
-
-# echo "Run the process to migrate the migrations files to database..."
-# echo yes | python manage.py migrate
 
 # Collect static files of Django service (app).
 # Note: --no-input flag means no for asking question of collectstatic to overwrite current static files.

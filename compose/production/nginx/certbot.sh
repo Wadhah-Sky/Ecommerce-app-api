@@ -68,7 +68,7 @@ if [[ ${CUSTOM_CERT_COMMAND:-0} != 0 ]]; then
   eval "$cert_command" || true
 
 # Else, check if environment variable "CERT_TEST_CERT" is 1 (means call certbot for test purpose).
-elif [[ ${CERT_TEST_CERT:-1} == 1 ]]; then
+elif [[ ${CERT_TEST_CERT:-0} == 1 ]]; then
   echo "Generate certbot test certificates"
   # Note: Let's Encrypt limits the amount of available free certificates per month (100), so in case of test, run
   #       this service with adding the flag: --dry-run. to the commands renew, certonly or certbot, or you can

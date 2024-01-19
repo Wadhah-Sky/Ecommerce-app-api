@@ -22,18 +22,24 @@ fi
 
 # Check if legitimate certificates are requested.
 if [[ ${CERT_GENERATE:-0} == 1 ]]; then
+  echo "Request to create authenticated SSL certificates..."
 
-  ## Send certbot Emission/Renewal to background
-  ## Let's Encrypt certificates are valid for 90 days. You can read about why here. There is no way to adjust this,
-  ## there are no exceptions. We recommend automatically renewing your certificates every 60 days.
-  ## Note: || true is used in case certbot faced an error.
-  ## Info: `&`: It starts a asynchronous process.
-  # shellcheck disable=SC2091
-  $(while :; do /usr/src/compose/certbot.sh || true; sleep "${CERT_RENEW_INTERVAL:-12h}"; done;) &
+  # Here we send certbot Emission/Renewal to system background as running service.
+  # Info: Let's Encrypt certificates are valid for 90 days. You can read about why here. There is no way to adjust this,
+  #       there are no exceptions. We recommend automatically renewing your certificates every 60 days.
+  # Note: || true is used in case certbot faced an error.
+  # Note: `&`: It starts a asynchronous process.
+  # $(while :; do /usr/src/compose/certbot.sh || true; sleep "${CERT_RENEW_INTERVAL:-12h}"; done;) &
+  while true; do
+    /usr/src/compose/certbot.sh || true; sleep "${CERT_RENEW_INTERVAL:-12h}"
+  done &
 
-  ## Check for changes in the certificate (i.e renewals or first start) and send this process to background.
+  # Check for changes in the certificate (i.e renewals or first start) and send this process to background.
   # shellcheck disable=SC2091
-  $(while inotifywait -e close_write /usr/share/nginx/certificates; do nginx -s reload; done) &
+  # $(while inotifywait -e close_write /usr/share/nginx/certificates; do nginx -s reload; done) &
+  while inotifywait -e close_write /usr/share/nginx/certificates; do
+    nginx -s reload
+  done &
 
   # Start nginx with daemon off as our main pid.
   nginx -g "daemon off;"

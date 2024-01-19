@@ -280,8 +280,8 @@ services:
     volumes:
       # Note: Since we connect logs of nginx to host machine, so nothing will show on your terminal screen,
       #       you have to check the files directly.
-      - ./logs/nginx:/var/log/nginx
-      - ./logs/letsencrypt:/var/log/letsencrypt
+      # - ./logs/nginx:/var/log/nginx
+      # - ./logs/letsencrypt:/var/log/letsencrypt
       # Nginx shares the same volume that connected to static files which being served in django service (app)
       - static_volume:/usr/src/vol/web/static
       - media_volume:/usr/src/vol/web/media

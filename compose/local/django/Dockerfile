@@ -172,16 +172,8 @@ RUN /opt/venv/bin/pip install -r /usr/src/backend/requirements.prod.txt && \
     find /usr/src/backend/django_rest/ -type d -name "migrations" -execdir chown -R user:usergroup {} + && \
     find /usr/src/backend/django_rest/ -type d -name "migrations" -execdir chmod -R 766 {} +
     # Remove any migrations files (except __init__.py file) to prevent confusion when run create migrations command.
-    # IMPORTANT: it's recommended to not delete the migrations files:
-    #            1- it's better to correct the initial one or the last one that causing issue for you like different
-    #               column name (between mode and database table) for same column in local machine and then re-create
-    #               (makemigrations) new one and push it to production server in order to update the database and track
-    #               changes in models and refelect into database.
-    #            2- if you still have issue, remove all migrations files from local machine and create initial migration
-    #               file that represent same database details in porudction server and then add your changes like
-    #               add/remove model fields (without makemigration) and push it to production server to update database
-    #               where there you will create the new migration file and migrate it, after that create migration file
-    #               in your local machine.
+    # IMPORTANT: it's recommended to not delete the migrations files, because the production server can't track the
+    #            changes that happened or should happen.
     # find /usr/src/backend/django_rest/*/migrations/* -not -name "__init__.py" -execdir rm -f {} +
 
 # Specify the default directory of this image layer (This should be where 'manage.py' file is holding or will be).
