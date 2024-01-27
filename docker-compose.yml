@@ -94,7 +94,7 @@ services:
       retries: 3
 
     networks:
-      - webnet
+      - webnet-dev
 
   db:
     # In Docker swarm environment, it's very important to name image that build using dockerfile as:
@@ -142,7 +142,7 @@ services:
     # where 'initdb' command will/created the databases cluster, because this directory has limited permissions, due
     # the user of the container is not the same of the one who in PostgresSQL database and this the reason for the error.
     volumes:
-     - postgres-db:/var/lib/postgresql/data
+     - postgres-db-dev:/var/lib/postgresql/data
     # Set environment variables to be use inside container, if there are already such variables in the image that will
     # use to create the container, then these variables will overwrite the ones of the image.
     environment:
@@ -151,7 +151,7 @@ services:
       - POSTGRES_PASSWORD=${SQL_PASS}
     # Set the network that this container will be in it.
     networks:
-      - webnet
+      - webnet-dev
 
   pgadmin:
     image: dpage/pgadmin4
@@ -186,7 +186,7 @@ services:
     depends_on:
       - db
     networks:
-      - webnet
+      - webnet-dev
 
   elasticsearch:
     # In Docker swarm environment, it's very important to name image that build using dockerfile as:
@@ -234,7 +234,7 @@ services:
           memory: 50M
     volumes:
       - ./compose/local/elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
-      - elasticsearch:/usr/share/elasticsearch/data:Z
+      - elasticsearch-dev:/usr/share/elasticsearch/data:Z
     environment:
       - node.name=${ELASTICSEARCH_NODE_NAME}
       - ES_JAVA_OPTS=${ES_JAVA_OPTS}
@@ -245,7 +245,7 @@ services:
       # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       - discovery.type=${DISCOVERY_TYPE}
     networks:
-      - webnet
+      - webnet-dev
 
   elk_setup:
     # The 'setup' service runs a one-off script which initializes users inside
@@ -308,7 +308,7 @@ services:
     depends_on:
       - elasticsearch
     networks:
-      - webnet
+      - webnet-dev
 
   logstash:
     image: 127.0.0.1:5000/logstash-dev
@@ -348,7 +348,7 @@ services:
     depends_on: &logstash_depends
       - elasticsearch
     networks:
-      - webnet
+      - webnet-dev
 
   kibana:
     image: 127.0.0.1:5000/kibana-dev
@@ -383,7 +383,7 @@ services:
       - node.name=${KIBANA_NODE_NAME}
     depends_on: *logstash_depends
     networks:
-      - webnet
+      - webnet-dev
 
   app:
     image: 127.0.0.1:5000/django-dev
@@ -481,7 +481,7 @@ services:
       - cache
       - elasticsearch
     networks:
-      - webnet
+      - webnet-dev
 
   ui:
     image: 127.0.0.1:5000/vue-dev
@@ -530,7 +530,7 @@ services:
     depends_on:
       - app
     networks:
-      - webnet
+      - webnet-dev
 
   worker:
     image: 127.0.0.1:5000/worker-dev
@@ -556,7 +556,7 @@ services:
     depends_on:
       - app
     networks:
-      - webnet
+      - webnet-dev
 
   beat:
     image: 127.0.0.1:5000/beat-dev
@@ -577,7 +577,7 @@ services:
     depends_on:
       - worker
     networks:
-      - webnet
+      - webnet-dev
 
   flower:
     image: 127.0.0.1:5000/flower-dev
@@ -600,14 +600,14 @@ services:
     depends_on:
       - worker
     networks:
-      - webnet
+      - webnet-dev
 
 # Set network that all services will be in it.
 networks:
-  webnet:
+  webnet-dev:
 
 volumes:
-  postgres-db:
+  postgres-db-dev:
     driver: local
-  elasticsearch:
+  elasticsearch-dev:
     driver: local

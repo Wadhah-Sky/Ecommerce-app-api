@@ -303,11 +303,13 @@ class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):
         """Return the instance's payment details"""
 
         if instance.po_payment:
+            icon_instance = instance.po_payment.payment_method.icon
+
             return {
                 'title': instance.po_payment.payment_method.title,
-                'icon_src': instance.po_payment.payment_method.icon.source_url,
+                'icon_src': icon_instance.source_url if icon_instance else '',
                 'icon_src2':
-                    instance.po_payment.payment_method.icon.source2_url,
+                    icon_instance.source2_url if icon_instance else '',
                 'card_number': instance.po_payment.scripted_card_number
 
             }
