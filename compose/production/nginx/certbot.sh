@@ -56,7 +56,7 @@ fi
 # creating another copy of received certificates from server.
 if [[ -f ${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store} ]]; then
   echo "Clear letsencrypt directory for received certificates from ACM server"
-  rm -rf "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}"
+  rm -rf "${LETSENCRYPT_DIR:-/etc/letsencrypt}"/live/"${CERT_NAME:-jamieandcassie.store}"
 fi
 
 
@@ -199,14 +199,27 @@ fi
 
 # Check if we get the certificate files from server, copy it to wanted destination as specified in default.conf file as
 # ssl_certificate and ssl_certificate_key.
-if [[ -f "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/privkey.pem" ]]; then
+if [[ -f "${LETSENCRYPT_DIR:-/etc/letsencrypt}"/live/"${CERT_NAME:-jamieandcassie.store}"/privkey.pem ]]; then
   echo "Copy certbot generated certificates to /usr/share/nginx/certificates/"
   # Remove all file from /usr/share/nginx/certificates/.
-  rm -rf /usr/share/nginx/certificates/* &&
+  # rm -f /usr/share/nginx/certificates/* &&
+  find /usr/share/nginx/certificates/* -delete
 
   # Use the cp command to create a copy of the contents of the file or directory specified by the SourceFile or
   # SourceDirectory parameters into the file or directory specified by the TargetFile or TargetDirectory parameters.
-  cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}/live/${CERT_NAME:-jamieandcassie.store}/*" /usr/share/nginx/certificates/
+  # Note: 1) -a option is an improved recursive option, that preserve all file attributes, and also preserve symlinks,
+  #          This flag will make the copied files as archive, to check use the following command which will notice the
+  #          files is pointing to archive location:
+  #
+  #          ls -l
+  #
+  #          To list files with their size where (h) option to -s flag to make printed size as human readable:
+  #
+  #          ls -sh
+  #
+  #       2) The . at end of the source path is a specific cp syntax that allow to copy all files and folders, included
+  #          hidden ones.
+  cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}"/live/"${CERT_NAME:-jamieandcassie.store}"/* /usr/share/nginx/certificates/
 
 fi
 

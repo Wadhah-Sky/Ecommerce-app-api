@@ -418,4 +418,4 @@ jobs:
 
             sudo chmod +x ./deploy/deploy-docker-compose.sh
 
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml
+            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env

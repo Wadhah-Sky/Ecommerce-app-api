@@ -99,7 +99,9 @@ echo "Process of building Docker services is Done and wait 30 seconds..."; sleep
 # Run elasticsearch service.
 # Note: we prefer to use --profile flag to run 'elk_setup' service which defined as setup profile in order to solve
 #       issue of network <name_of_network> is not found in case we run it separately.
-echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f $DOCKER_COMPOSE_FILE up -d elasticsearch
+# echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f $DOCKER_COMPOSE_FILE up -d elasticsearch
+## echo "Run 'elasticsearch' service and wait 60 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d elasticsearch && sleep 60
+## echo "Run 'elk_setup' service to configure elasticsearch service"; docker compose -f $DOCKER_COMPOSE_FILE up -d elk_setup
 
 # Run the setup process for elasticsearch (this service has script to wait until elasticsearch service is ready,
 # do its job and exit).
@@ -113,25 +115,29 @@ echo "Run 'elasticsearch' service with profile..."; docker compose --profile -f 
 #
 #            django.db.utils.ProgrammingError: relation "admin_interface_theme" does not exist
 #
-echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
+# echo "Run 'db' service and wait 30 seconds..."; docker compose -f $DOCKER_COMPOSE_FILE up -d db && sleep 30
 
 # echo "Installing default django theme..."
 # Note: no need to this step but in case you want to install different theme you should do it development PC so the
 #       new files loaded to Github repository and here only collect it.
-# docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py loaddata admin_interface_theme_django.json" && sleep 10
+## docker compose -f $DOCKER_COMPOSE_FILE run --rm app sh -c "python manage.py loaddata admin_interface_theme_django.json" && sleep 10
 
 # Run 'app' service in detach mode that will make sure database is updated.
 # Important: since we are not using 'root' user (privileges), so we can't use 'rm' command and will return permission
 #            denied.
-echo "Run 'app' service and wait 30 seconds..."
-docker compose -f $DOCKER_COMPOSE_FILE up -d app && sleep 30
+# echo "Run 'app' service and wait 30 seconds..."
+# docker compose -f $DOCKER_COMPOSE_FILE up -d app && sleep 30
 
-echo "Run 'nginx' service and wait 10 seconds..."
-docker compose -f $DOCKER_COMPOSE_FILE up -d nginx && sleep 10
+# echo "Run 'nginx' service and wait 10 seconds..."
+# docker compose -f $DOCKER_COMPOSE_FILE up -d nginx && sleep 10
 
 # Run the other services.
-echo "Run the rest of docker containers in detach mode..."
-docker compose -f $DOCKER_COMPOSE_FILE up -d && echo "Your docker compose services is up!"
+# echo "Run the rest of docker containers in detach mode..."
+# docker compose -f $DOCKER_COMPOSE_FILE up -d && echo "Your docker compose services is up!"
+
+# Run docker compose containers
+echo "Run selected docker compose services in detach mode..."
+docker compose -f $DOCKER_COMPOSE_FILE --profile elk_setup up -d
 
 echo "Wait 10 seconds before exit..."
 sleep 10
