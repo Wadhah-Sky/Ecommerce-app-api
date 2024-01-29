@@ -211,14 +211,19 @@ if [[ -f "${LETSENCRYPT_DIR:-/etc/letsencrypt}"/live/"${CERT_NAME:-jamieandcassi
   #          This flag will make the copied files as archive, to check use the following command which will notice the
   #          files is pointing to archive location:
   #
-  #          ls -l
+  #          >> ls -l
   #
   #          To list files with their size where (h) option to -s flag to make printed size as human readable:
   #
-  #          ls -sh
+  #          >> ls -sh
   #
   #       2) The . at end of the source path is a specific cp syntax that allow to copy all files and folders, included
   #          hidden ones.
+  #
+  # Info: if you want to view content of supported (.pem) file:
+  #
+  #       >> openssl x509 -in "${LETSENCRYPT_DIR:-/etc/letsencrypt}"/live/"${CERT_NAME:-jamieandcassie.store}"/fullchain.pem -text
+  #
   cp "${LETSENCRYPT_DIR:-/etc/letsencrypt}"/live/"${CERT_NAME:-jamieandcassie.store}"/* /usr/share/nginx/certificates/
 
 fi

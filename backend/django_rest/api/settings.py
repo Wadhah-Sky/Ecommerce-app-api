@@ -687,24 +687,30 @@ SERVER_EMAIL = os.getenv('SERVER_EMAIL', '')
 # Configure Anymail parameters. Not required but in case happen to change
 # default name of environment variables for AWS SDK (Boto3) or change some
 # details
-# Note: You should pass directly into docker service, the following environment
-#       variables (as shown or updated names) within (environment) parameters
-#       and remember to re-build the service before use it:
-#
-#       AWS_ACCESS_KEY_ID
-#       AWS_SECRET_ACCESS_KEY
-#       AWS_SESSION_TOKEN  # Required only for temporarily sessions
-#       AWS_DEFAULT_REGION
-#       AWS_DEFAULT_OUTPUT # Default is JSON
-#       AWS_PROFILE  # Profile name for (.aws) file that contains (credentials)
-#                    # and (config) files, if you set this parameter then no
-#                    # need to above parameters. Default is (.aws)
 if os.getenv('EMAIL_BACKEND_NAME', '').lower() == 'mailjet':
     ANYMAIL = {
         "MAILJET_API_KEY": os.getenv('MAILJET_API_KEY', ''),
         "MAILJET_SECRET_KEY": os.getenv('MAILJET_SECRET_KEY', ''),
     }
+elif os.getenv('EMAIL_BACKEND_NAME', '').lower() == 'brevo':
+    ANYMAIL = {
+        "SENDINBLUE_API_KEY": os.getenv('SENDINBLUE_API_KEY', ''),
+    }
 else:
+    # Note: You should pass directly into docker service, the following
+    #       environment variables (as shown or updated names) within
+    #       (environment) parameters and remember to re-build the service
+    #       before use it:
+    #
+    #       AWS_ACCESS_KEY_ID
+    #       AWS_SECRET_ACCESS_KEY
+    #       AWS_SESSION_TOKEN  # Required only for temporarily sessions
+    #       AWS_DEFAULT_REGION
+    #       AWS_DEFAULT_OUTPUT # Default is JSON
+    #       AWS_PROFILE  # Profile name for (.aws) file that contains
+    #                    # (credentials) and (config) files, if you set this
+    #                    # parameter then no need to above parameters. Default
+    #                    # is (.aws)
     ANYMAIL = {
 
         # Optional. Additional client parameters Anymail should use to create

@@ -42,6 +42,15 @@ if [[ ${CERT_GENERATE:-0} == 1 ]]; then
   done &
 
   # Start nginx with daemon off as our main pid.
+  # Info: nginx has multiple signals to use with:
+  #
+  #       >> nginx -s <SIGNAL>
+  #
+  #       where <SIGNAL> can be one of the following:
+  #       quit – Shut down gracefully (the SIGQUIT signal)
+  #       reload – Reload the configuration file (the SIGHUP signal)
+  #       reopen – Reopen log files (the SIGUSR1 signal)
+  #       stop – Shut down immediately (or fast shutdown, the SIGTERM singal)
   nginx -g "daemon off;"
 
 else
