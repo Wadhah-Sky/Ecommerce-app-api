@@ -18,6 +18,7 @@
                       @update:model-value="($event) => {
                         inputs['paymentMethod'].isCard = props.isPaymentCard($event);
                         setPaymentValue('paymentMethod', $event);
+                        checkValidation();
                       }"
                       v-slot="{ option, isSelected }"
           >
@@ -235,6 +236,7 @@ const getCountries = async () => {
     countries.value = response.data
   }
   catch (error) {
+    countries.value = [{label: '', value: ''}];
     // console.log("Error while trying to retrieve the requested data from backend server!");
   }
   finally {
@@ -294,7 +296,7 @@ const checkValidation = () => {
 
   // Check form inputs.
   for (let key of Object.keys(inputs.value)){
-    if(inputs.value[key].isRequired === true && info.value[key] === ''){
+    if(inputs.value[key].isRequired === true && [undefined, '', null, 0].includes(info.value[key])){
       // Emits a false value for 'isRequiredSet' event.
       emits('isRequiredSet', false);
       // No need to continue the loop.
