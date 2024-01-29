@@ -882,7 +882,8 @@ class MetaItem(models.Model):
     source2_url = models.URLField(
         max_length=255,
         blank=True,
-        help_text="You can set URL for icon image source e.g. PNG or JPG"
+        help_text="You can set URL for icon image source e.g. PNG or JPG, "
+                  "currently this one being used"
     )
     use_source = models.BooleanField(default=False)
     meta = models.ForeignKey(

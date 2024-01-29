@@ -23,10 +23,22 @@ def get_home_url():
 
         # Note: if you are using nginx server for development or localhost,
         #       this will return the port of Django service not the nginx.
-        return current_site.domain
+        # Info: We put protocol schema here because where we use the returned
+        #       value we are not using it and this will lead to make the
+        #       browser process the returned value with attribute 'href' or
+        #       'src' as sub-domain of current page:
+        #
+        #       https://<current_url>/<returned_value>
+        #
+        #       https://example.com/example.com
+        #
+        # Important: if you used 'https' with not valid domain SSL certificate
+        #            with links to images, the images will not show in the
+        #            email box.
+        return f'https://{current_site.domain}'
 
     except ObjectDoesNotExist:
-        return settings.MAIN_DOMAIN_NAME
+        return f'https://{settings.MAIN_DOMAIN_NAME}'
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -179,7 +191,12 @@ class POItemSerializer(serializers.ModelSerializer):
         """Return the product item url of frontend server"""
 
         # Get request object from 'context'.
-        request = self.context.get("request", None)
+        # Note: here we don't want to use build_absolute_uri() method of object
+        #       request because in where we use the returned value we don't
+        #       write protocol schema and this will lead to make it duplicate
+        #       by browser process, read note in get_home_url() method to
+        #       understand.
+        # request = self.context.get("request", None)
 
         # Get product slug for current product item
         product_slug = instance.product_item.product.slug
@@ -190,10 +207,10 @@ class POItemSerializer(serializers.ModelSerializer):
         # Initialize frontend page route.
         url = f'/product/{product_slug}?itemS={instance_slug}'
 
-        if request:
-            return request.build_absolute_uri(url)
-        else:
-            return f'{get_home_url()}{url}'
+        # if request:
+        #     return request.build_absolute_uri(url)
+        # else:
+        return f'{get_home_url()}{url}'
 
 
 class PurchaseOrderDetailsSerializer(serializers.ModelSerializer):

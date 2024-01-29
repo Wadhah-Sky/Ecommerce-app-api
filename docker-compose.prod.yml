@@ -288,7 +288,7 @@ services:
       - media_volume:/usr/src/vol/web/media
       # /var/www/certbot/ is already exists in the image so no need to create it.
       # - certbot-www:/var/www/certbot/
-      # You can point volume to file because you will get an error is that file a directory?
+      # Note: so far can't store certificates in volume
       # - letsencrypt:/usr/share/nginx/certificates/
     command: bash -c "/usr/src/compose/start-nginx.sh"
     environment:
