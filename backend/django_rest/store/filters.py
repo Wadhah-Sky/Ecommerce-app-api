@@ -479,7 +479,7 @@ class ProductFilter(filters.FilterSet):
             # Return the product item instance if this product 'pk' if found in
             # the dictionary, or return None.
             if self.selected_items_dict:
-                instance_var = self.selected_items_dict[prod.pk]
+                instance_var = self.selected_items_dict.get(prod.pk, None)
 
             # Check if current product return a item_deal_price property value.
             if prod.item_deal_price(item=instance_var):
@@ -518,7 +518,7 @@ class ProductFilter(filters.FilterSet):
             # Return the product item instance if this product 'pk' if found in
             # the dictionary, or return None.
             if self.selected_items_dict:
-                instance_var = self.selected_items_dict[prod.pk]
+                instance_var = self.selected_items_dict.get(prod.pk, None)
 
             # Check if current product return a item_deal_price property value.
             if prod.item_deal_price(item=instance_var):
@@ -548,7 +548,7 @@ class ProductFilter(filters.FilterSet):
             instance if exists in dictionary"""
 
             # Initialize instance variable.
-            instance_var = self.selected_items_dict[prod.pk] or None
+            instance_var = self.selected_items_dict.get(prod.pk, None)
 
             # Get list price as Money.
             money = prod.item_list_price(item=instance_var)
@@ -560,7 +560,7 @@ class ProductFilter(filters.FilterSet):
             And the selected product item instance has deal price"""
 
             # Initialize instance variable.
-            product_item = self.selected_items_dict[prod.pk] or None
+            product_item = self.selected_items_dict.get(prod.pk, None)
 
             if product_item and product_item.deal_price:
                 return True
@@ -572,7 +572,7 @@ class ProductFilter(filters.FilterSet):
             instance if exists in dictionary"""
 
             # Initialize instance variable.
-            instance_var = self.selected_items_dict[prod.pk] or None
+            instance_var = self.selected_items_dict.get(prod.pk, None)
 
             # Get deal price as Money.
             money = prod.item_deal_price(item=instance_var)
@@ -674,7 +674,10 @@ class ProductFilter(filters.FilterSet):
                     # Return the product item instance if this product 'pk' if
                     # found in the dictionary, or return None.
                     if self.selected_items_dict:
-                        instance_var = self.selected_items_dict[prod.pk]
+                        instance_var = self.selected_items_dict.get(
+                            prod.pk,
+                            None
+                        )
 
                     # Check if current item return a deal_price property value.
                     if prod.item_deal_price(instance_var):

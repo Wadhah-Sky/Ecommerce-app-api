@@ -14,14 +14,14 @@
 
               </div>
 
-              <div class="col ps-0">
+              <div id="filters" class="col ps-0" @click="emits('toggle-filter-side-panel')">
 
                 <span style="margin-right: 5px">
                   <font-awesome-icon :icon="['fa-solid', 'fa-sliders']" />
                   Filters
                 </span>
 
-                <div class="button r" id="button-filter" @click="emits('toggle-filter-side-panel')">
+                <div class="button r" id="button-filter">
                   <input type="checkbox" class="checkbox" :checked="storeFilter.collapsed"/>
                   <div class="knobs"></div>
                   <div class="layer"></div>
@@ -53,6 +53,7 @@
 
             <product-card-component :product-title="product.title"
                                     :product-items-count="product.product_items_count"
+                                    :product-items-variation="product.product_items_variation"
                                     :rating="product.rating"
                                     :slug="product.slug"
                                     :item-s="product.product_item.slug"
@@ -221,8 +222,12 @@ const emits = defineEmits(['toggle-filter-side-panel']);
 .layer {
   width: 100%;
   background-color: grey;
-  transition: 0.5s ease all;
+  transition: 0.3s ease all;
   z-index: 1;
+}
+
+#filters:hover{
+  cursor: pointer;
 }
 
 #button-filter .knobs:before {

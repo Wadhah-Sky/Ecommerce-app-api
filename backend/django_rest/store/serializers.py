@@ -198,6 +198,8 @@ class AttributeSerializer(serializers.ModelSerializer):
 
         # Get conditional descendant instances of attributes for current
         # instance ordered alphabetically.
+        # Info: it's important to not return attributes that not connected to
+        #       product.
         # Note: get_descendants() doesn't include the current instance.
         attributes = instance.get_descendants().filter(
             category_attributes_attribute__category__in=category_ancestors,
@@ -205,9 +207,9 @@ class AttributeSerializer(serializers.ModelSerializer):
         ).distinct()
 
         # initialize an empty list.
-        options = []
+        pk_list = []
 
-        # Loop over returned attribute instances.
+        # Loop over returned attribute instances to get family of each one.
         for attribute in attributes:
             # Add the title of instance to the list as parent and child
             # title, in case its parent is a root node, otherwise use the
@@ -235,9 +237,19 @@ class AttributeSerializer(serializers.ModelSerializer):
 
             # Add the (level=1) in tree family instances for current attribute
             # ancestor.
-            options += [
-                item.title for item in attribute.get_family().filter(level=1)
+            # Note: get_family() is iterable while get_root() is not.
+            pk_list += [
+                item.pk for item in attribute.get_family().filter(level=1)
             ]
 
-        # Return the sorted list of non-duplicated options.
-        return sorted(set(options))
+        # Get attributes instances for non-duplicated pk and sort them.
+        sorted_attributes = Attribute.objects.filter(
+            pk__in=set(pk_list)
+        ).order_by('display_order').only('title')
+
+        # Loop over query of instances and get only title value.
+        options = [item.title for item in sorted_attributes]
+
+        # Return the sorted list of non-duplicated titles of attributes (level
+        # 1) as options.
+        return options

@@ -4,7 +4,7 @@ from rest_framework import serializers
 # from rest_framework.response import Response
 # from django.conf import settings
 from core.models import (Card, Section, Banner, TopBanner, Product,
-                         ProductGroup, ProductItem)
+                         ProductGroup, ProductItem, Attribute)
 
 # Note: serializer class receive the queryset after filter class have done its
 #       process (in case View using filter class).
@@ -256,18 +256,50 @@ class ProductSerializer(serializers.ModelSerializer):
             'title',
             'slug',
             'product_items_count',
+            'product_items_variation',
             'product_item'
         ]
 
     # Define related/reverse model fields.
     # title = serializers.StringRelatedField()
     product_items_count = serializers.SerializerMethodField()
+    product_items_variation = serializers.SerializerMethodField()
     product_item = serializers.SerializerMethodField()
 
     def get_product_items_count(self, instance):
         """Return the count of items for certain Product instance"""
 
         return len(instance.product_items_product.all())
+
+    def get_product_items_variation(self, instance):
+        """Return the attributes variation for certain Product instance"""
+
+        # Get the related product attribute instances that is_common_attribute
+        # is True and is connected to product item attribute.
+        uncommon_attributes = instance.product_attributes_product.filter(
+            is_common_attribute=False,
+            product_item_attributes_product_attribute__isnull=False
+        ).distinct()
+
+        # Get the attribute instances that related to specific product
+        # attribute instances.
+        attributes = Attribute.objects.filter(
+            product_attributes_attribute__in=uncommon_attributes
+        ).order_by('display_order')
+
+        # initialize an empty list.
+        titles = []
+
+        # Loop over returned attribute instances to get root of each one.
+        for attribute in attributes:
+            # Get root instance
+            root = attribute.get_root()
+
+            # Append title value titles list.
+            titles.append(root.title)
+
+        # Return the sorted list of non-duplicated titles of attributes.
+        return sorted(set(titles))
 
     def get_product_item(self, instance):
         """Return the related product item depending on if 'attr' query string

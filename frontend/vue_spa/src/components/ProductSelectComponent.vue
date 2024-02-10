@@ -19,7 +19,7 @@
         <div class="item-option-select mt-2">
 
           <template v-if="(useColorShape && colorSyllable.includes(lowerCase(index))) ||
-                          (useImg && risePickerSyllable.includes(lowerCase(index))) &&
+                          (useImg && checkThumbnailsAvailability(index)) &&
                           !selectedSameOptionStatus[index]"
           >
 
@@ -39,7 +39,7 @@
             <product-single-select-component v-model="selectedOptions[index]"
                                              :group-name="index"
                                              :options="options"
-                                             :use-img="useImg ? checkThumbnailsAvailability(index) : false"
+                                             :use-img="useImg"
                                              :rise-picker-syllable="risePickerSyllable"
                                              track-by="value"
                                              parent-attr="parentAttribute"
@@ -73,7 +73,7 @@
                    v-tooltip
                    data-bs-toggle="tooltip"
                    data-bs-placement="top"
-                   :title="`deselect ${lowerCase(index)}`"
+                   :title="`Deselect ${lowerCase(index)}`"
               >
 
                 <font-awesome-icon icon="fa-solid fa-xmark"/>

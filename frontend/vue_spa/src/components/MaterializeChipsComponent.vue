@@ -97,12 +97,8 @@ const removeSelectByOption = () => {
   selectByObj.value = null;
   /*
     Change state of 'selectByOption' in filter store.
-    Note: Here we prefer to use patch object because this type being watched in 'MultiSelectComponent' by
-          subscribe method.
    */
-  storeFilter.value.$patch({
-    selectByOption: null
-  });
+  storeFilter.value.selectByOption = null;
 
 };
 const removeAttrOption = (index) => {
@@ -116,14 +112,10 @@ const removeAttrOption = (index) => {
    Note: since options is directly connected to store filter 'checkedOptions', so when you make
          a change on 'options' will lead to change 'checkedOptions' in store and this will trigger
          mutation type 'direct'.
-         Here we prefer to use patch object because this type being watched in 'FilterAttributeComponent'
-         by subscribe method.
    */
   options.value.splice(index, 1);
 
-  storeFilter.value.$patch({
-    checkedOptions: options.value
-  });
+  storeFilter.value.checkedOptions = options.value;
 
   /* Here we don't need to push our change, because in 'FilterAttributeComponent' we watch()
      any change happen to 'checkedOptions' and push() it, while updating the variable that
@@ -147,12 +139,8 @@ const removePrice = (key) => {
 
   /*
     Change state of 'price' using key in filter store.
-    Note: Here we prefer to use patch object because this type being watched in
-          'PriceRangeComponent' by subscribe method.
    */
-  storeFilter.value.$patch({
-    price: priceObj.value
-  });
+  storeFilter.value.price = priceObj.value;
 
 };
 

@@ -107,7 +107,8 @@ import FilterAttributeComponent from "@/components/FilterAttributeComponent";
 import FilterMultiSelectComponent from "@/components/FilterMultiSelectComponent";
 // import FilterRatingStarsComponent from "@/components/FilterRatingStarsComponent";
 import FilterPriceRangeComponent from "@/components/FilterPriceRangeComponent";
-import {useRoute, useRouter} from "vue-router";
+import { useSwipe } from '@vueuse/core';
+import {useRoute} from "vue-router";
 import {ref, toRef, onMounted, defineExpose, defineProps} from "vue";
 
 export default {
@@ -143,12 +144,32 @@ const props = defineProps({
 });
 const storeFilter = toRef(props, 'storeFilter');
 const route = useRoute();
-const router = useRouter();
 const sidePanel = ref();
 const span = ref();
 const circle = ref();
 const currentSidePanelWidth = ref();
 const isHide = ref(false);
+const { lengthX } = useSwipe(
+    sidePanel,
+    {
+      /*
+        By marking a touch or wheel listener as passive, the developer is promising the handler won't
+        call preventDefault() to disable scrolling. This frees the browser up to respond to scrolling immediately
+        without waiting for JavaScript, thus ensuring a reliably smooth scrolling experience for the user.
+       */
+      passive: false,
+      // onSwipeEnd is similar to touch event ontouchend (A finger is removed from a touch screen).
+      onSwipeEnd(e) {
+
+        // Check that length for X-Axis is less than zero (moving to the right side the moment touch detect
+        // on sidepanel) and its value should be more than 50 Pixels
+        if(lengthX.value < 0 && Math.abs(lengthX.value) > 50){
+          triggerToggleSidePanel();
+
+        }
+      },
+    },
+);
 
 /*
   Define functions
@@ -235,7 +256,15 @@ const resetFilters = async () => {
    */
 
   // Push new router state.
-  router.push({name: route.name, query: {page: 1}});
+  // router.push({path: route.path, query: {page: 1}});
+
+  // Reset certain value in store filters that we watch (patch object) in store view and whenever
+  // updated push new router state.
+  props.storeFilter.$patch({
+    checkedOptions: [],
+    price: {minPrice: null, maxPrice: null},
+    selectByOption: null
+  });
 
   // Reset the 'response' of storeFilter using patch function.
   props.storeFilter.$patch((state) => {

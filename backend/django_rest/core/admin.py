@@ -921,9 +921,12 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
         'item_list_price',
         'item_deal_price',
         'slug',
+        'admin_thumbnail',
         'created_at',
         'updated_at'
     ]
+
+    search_fields = ['title']
 
     # In case wanting to get field value using Foreign Key field.
     # Note: put the method name within your admin model lists to get its value.

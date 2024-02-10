@@ -57,6 +57,7 @@ import StoreCategoryMenuComponent from "@/components/StoreCategoryMenuComponent"
 import StoreMainComponent from "@/components/StoreMainComponent";
 import FilterSidePanelComponent from "@/components/FilterSidePanelComponent";
 import BreadCrumbsComponent from "@/components/BreadCrumbsComponent";
+import { MutationType } from 'pinia';
 import {ref, defineProps} from "vue";
 import {endpointSerializer} from "@/common/endpointSerializer";
 import {cleanUrlQuery} from "@/common/cleanURL";
@@ -149,6 +150,7 @@ onBeforeRouteUpdate(async (to, from, next) => {
       );
     }
   }
+
   await triggerGetProductsDataResult(
       to.params.slug,
       to.query.attr,
@@ -326,6 +328,57 @@ await triggerGetProductsDataResult(
     props.selectBy,
     props.page
 );
+
+/*
+  Keep watching the state of 'storeFilter' and other stores so whenever there is change in
+  the state made by another component will make sure to be reflected over the component or the
+  view that use that store.
+
+  Note: You can track a certain state property or all properties.
+
+  Info: 1- it will track the change in state of the store only if it's happened using 'direct', 'patch' object
+           or $patch function to change the state.
+        2- subscribe working in two ways, means if this component cause or tigger anything that will
+           lead to change the state of store by other components (like in parent component), will trigger
+           mutation type ('direct', 'patchObject' or 'patchFunction') depending on how you are changing the
+           state in parent component, then this component will receive that mutation type.
+
+  Important: be careful, the mutation cause by this component should not use as condition to update
+             your data, because this will lead to loop.
+ */
+storeFilter.$subscribe((mutation, state) => {
+  let queryObj = {};
+  // You can specify type of mutation.
+  // Note: maybe you wonder why we didn't change route.query.<attribute> directly with new values, it won't work.
+  if ( [MutationType.patchObject].includes(mutation.type) ) {
+
+    if(storeFilter.checkedOptions.length > 0){
+      queryObj['attr'] = storeFilter.checkedOptions.join();
+    }
+    if(storeFilter.selectByOption !== null){
+      queryObj['selectBy'] = storeFilter.selectByOption.value;
+    }
+    if(!['', null].includes(storeFilter.price['minPrice'])){
+      queryObj['minPrice'] = storeFilter.price.minPrice;
+    }
+    if(!['', null].includes(storeFilter.price['maxPrice'])){
+      queryObj['maxPrice'] = storeFilter.price.maxPrice;
+    }
+
+    queryObj['page'] = 1;
+    // Push new router state.
+    router.push(
+        {
+          path: route.path,
+          query: queryObj
+        }
+    );
+  }
+
+  // You can persist the whole state to the local storage whenever it changes.
+  // localStorage.setItem('checkedOptions', JSON.stringify(state));
+
+});
 
 // Info: We disabled this part of code, because it's cause to replace router state after we make
 //       any push within related component.

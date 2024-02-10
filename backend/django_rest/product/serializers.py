@@ -143,8 +143,7 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
         # Check if current product item instance is not the default item and is
         # set True to use default product item instance images.
-        if instance.is_default is False \
-                and instance.use_default_images:
+        if instance.is_default is False and instance.use_default_images:
 
             # Get related default product item instance.
             default_product_item = ProductItem.objects.filter(
@@ -155,6 +154,16 @@ class ProductItemSerializer(serializers.ModelSerializer):
             if default_product_item:
                 # If there is a return value. set to selected_instance.
                 selected_instance = default_product_item
+
+        # Else if (if 'is_default' is True or False and value of
+        # use_default_images is False) in case use_sku_images is set
+        elif instance.use_sku_images:
+            # Get product item of given sku
+            product_item = ProductItem.objects.get(sku=instance.use_sku_images)
+
+            if product_item:
+                # If there is a return value. set to selected_instance.
+                selected_instance = product_item
 
         # Check if selected product item instance has images.
         if selected_instance.images:

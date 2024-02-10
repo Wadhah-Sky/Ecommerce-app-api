@@ -142,7 +142,7 @@
 */
 import { MutationType } from 'pinia';
 import {whiteSpacesReplacer} from "@/common/whiteSpacesReplacer";
-import {useRoute, useRouter} from "vue-router";
+// import {useRoute} from "vue-router";
 import {watch, ref, toRef} from 'vue';
 
 export default {
@@ -173,8 +173,8 @@ const props = defineProps({
     required: false
   }
 });
-const route = useRoute();
-const router = useRouter();
+// const route = useRoute();
+// const router = useRouter();
 const storeFilter = toRef(props, 'storeFilter');
 const checkInputs = ref(props.checkedOptions);
 
@@ -247,7 +247,7 @@ const whiteSpacesReplace = (str, use='') => {
  */
 storeFilter.value.$subscribe((mutation, state) => {
   // You can specify type of mutation.
-  if ( [MutationType.patchObject].includes(mutation.type) ) {
+  if ( [MutationType.direct].includes(mutation.type) ) {
     checkInputs.value = state.checkedOptions;
   }
 
@@ -264,28 +264,14 @@ storeFilter.value.$subscribe((mutation, state) => {
  */
 watch(() => [...checkInputs.value], (currentValue, oldValue) =>
     {
-      // As we know watch() will be triggered when the component is unmounted, so
-      // we don't need to trigger push() in that case.
+      // Since we are watching value, this could cause a loop if you send
+      // patch signal and then receive same signal to update your data.
+
       if (currentValue.length !== oldValue.length) {
-        // In case current length of checkInputs is bigger than zero.
-        if (currentValue.length > 0) {
-          // Push 'checkInputs' as string seperated by comma (,).
-          router.push(
-              {
-                path: route.path,
-                query: {
-                  ...route.query,
-                  attr: checkInputs.value.join(),
-                  page: 1
-                }
-              }
-          );
-        }
-        // in case the length is zero (means empty list), delete 'attr' from route.query
-        else{
-          delete route.query.attr;
-          router.push({name: route.name, query: {...route.query, page: 1} });
-        }
+
+        storeFilter.value.$patch({
+          checkedOptions: currentValue
+        });
 
       }
     },

@@ -9,13 +9,9 @@
         >
           <div v-for="( banner, index ) in storeHome.dataResult.Banner" :key="index" class="slide">
 
-            <router-link v-if="banner.frontend_path"
-                         :to="{ path: banner.frontend_path }"
-                         class="img-wrap"
-                         style="max-width: 1118px; max-height: 300px;"
-            >
+            <a v-if="banner.frontend_path" :href="banner.frontend_path" class="img-wrap" style="max-width: 1118px; max-height: 300px;">
               <img v-lazy="banner.thumbnail" :alt="banner.title" width="1118" height="300">
-            </router-link>
+            </a>
           </div>
 
         </agile>

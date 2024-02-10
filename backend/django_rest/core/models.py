@@ -2558,12 +2558,31 @@ class Product(TimeStampedModel):
 
     @property
     def common_attributes(self):
-        """Return related attribute instances that this product connect with"""
+        """Return related common attribute instances that this product connect
+         with"""
 
         # Get the related product attribute instances that is_common_attribute
         # is True.
         common_product_attributes = self.product_attributes_product.filter(
             is_common_attribute=True
+        ).distinct()
+
+        # Get the attribute instances that related to specific product
+        # attribute instances.
+        attributes = Attribute.objects.filter(
+            product_attributes_attribute__in=common_product_attributes
+        )
+        return attributes
+
+    @property
+    def uncommon_attributes(self):
+        """Return related uncommon attribute instances that this product
+        connect with"""
+
+        # Get the related product attribute instances that is_common_attribute
+        # is True.
+        common_product_attributes = self.product_attributes_product.filter(
+            is_common_attribute=False
         ).distinct()
 
         # Get the attribute instances that related to specific product
@@ -2680,14 +2699,21 @@ class ProductItem(TimeStampedModel):
         on_delete=models.PROTECT,
         related_name='product_items_supplier'
     )
-    is_default = models.BooleanField(
-        default=False,
-        help_text="You should set at least one True value and no more than one"
+    use_sku_images = models.CharField(
+        max_length=12,
+        blank=True,
+        help_text="If (use default images) is False, the images of product "
+                  "item that has the entered (sku) will be use even if the "
+                  "current product item has images"
     )
     use_default_images = models.BooleanField(
         default=False,
         help_text="With selecting, the default product item images will be "
                   "use even if the current product item has images"
+    )
+    is_default = models.BooleanField(
+        default=False,
+        help_text="You should set at least one True value and no more than one"
     )
 
     @property

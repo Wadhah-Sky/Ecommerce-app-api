@@ -20,7 +20,6 @@
   Libraries, methods, variables and components imports
 */
 import { MutationType } from 'pinia';
-import {useRouter, useRoute} from "vue-router";
 import {ref, toRef, defineProps, watch} from 'vue';
 
 export default {
@@ -50,8 +49,6 @@ const props = defineProps({
 });
 const storeFilter = toRef(props, 'storeFilter');
 const selectedOption = ref(props.selectByOption);
-const route = useRoute();
-const router = useRouter();
 
 /*
   Keep watching the state of 'storeFilter' and other stores so whenever there is change in
@@ -71,11 +68,10 @@ const router = useRouter();
              your data, because this will lead to loop.
  */
 storeFilter.value.$subscribe((mutation, state) => {
+
   // You can specify type of mutation.
-  if ( [MutationType.patchObject].includes(mutation.type) ) {
-
+  if ( [MutationType.direct].includes(mutation.type) ) {
     selectedOption.value = state.selectByOption;
-
   }
 
   // You can persist the whole state to the local storage whenever it changes.
@@ -86,16 +82,12 @@ storeFilter.value.$subscribe((mutation, state) => {
 // Watch the selectValue object.
 watch(() => selectedOption.value, (currentValue, oldValue) =>{
 
-  if (currentValue !== null) {
-    router.push({
-      name: route.name,
-      query: {...route.query, selectBy: currentValue['value'], page: 1}
+  if (currentValue !== oldValue) {
+    storeFilter.value.$patch({
+      selectByOption: currentValue,
     });
   }
-  else {
-    delete route.query.selectBy;
-    router.push({path: route.path, query: {...route.query, page: 1}});
-  }
+
 });
 
 </script>

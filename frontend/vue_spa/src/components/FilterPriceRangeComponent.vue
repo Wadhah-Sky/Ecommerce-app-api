@@ -91,8 +91,8 @@
   Libraries, methods, variables and components imports
 */
 import { MutationType } from 'pinia';
-import {querySerializer} from "@/common/querySerializer";
-import {useRoute, useRouter} from "vue-router";
+// import {querySerializer} from "@/common/querySerializer";
+import {useRoute} from "vue-router";
 import {ref, toRef, defineProps} from 'vue';
 
 export default {
@@ -123,7 +123,7 @@ const priceObj = ref({
   'minPrice': props.minPrice,
   'maxPrice': props.maxPrice
 });
-const router = useRouter();
+//const router = useRouter();
 const route = useRoute();
 // Note: <ref_name>.value represent the element itself, to get its value use <ref_name>.value.value
 const min = ref(null);
@@ -244,17 +244,16 @@ const submitPriceRange = (minVal=null, maxVal=null) => {
     maxError.value = true;
     max.value.focus();
   }
-  // In case the current value of minVal and maxVal are active in url, don't push.
+  // In case the current value of minVal and maxVal are active in url, don't update store values.
   else if ( !((+minVal === +route.query.minPrice) && (+maxVal === +route.query.maxPrice)) ) {
-
-    // Get serializedQueryObj
-    let serializedQueryObj = querySerializer(priceObj.value, route.query, [0, null]);
-
-    // push new router state.
-    router.push({
-      path: route.path,
-      query: {...serializedQueryObj, page: 1}
-    });
+    // check that both of minVal and maxVal shouldn't be empty or null.
+    if (!(['', null].includes(minVal) && ['', null].includes(maxVal))){
+      // Get serializedQueryObj
+      // let serializedQueryObj = querySerializer(priceObj.value, route.query, [0, null, undefined]);
+      storeFilter.value.$patch({
+        price: priceObj.value
+      });
+    }
   }
 };
 
@@ -273,17 +272,14 @@ const submitPriceRange = (minVal=null, maxVal=null) => {
            state in parent component, then this component will receive that mutation type.
 
   Important: be careful, the mutation cause by this component should not use as condition to update
-             your data, because this will lead to loop.
+             your data in store, because this will lead to loop.
  */
 storeFilter.value.$subscribe((mutation, state) => {
   // You can specify type of mutation.
-  if ( [MutationType.patchObject].includes(mutation.type) ) {
+  if ( [MutationType.direct].includes(mutation.type) ) {
 
     priceObj.value.minPrice = state.price.minPrice;
-    priceObj.value.maxPrice = state.price.maxPrice
-
-    // Submit the new value of priceObj.
-    submitPriceRange(priceObj.value.minPrice, priceObj.value.maxPrice);
+    priceObj.value.maxPrice = state.price.maxPrice;
 
   }
 
@@ -300,8 +296,6 @@ storeFilter.value.$subscribe((mutation, state) => {
 //       flush: "post",
 //     }
 // )
-
-
 
 </script>
 
@@ -387,7 +381,7 @@ input[type=number]:focus {
   height: 31px;
   padding: 3px 7px;
   line-height: normal;
-  width: 40px;
+  width: 38px;
   margin-top: 6px !important;
   margin-right: 1px;
 }

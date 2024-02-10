@@ -23,18 +23,13 @@
 
             <h6 v-if="productItemsCount > 1">
 
-              <span class="badge text-bg-secondary"
-                    style="
-                      background-color: #e9ecef !important;
-                      color: #0F1111 !important;
-                      cursor: default;
-                    "
+              <span class="badge text-bg-secondary available-variation"
                     v-tooltip
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
                     title="This product has multi variations"
               >
-                Multi variations
+                Multi {{product_items_variation_string()}}
               </span>
 
             </h6>
@@ -165,6 +160,10 @@ const props = defineProps({
     type: [String, Number, undefined],
     required: false
   },
+  productItemsVariation: {
+    type: Array,
+    required: false
+  },
   rating: {
     type: [String, Number, undefined],
     required: false
@@ -176,6 +175,16 @@ const props = defineProps({
 /*
   Define functions
 */
+const product_items_variation_string = () => {
+  /**
+   * Convert product_items_variation into a string
+   */
+
+  // Return string of given array and make sure the last seperator (,) is
+  // convert to and word.
+  return props.productItemsVariation.join(', ').replace(/,(?!.*,)/gmi, ' and').toLowerCase();
+};
+
 // const showProductView = async (slug, itemS) => {
 //   /**
 //    * Method to push new router state and show new component while recerve the
@@ -194,12 +203,24 @@ const props = defineProps({
 //     state: {backgroundView}
 //   })
 // };
+
 </script>
 
 <style scoped>
 
 .badge{
   border-radius: 0!important;
+}
+
+.available-variation {
+  background-color: #e9ecef !important;
+  color: #0F1111 !important;
+  cursor: default;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 180px;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .promotion-title{
@@ -221,5 +242,23 @@ const props = defineProps({
 .fa-star{
   color: orange;
   filter: drop-shadow(0 0 4px);
+}
+
+@media only screen and (max-width: 480px) {
+  .available-variation{
+    max-width: 160px;
+  }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 992px) {
+  .available-variation{
+    max-width: 130px;
+  }
+}
+
+@media only screen and (min-width: 1100px) {
+  .available-variation{
+    max-width: 220px;
+  }
 }
 </style>
