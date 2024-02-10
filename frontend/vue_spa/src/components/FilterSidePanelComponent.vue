@@ -157,7 +157,8 @@ const { lengthX } = useSwipe(
         call preventDefault() to disable scrolling. This frees the browser up to respond to scrolling immediately
         without waiting for JavaScript, thus ensuring a reliably smooth scrolling experience for the user.
        */
-      passive: false,
+      // Note: since this swipe is related to use other events, so using passing as false will stop these events.
+      passive: true,
       // onSwipeEnd is similar to touch event ontouchend (A finger is removed from a touch screen).
       onSwipeEnd(e) {
 

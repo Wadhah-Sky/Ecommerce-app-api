@@ -218,7 +218,7 @@ const product_items_variation_string = () => {
   cursor: default;
   text-overflow: ellipsis;
   overflow: hidden;
-  max-width: 180px;
+  /*max-width: 180px;*/
   display: inline-block;
   white-space: nowrap;
 }
@@ -244,19 +244,13 @@ const product_items_variation_string = () => {
   filter: drop-shadow(0 0 4px);
 }
 
-@media only screen and (max-width: 480px) {
+@media only screen and (max-width: 992px) {
   .available-variation{
-    max-width: 160px;
+    max-width: 120px;
   }
 }
 
-@media only screen and (min-width: 768px) and (max-width: 992px) {
-  .available-variation{
-    max-width: 130px;
-  }
-}
-
-@media only screen and (min-width: 1100px) {
+@media only screen and (min-width: 993px) {
   .available-variation{
     max-width: 220px;
   }
