@@ -164,7 +164,7 @@ const cardNumberProps = {
 
         for (let i = 0; i < dynamicMasked.compiledMasks.length; i++) {
             let re = new RegExp(dynamicMasked.compiledMasks[i].regex);
-            //console.log("Value:", number, number.match(re))
+
             if (number.match(re) !== null) {
 
                 return dynamicMasked.compiledMasks[i];
@@ -234,6 +234,46 @@ const cardSecurityNoSecretCodeProps = {
             displayChar: '',
         }
     ],
+};
+
+const minPriceProps = {
+    mask: Number,
+    regex: /^(?=.{0,4}$)([0-9]+)$/,
+    // skip invalid is by default is true, means don't write the character
+    // that invalid to mask value.
+    skipInvalid: true,
+    // Lazy option is to lazy overwrite of placeholder if has been set to false.
+    lazy: true,
+    min: 0,
+    max: 4449,
+
+    // other options are optional with defaults below
+    scale: 2,  // digits after point, 0 for integers
+    thousandsSeparator: '',  // any single char
+    padFractionalZeros: true,  // if true, then pads zeros at end to the length of scale
+    normalizeZeros: true,  // appends or removes zeros at ends for fractional part
+    radix: '.',  // fractional delimiter
+    mapToRadix: ['.'],  // symbols to process as radix
+};
+
+const maxPriceProps = {
+    mask: Number,
+    regex: /^(?=.{0,4}$)([0-9]+)$/,
+    // skip invalid is by default is true, means don't write the character
+    // that invalid to mask value.
+    skipInvalid: true,
+    // Lazy option is to lazy overwrite of placeholder if has been set to false.
+    lazy: true,
+    min: 1,
+    max: 5000,
+
+    // other options are optional with defaults below
+    scale: 2,  // digits after point, 0 for integers
+    thousandsSeparator: '',  // any single char
+    padFractionalZeros: true,  // if true, then pads zeros at end to the length of scale
+    normalizeZeros: true,  // appends or removes zeros at ends for fractional part
+    radix: '.',  // fractional delimiter
+    mapToRadix: ['.'],  // symbols to process as radix
 };
 
 
@@ -321,5 +361,7 @@ export {
     cardNumberProps,
     cardSecurityCodeProps,
     cardSecurityNoSecretCodeProps,
+    minPriceProps,
+    maxPriceProps,
     cardPaymentMask
 };

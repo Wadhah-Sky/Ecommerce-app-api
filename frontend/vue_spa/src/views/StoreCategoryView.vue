@@ -94,22 +94,22 @@ const props = defineProps({
   attr: {
     type: [String, undefined],
     required: false,
-    default: ''
+    default: null
   },
   minPrice: {
     type: [String, undefined],
     required: false,
-    default: ''
+    default: undefined
   },
   maxPrice: {
     type: [String, undefined],
     required: false,
-    default: ''
+    default: undefined
   },
   selectBy: {
     type: [String, undefined],
     required: false,
-    default: ''
+    default: null
   }
 });
 // Note: inject() for examples stores can only be used inside setup() or functional components.
@@ -358,10 +358,10 @@ storeFilter.$subscribe((mutation, state) => {
     if(storeFilter.selectByOption !== null){
       queryObj['selectBy'] = storeFilter.selectByOption.value;
     }
-    if(!['', null].includes(storeFilter.price['minPrice'])){
+    if(!['', null, undefined].includes(storeFilter.price['minPrice'])){
       queryObj['minPrice'] = storeFilter.price.minPrice;
     }
-    if(!['', null].includes(storeFilter.price['maxPrice'])){
+    if(!['', null, undefined].includes(storeFilter.price['maxPrice'])){
       queryObj['maxPrice'] = storeFilter.price.maxPrice;
     }
 

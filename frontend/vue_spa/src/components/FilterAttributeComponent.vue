@@ -247,7 +247,8 @@ const whiteSpacesReplace = (str, use='') => {
  */
 storeFilter.value.$subscribe((mutation, state) => {
   // You can specify type of mutation.
-  if ( [MutationType.direct].includes(mutation.type) ) {
+  // Important: events key value of mutation in store is 'length' if the key related to array.
+  if ( [MutationType.direct].includes(mutation.type) && mutation.events.key === 'length') {
     checkInputs.value = state.checkedOptions;
   }
 

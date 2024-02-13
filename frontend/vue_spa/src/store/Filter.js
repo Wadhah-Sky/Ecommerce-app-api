@@ -23,7 +23,7 @@ export const useFilterStore = defineStore('Filter', {
         'multi', 'clear'
     ],
     checkedOptions: [],
-    price: {minPrice: null, maxPrice: null},
+    price: {minPrice: undefined, maxPrice: undefined},
     availableSelectByOptions: [
         { option: 'Deals', value: 'deals' },
         { option: 'Price: Low to High', value: 'price-low-to-high' },

@@ -259,30 +259,33 @@ class ProductFilter(filters.FilterSet):
         #       the . are not.
 
         if min_price:
-            # Check if min_price value is numeric or not.
-            if not min_price.isnumeric():
+            # Check if min_price value is numeric (also float) or not.
+            # Note: 1- is_numeric() only works with integer value otherwise
+            #          return false.
+            #       2- For non-negative (unsigned) integers only, use isdigit()
+            if not min_price.replace('.', '', 1).isdigit():
                 raise exceptions.InvalidPriceValueDataType
 
             # Validate the value of min_price query string, and raise an
             # api exception if it's not valid.
-            elif int(min_price) < usd_min_amount or \
-                    int(min_price) >= usd_max_amount:
+            elif float(min_price) < usd_min_amount or \
+                    float(min_price) >= usd_max_amount:
                 raise exceptions.InvalidMinPriceValue
 
         if max_price:
             # Check if max_price value is numeric or not.
-            if not max_price.isnumeric():
+            if not max_price.replace('.', '', 1).isdigit():
                 raise exceptions.InvalidPriceValueDataType
 
             # Validate the value of max_price query string, and raise an
             # api exception if it's not valid.
-            if int(max_price) < usd_min_amount or\
-                    int(max_price) > usd_max_amount:
+            if float(max_price) < usd_min_amount or \
+                    float(max_price) > usd_max_amount:
                 raise exceptions.InvalidMaxPriceValue
 
         if min_price and max_price:
             # Validate that max price value is bigger than min price value.
-            if int(min_price) > int(max_price):
+            if float(min_price) > float(max_price):
                 raise exceptions.InvalidMinMaxPriceValue
 
     # Specify fields type of Meta.fields/extra which will be use as

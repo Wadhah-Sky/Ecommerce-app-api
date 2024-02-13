@@ -460,7 +460,7 @@
 import {
   cardNameProps, cardExpiryProps, cardNumberProps, cardSecurityCodeProps,
   cardSecurityNoSecretCodeProps
-} from "@/common/inputMask"
+} from "@/common/inputMask";
 // import {cardPaymentMask} from "@/common/inputMask";
 // import { IMaskComponent } from 'vue-imask';
 import * as paymentSVGIcon from "@/assets/javascript/paymentCardIcons";

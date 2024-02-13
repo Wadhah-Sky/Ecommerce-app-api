@@ -70,7 +70,7 @@ const selectedOption = ref(props.selectByOption);
 storeFilter.value.$subscribe((mutation, state) => {
 
   // You can specify type of mutation.
-  if ( [MutationType.direct].includes(mutation.type) ) {
+  if ( [MutationType.direct].includes(mutation.type) && mutation.events.key === 'selectByOption' ) {
     selectedOption.value = state.selectByOption;
   }
 
@@ -79,7 +79,7 @@ storeFilter.value.$subscribe((mutation, state) => {
 
 });
 
-// Watch the selectValue object.
+// Watch the selectedOption object.
 watch(() => selectedOption.value, (currentValue, oldValue) =>{
 
   if (currentValue !== oldValue) {

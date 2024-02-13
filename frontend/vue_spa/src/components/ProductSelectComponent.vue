@@ -19,7 +19,7 @@
         <div class="item-option-select mt-2">
 
           <template v-if="(useColorShape && colorSyllable.includes(lowerCase(index))) ||
-                          (useImg && checkThumbnailsAvailability(index)) &&
+                          (useImg && risePickerSyllable.includes(lowerCase(index)) || checkThumbnailsAvailability(index)) &&
                           !selectedSameOptionStatus[index]"
           >
 

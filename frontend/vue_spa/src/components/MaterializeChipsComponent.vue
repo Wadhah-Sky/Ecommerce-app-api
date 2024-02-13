@@ -135,7 +135,7 @@ const removePrice = (key) => {
    */
 
   // Re-set price value using key.
-  priceObj.value[key] = null;
+  priceObj.value[key] = undefined;
 
   /*
     Change state of 'price' using key in filter store.
