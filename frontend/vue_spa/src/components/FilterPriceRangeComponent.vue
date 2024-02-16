@@ -178,6 +178,7 @@ const maxPriceInput = {
   mask: maxPriceProps,
   isRequired: true,
 };
+const to_watch = ref([]);
 
 /*
   Define functions
@@ -213,15 +214,16 @@ const submitPriceRange = () => {
   //       it's default value for Type Number
 
   // Get min and max input values.
-  let minVal = minPriceInput.el.value.value;
-  let maxVal = maxPriceInput.el.value.value;
+  let minVal = minPriceInput.el.value.value || undefined;
+  let maxVal = maxPriceInput.el.value.value || undefined;
 
-  // Get route query values of min and max price (if not defined will return 'undefined')
-  let routeQueryMinPrice = +route.query.minPrice;
-  let routeQueryMaxPrice = +route.query.maxPrice;
+  // Get route query values of min and max price (if not defined will return 'undefined' but since we set it
+  // as number by using + then it return as 'NaN').
+  let routeQueryMinPrice = route.query.minPrice || undefined;
+  let routeQueryMaxPrice = route.query.maxPrice || undefined;
 
   // Initialize default price object
-  let priceObj = {minPrice: undefined, maxPrice: undefined};
+  // let priceObj = {minPrice: undefined, maxPrice: undefined};
 
   // Initialize flag to determine to update store or not
   let updateStore = false;
@@ -247,14 +249,14 @@ const submitPriceRange = () => {
     maxPriceInput.el.value.focus();
   }
 
-  // In case the current value of minVal and maxVal are valid and active in url, don't update store values.
-  if ((minVal !== undefined) && (+minVal !== routeQueryMinPrice)){
-    priceObj['minPrice'] = minVal;
+  // Check that route query values for min and max is not 'undefined' for both of them.
+  if (routeQueryMinPrice !== undefined || routeQueryMaxPrice !== undefined){
+    // change update store flag to be true.
     updateStore = true;
   }
-
-  if ((maxVal !== undefined) && (+maxVal !== routeQueryMaxPrice)){
-    priceObj['maxPrice'] = maxVal;
+  else if (minVal !== undefined || maxVal !== undefined){
+    // In case route query values for min and max is 'undefined' for both of them, then check if min and max price
+    // is not 'undefined' for both of them.
     updateStore = true;
   }
 
@@ -283,6 +285,8 @@ const updateInputsAndSubmit = (minVal, maxVal) => {
 onMounted(() => {
   // Initialize values of input min and max.
   updateInputs(props.minPrice, props.maxPrice);
+
+  to_watch.value = [minPriceInput.el.value.value, maxPriceInput.el.value.value];
 });
 
 /*
@@ -304,30 +308,32 @@ onMounted(() => {
  */
 storeFilter.value.$subscribe((mutation, state) => {
   // You can specify type of mutation.
-  if ( [MutationType.direct].includes(mutation.type) && mutation.events.key === 'price' ) {
+  /*
+     Info: you can use (mutation.events.key === 'price'), But unfortunately events doesn't have attribute
+           'key' when and show 'Cannot read properties of undefined' error after build the code.
+   */
+  if ( [MutationType.direct].includes(mutation.type) ) {
+
+    // Save old value of min and max input before change it.
+    let oldValue = [minPriceInput.el.value.value, maxPriceInput.el.value.value];
+
+    // Update the value of min and max input.
     updateInputs(state.price.minPrice, state.price.maxPrice);
 
-    // submit price
-    submitPriceRange();
+    // Get values of min and mac input after update.
+    let newValue = [minPriceInput.el.value.value, maxPriceInput.el.value.value];
+
+    // Check that old values of min and max are not the same in newValue array.
+    if (! (Object.values(newValue).every((ele, index) => ele === oldValue[index])) ){
+      // Submit new price.
+      submitPriceRange();
+    }
   }
 
   // You can persist the whole state to the local storage whenever it changes.
   // localStorage.setItem('checkedOptions', JSON.stringify(state));
 
 });
-
-// Watch the selectedOption object.
-// watch(() => priceObj.value, (currentValue, oldValue) =>
-//     {
-//       console.log("Push watch", currentValue, oldValue)
-//       storeFilter.value.$patch({
-//         price: currentValue,
-//       });
-//     },
-//     {
-//       deep: true
-//     }
-// );
 
 // watchEffect(
 //     () => {

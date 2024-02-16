@@ -70,7 +70,11 @@ const selectedOption = ref(props.selectByOption);
 storeFilter.value.$subscribe((mutation, state) => {
 
   // You can specify type of mutation.
-  if ( [MutationType.direct].includes(mutation.type) && mutation.events.key === 'selectByOption' ) {
+  /*
+     Info: you can use (mutation.events.key === 'selectByOption'), But unfortunately events doesn't have
+           attribute 'key' when and show 'Cannot read properties of undefined' error after build the code.
+   */
+  if ( [MutationType.direct].includes(mutation.type) ) {
     selectedOption.value = state.selectByOption;
   }
 

@@ -247,8 +247,12 @@ const whiteSpacesReplace = (str, use='') => {
  */
 storeFilter.value.$subscribe((mutation, state) => {
   // You can specify type of mutation.
-  // Important: events key value of mutation in store is 'length' if the key related to array.
-  if ( [MutationType.direct].includes(mutation.type) && mutation.events.key === 'length') {
+  /*
+     Info: events key value of mutation in store is 'length' if the key related to array. But unfortunately
+           events doesn't have attribute 'key' when and show 'Cannot read properties of undefined' error after
+           build the code.
+   */
+  if ( [MutationType.direct].includes(mutation.type)) {
     checkInputs.value = state.checkedOptions;
   }
 
