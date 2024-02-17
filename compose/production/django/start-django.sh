@@ -33,15 +33,19 @@ echo yes | python manage.py migrate
 #
 #       This will DELETE ALL FILES in this location! Are you sure you want to do this?
 echo "Collect static files for django..."
+sleep 10 &&
 echo yes | python manage.py collectstatic --clear
 
 # Create super user depending on environment variables.
 echo "Create superuser if not exists..."
+sleep 10 &&
 python manage.py create-superuser
 
 # Re-build indexes of elasticsearch engine.
+sleep 10 &&
 /bin/bash /usr/src/compose/es-index-rebuild.sh
 
+sleep 10 &&
 # In production we bind django server (import project) into gunicorn and We're
 # running Gunicorn rather than the Django development server.
 # Note: 'api' is name of directory that contains 'wsgi' file

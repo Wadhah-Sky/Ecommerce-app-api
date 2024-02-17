@@ -230,13 +230,18 @@ class PaginatedElasticSearchListAPIView(generics.ListAPIView):
                 ).exclude(
                     **{self.filter_exclude_arg: self.filter_exclude_val}
                 ).distinct().order_by(self.filter_order_by)
+
             else:
                 # Get the filtered queryset for provided model class.
                 queryset = self.model_class.objects.filter(
                     **{lookup: lookup_vals}
                 ).distinct().order_by(self.filter_order_by)
 
-            return queryset
+            # make sure queryset return no-empty list
+            if queryset:
+                return queryset
+            else:
+                return []
         else:
             return []
 
