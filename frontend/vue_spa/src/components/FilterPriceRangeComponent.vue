@@ -248,9 +248,8 @@ const submitPriceRange = () => {
     maxError.value = true;
     maxPriceInput.el.value.focus();
   }
-
   // Check that route query values for min and max is not 'undefined' for both of them.
-  if (routeQueryMinPrice !== undefined || routeQueryMaxPrice !== undefined){
+  else if (routeQueryMinPrice !== undefined || routeQueryMaxPrice !== undefined){
     // change update store flag to be true.
     updateStore = true;
   }
