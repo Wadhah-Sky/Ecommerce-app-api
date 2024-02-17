@@ -52,6 +52,7 @@
 
                 <product-card-component :product-title="product.title"
                                         :product-items-count="product.product_items_count"
+                                        :product-items-variation="product.product_items_variation"
                                         :rating="product.rating"
                                         :slug="product.slug"
                                         :item-s="product.product_item.slug"

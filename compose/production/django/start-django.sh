@@ -33,16 +33,13 @@ echo yes | python manage.py migrate
 #
 #       This will DELETE ALL FILES in this location! Are you sure you want to do this?
 echo "Collect static files for django..."
-sleep 3 &&
 echo yes | python manage.py collectstatic --clear
 
 # Create super user depending on environment variables.
 echo "Create superuser if not exists..."
-sleep 3 &&
 python manage.py create-superuser
 
 # Re-build indexes of elasticsearch engine.
-sleep 3 &&
 /bin/bash /usr/src/compose/es-index-rebuild.sh
 
 # In production we bind django server (import project) into gunicorn and We're
