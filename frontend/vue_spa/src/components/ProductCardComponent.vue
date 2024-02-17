@@ -162,7 +162,11 @@ const props = defineProps({
   },
   productItemsVariation: {
     type: Array,
-    required: false
+    // Object or array defaults must be returned from a factory function.
+    // The function receives the raw props received by the component as the argument.
+    default(rawProps) {
+      return []
+    }
   },
   rating: {
     type: [String, Number, undefined],
@@ -180,9 +184,15 @@ const product_items_variation_string = () => {
    * Convert product_items_variation into a string
    */
 
-  // Return string of given array and make sure the last seperator (,) is
-  // convert to and word.
-  return props.productItemsVariation.join(', ').replace(/,(?!.*,)/gmi, ' and').toLowerCase();
+  // Check in case there no 'productItemsVariation' passed.
+  if (props.productItemsVariation.length === 0){
+   return 'variations';
+  }
+  else{
+    // Return string of given array and make sure the last seperator (,) is
+    // convert to and word.
+    return props.productItemsVariation.join(', ').replace(/,(?!.*,)/gmi, ' and').toLowerCase();
+  }
 };
 
 // const showProductView = async (slug, itemS) => {

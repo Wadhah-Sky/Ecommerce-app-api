@@ -39,7 +39,7 @@
             <product-single-select-component v-model="selectedOptions[index]"
                                              :group-name="index"
                                              :options="options"
-                                             :use-img="useImg"
+                                             :use-img="!!(useImg && checkThumbnailsAvailability(index))"
                                              :rise-picker-syllable="risePickerSyllable"
                                              track-by="value"
                                              parent-attr="parentAttribute"
@@ -205,6 +205,7 @@ const route = useRoute();
 const selectLabel = ref({});
 const risePickerSyllable = ['rise', 'picker', 'rise style', 'rise picker', 'rise picker style'];
 const colorSyllable = ['color', 'colors', 'colour', 'colours'];
+let indexThumbnailsAvailability = {};
 // Define the list of events that you want to emit.
 const emits = defineEmits(['activeOption']);
 
@@ -222,11 +223,17 @@ const checkThumbnailsAvailability = (index) => {
   /**
    * Method to check array of options that should all of them has thumbnail value, otherwise return false.
    */
-
-  // Get the option array.
-  let arr = productOptions.value[index];
-  // return true if condition is passed for all objects of array otherwise return false.
-  return !!arr.every(item => !['', null, 'None', false].includes(item.thumbnail));
+  // Check if already we check thumbnail availability of the given index.
+  if (Object.prototype.hasOwnProperty.call(indexThumbnailsAvailability, index)){
+    return indexThumbnailsAvailability[index];
+  }
+  else {
+    // Get the option array.
+    let arr = productOptions.value[index];
+    // return true if condition is passed for all objects of array otherwise return false.
+    indexThumbnailsAvailability[index] = !!arr.every(item => !['', null, 'None', false].includes(item.thumbnail));
+    return indexThumbnailsAvailability[index];
+  }
 };
 const setSelectLabel = (index, label) =>{
   /**
