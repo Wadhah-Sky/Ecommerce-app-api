@@ -9,7 +9,7 @@
 #           service itself not by daemon which mean you should use localhost ip in the commands NOT the service
 #           name.
 
-version: "3.9"
+# version: "3.9"
 
 services:
 
@@ -111,10 +111,10 @@ services:
         condition: on-failure
       resources:
         limits:
-          # Note: be careful when specify the values due it's possible to cause to exit the container with 0
+          # Note: be careful when specify the values due it's possible to cause to exit the container with 0 or 137
           #       at initializing time because health check test run before service is ready.
-          cpus: '0.40'
-          memory: 500M
+          cpus: '0.80'
+          memory: 1000M
         reservations:
           cpus: '0.05'
           memory: 50M

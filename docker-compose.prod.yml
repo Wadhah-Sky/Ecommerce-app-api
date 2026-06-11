@@ -3,7 +3,7 @@
 # Note: for production environment we expose (using ports variable) only the services that we want
 #       to be reachable from host machine (e.g, cloud node machine)
 
-version: "3.9"
+# version: "3.9"
 
 services:
   cache:
@@ -109,8 +109,8 @@ services:
         condition: on-failure
       resources:
         limits:
-          cpus: '0.40'
-          memory: 700M
+          cpus: '0.80'
+          memory: 1000M
         reservations:
           cpus: '0.05'
           memory: 50M

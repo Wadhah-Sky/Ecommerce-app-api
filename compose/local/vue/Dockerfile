@@ -32,7 +32,7 @@
 #           otherwise the docker contianer will exit with code 243.
 
 # Building stage.
-FROM node:18-alpine AS builder
+FROM node:26-alpine AS builder
 
 MAINTAINER Wadhah Sky
 

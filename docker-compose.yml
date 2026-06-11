@@ -26,8 +26,8 @@
 #       a docker-compose.override.yml file to override those config settings
 #       based on the environment.
 
-# Define the version of docker compose.
-version: "3.9"
+# Define the version of docker compose (obsolete).
+# version: "3.9"
 
 # Define the services that make up the project application.
 services:
@@ -217,7 +217,7 @@ services:
       test: [ "CMD-SHELL", "curl -u elastic:${ELASTIC_PASSWORD} localhost:9200/_cluster/health?pretty", " | grep -E ", '"status" : "yellow|green"', " || exit 1" ]
       interval: 30s
       timeout: 10s
-      start_period: 240s
+      start_period: 340s
       retries: 3
     deploy:
       replicas: 1
@@ -225,10 +225,10 @@ services:
         condition: on-failure
       resources:
         limits:
-          # Note: be careful when specify the values due it's possible to cause to exit the container with 0
+          # Note: be careful when specify the values due it's possible to cause to exit the container with 0 or 137
           #       at initializing time because health check test run before service is ready.
-          cpus: '0.40'
-          memory: 700M
+          cpus: '0.80'
+          memory: 1000M
         reservations:
           cpus: '0.05'
           memory: 50M
