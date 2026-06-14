@@ -109,8 +109,8 @@ USER user
 # Prodduction stage.
 # Note: in production stage of Vue, you need 'dist' file only which contains all static files to be
 #       served, either by django directly or through Nginx, So, you don't need docker container to serve Vue
-#       files, all what you need is copy 'dist' file into the mentiod servers, or you can simply
-#       A- add 'dist' file to GitHub repository of your project, then make Django or Nginx copy 'dist' within
+#       files, all what you need is copy 'dist' file into the mentioned servers, or you can simply
+#       A- add 'dist' file into GitHub repository of your project, then make Django or Nginx copy 'dist' within
 #          their 'static' directory.
 #       B- add 'dist' file to your Django application 'static' directory (make sure it's defined in 'STATICFILES_DIRS'
 #          in settings.py file) and then run withing Django container:
@@ -134,7 +134,7 @@ RUN npm ci && \
     npm run build && \
     # Delete all directories recursively except 'dist' using 'find' command:
     # Note: you can use -type f to delete files.
-    find . -maxdepth 1 -type d -not -name 'dist' -delete
+    # find . -maxdepth 1 -type d -not -name 'dist' -delete
 
 # Switch docker container account from 'root' to the new account.
 USER user
