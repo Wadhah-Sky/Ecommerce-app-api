@@ -313,6 +313,10 @@ jobs:
             
             git pull origin production/aws
             
+            sudo chmod +x ./deploy/setup-docker.sh
+            
+            sudo ./deploy/setup-docker.sh
+            
             sudo chmod +x ./deploy/deploy-docker-compose.sh
             
             sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env
@@ -417,6 +421,10 @@ jobs:
             git remote add origin $PROJECT_GIT_URL
 
             git pull origin production/linode
+
+            sudo chmod +x ./deploy/setup-docker.sh
+            
+            sudo ./deploy/setup-docker.sh
 
             sudo chmod +x ./deploy/deploy-docker-compose.sh
 
