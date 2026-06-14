@@ -28,7 +28,7 @@ if service_exists docker; then
 
 else
 
-  echo "Uninstall all Docker related conflicting packages!"
+  echo "Docker is not exists, uninstall all Docker related conflicting packages!"
   # The option -y to apt-get will automatically answer "yes" to prompts.
   for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do apt-get remove -y $pkg; done
 
@@ -49,9 +49,10 @@ else
   #       often utilized in package management systems, email encryption, and software distribution in the Linux ecosystem
   #       to ensure data security and integrity.
   # Info: The GPG (GNU Privacy Guard) command in Linux is a powerful tool used for secure communication and data storage.
-  #       The option -y to gpg command will automatically answer "yes" to prompts in case there is already
+  #       The option --batch to gpg command will run GPG completely non-interactively.
+  #       The option --yes to gpg command will automatically answer "yes" to prompts in case there is already
   #       '/etc/apt/keyrings/docker.gpg' file exists and will asking if you want to overwrite it or not.
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg -y --dearmor -o /etc/apt/keyrings/docker.gpg
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
 
   chmod a+r /etc/apt/keyrings/docker.gpg
 
@@ -90,3 +91,5 @@ else
   echo "Done! :)"
 
 fi
+
+exit 0

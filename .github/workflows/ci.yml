@@ -314,12 +314,11 @@ jobs:
             git pull origin production/aws
             
             sudo chmod +x ./deploy/setup-docker.sh
-            
-            sudo ./deploy/setup-docker.sh
-            
+                        
             sudo chmod +x ./deploy/deploy-docker-compose.sh
             
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env
+            sudo ./deploy/setup-docker.sh && ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml &&
+            rm .env
 
   deploy_production_linode:
     # Deploy to Linode cloud
@@ -424,8 +423,7 @@ jobs:
 
             sudo chmod +x ./deploy/setup-docker.sh
             
-            sudo ./deploy/setup-docker.sh
-
             sudo chmod +x ./deploy/deploy-docker-compose.sh
 
-            sudo ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml && rm .env
+            sudo ./deploy/setup-docker.sh && ./deploy/deploy-docker-compose.sh --compose-file docker-compose.prod.yml &&
+            rm .env
