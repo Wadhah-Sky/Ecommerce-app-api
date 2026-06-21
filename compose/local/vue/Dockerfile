@@ -131,10 +131,10 @@ WORKDIR /usr/src/frontend/vue_spa
 # install all npm packages on the system depending on package-lock.json file.
 RUN npm ci && \
     # Build 'dist' optimized file that Compiled and minified for production.
-    npm run build
+    npm run build && \
     # Delete all directories recursively except 'dist' using 'find' command:
     # Note: you can use -type f to delete files.
-    # find . -maxdepth 1 -type d -not -name 'dist' -delete
+    find . -maxdepth 1 -type d -not -name 'dist' -delete
 
 # Switch docker container account from 'root' to the new account.
 USER user

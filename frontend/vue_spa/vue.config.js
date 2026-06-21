@@ -34,6 +34,8 @@ const CompressionPlugin = require('compression-webpack-plugin');
 const zlib = require("node:zlib");
 
 module.exports = defineConfig({
+  // Disable linting entirely during dev-server compilation loops
+  lintOnSave: false,
   /*
   By default, babel-loader ignores all files inside node_modules. You can
   enable this option to avoid unexpected untranspiled code from third-party

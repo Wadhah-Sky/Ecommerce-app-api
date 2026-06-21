@@ -70,7 +70,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import {Multiselect} from 'vue-multiselect';
 import { tooltip } from "@/common/tooltip";
 import VueLazyload from 'vue-lazyload';
-import MazPhoneNumberInput from 'maz-ui/components/MazPhoneNumberInput';
+import MazInputPhoneNumber from 'maz-ui/components/MazInputPhoneNumber';
 import MazInput from 'maz-ui/components/MazInput';
 import MazSelect from 'maz-ui/components/MazSelect';
 import { IMaskDirective } from 'vue-imask';
@@ -105,7 +105,7 @@ const containerSelector = "#app";
 /*
   Note: If you don't want to use the existing 'app' instance, you can change the code
         by use 'app.unmount()' inside if{} block and remove else{} block, then outside
-        the condition block plug in your components, stores..etc to the new created app
+        the condition block plug in your components, stores...etc to the new created app
         instance and use 'app.mount(containerSelector)' at the end.
  */
 // Get the #app element from DOM using querySelector() method.
@@ -136,7 +136,7 @@ else {
     app.use(pinia);
     app.use(VueSidebarMenu);
     app.use(VueAgile);
-    // 'preLoad' option is proportion of a pre-loading height, default (1.3).
+    // 'preLoad' option is proportion of a preloading height, default (1.3).
     app.use(VueLazyload, {
         preLoad: 1.3,
         loading: loadImage,
@@ -147,7 +147,7 @@ else {
     app.component('multi-select', Multiselect);
     app.component('maz-input', MazInput);
     app.component('maz-select', MazSelect);
-    app.component('maz-phone-number-input', MazPhoneNumberInput);
+    app.component('maz-phone-number-input', MazInputPhoneNumber);
     app.directive('tooltip', tooltip);
     app.directive('imask', IMaskDirective);
 

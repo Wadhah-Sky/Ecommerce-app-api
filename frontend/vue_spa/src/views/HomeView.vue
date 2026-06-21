@@ -190,61 +190,67 @@ await checkDataResultAvailability();
 
 </script>
 
-<style lang="sass">
+<style lang="scss">
 
-.agile
-  &__dots
-    bottom: 10px
-    flex-direction: column
-    right: 30px
-    position: absolute
+.agile {
+  &__dots {
+    bottom: 10px;
+    flex-direction: column;
+    right: 30px;
+    position: absolute;
+  }
 
-  &__dot
-    margin: 5px 0
+  &__dot {
+    margin: 5px 0;
 
-    button
-      background-color: transparent
-      border: 1px solid #fff
-      cursor: pointer
-      display: block
-      height: 10px
-      font-size: 0
-      line-height: 0
-      margin: 0
-      padding: 0
-      transition-duration: .3s
-      width: 10px
+    button {
+      background-color: transparent;
+      border: 1px solid #fff;
+      cursor: pointer;
+      display: block;
+      height: 10px;
+      font-size: 0;
+      line-height: 0;
+      margin: 0;
+      padding: 0;
+      transition-duration: .3s;
+      width: 10px;
+    }
 
     &--current,
-    &:hover
-      button
-        background-color: #fff
+    &:hover {
+      button {
+        background-color: #fff;
+      }
+    }
+  }
 
-// Slides styles
-.slide
-  display: block
-  height: 300px
-  width: 100%
+  // Slides styles
+  .slide {
+    display: block;
+    height: 300px;
+    width: 100%;
+  }
 
-.slide img
-  object-fit: fill
-  -o-object-fit: fill
+  .slide img {
+    object-fit: fill;
+    -o-object-fit: fill;
+  }
 
-p .card-text
-  position: absolute
-  height: 113px
-  overflow: hidden
-  text-overflow: ellipsis
-  margin-bottom: 10px
-  //text-align: justify
-  text-justify: inter-word
+  p .card-text {
+    position: absolute;
+    height: 113px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 10px;
+    //text-align: justify
+    text-justify: inter-word;
+  }
 
-.section-cards .card-product-grid
-  min-height: 370px
-
-</style>
-
-<style lang="scss">
+  .section-cards .card-product-grid {
+    min-height: 370px
+  }
+}
 
 @media (min-width: 280px) and (max-width: 767px) {
   // .agile__slides > img

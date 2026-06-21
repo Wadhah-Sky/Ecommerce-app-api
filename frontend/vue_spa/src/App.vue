@@ -830,7 +830,7 @@ $toggle-btn-color: $primary-color;
   outline: none!important;
 }
 
-@import "maz-ui/css/main.css";
+@import 'maz-ui/styles';
 
 </style>
 
