@@ -32,7 +32,7 @@
 #           otherwise the docker contianer will exit with code 243.
 
 # Building stage.
-FROM node:26-alpine AS builder
+FROM node:24-alpine AS builder
 
 MAINTAINER Wadhah Sky
 
@@ -128,7 +128,7 @@ COPY --from=dev /usr/src/frontend/vue_spa /usr/src/frontend/vue_spa
 # Specify the default directory of this image layer (where 'node_modules' file is holding or will be).
 WORKDIR /usr/src/frontend/vue_spa
 
-# install all npm packages on the system depending on package-lock.json file.
+# Clean install all npm packages on the system depending on package-lock.json file.
 RUN npm ci && \
     # Build 'dist' optimized file that Compiled and minified for production.
     npm run build && \
