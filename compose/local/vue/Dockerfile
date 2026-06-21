@@ -129,7 +129,7 @@ COPY --from=dev /usr/src/frontend/vue_spa /usr/src/frontend/vue_spa
 WORKDIR /usr/src/frontend/vue_spa
 
 # Clean install all npm packages on the system depending on package-lock.json file.
-RUN npm ci && \
+RUN NODE_OPTIONS='--trace-deprecation' npm ci && \
     # Build 'dist' optimized file that Compiled and minified for production.
     npm run build && \
     # Delete all directories recursively except 'dist' using 'find' command:

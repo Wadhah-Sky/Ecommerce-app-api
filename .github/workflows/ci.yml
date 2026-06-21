@@ -328,11 +328,11 @@ jobs:
     if: github.ref == 'refs/heads/production/linode'
     environment: production
     steps:
-      - name: Setup node version that match this exactly to your local node -v
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24' # Match this exactly to your local node -v
-          cache: 'npm'
+      # - name: Setup node version that match this exactly to your local node -v
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '24' # Match this exactly to your local node -v
+      #     cache: 'npm'
       - name: Deploy to production server
         uses: appleboy/ssh-action@master
         with:
